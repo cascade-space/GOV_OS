@@ -1,0 +1,241 @@
+version: '3.9'
+
+# GovOS Local Development Stack
+# Prajna Labs × Cascade Technologies Solutions
+# Usage: docker-compose up -d
+
+networks:
+  govos-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  opensearch_data:
+
+services:
+
+  # ====================================================================
+  # INFRASTRUCTURE SERVICES
+  # ====================================================================
+
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: govos-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: govos_db
+      POSTGRES_USER: govos_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-govos_dev_secret}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U govos_user -d govos_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - govos-network
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: govos-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD:-govos_redis_dev} --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-govos_redis_dev}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - govos-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: govos-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-govos_minio_admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-govos_minio_secret}
+    ports:
+      - "9000:9000"    # S3 API
+      - "9001:9001"    # MinIO Console
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - govos-network
+
+  opensearch:
+    image: opensearchproject/opensearch:2.13.0
+    container_name: govos-opensearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+      - plugins.security.disabled=true
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWORD:-GovOS_Search_Dev_2024!}
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    networks:
+      - govos-network
+
+  # ====================================================================
+  # BACKEND SERVICES
+  # ====================================================================
+
+  govos-core-api:
+    build:
+      context: ../../govos-core-api
+      dockerfile: Dockerfile
+    container_name: govos-core-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/govos_db
+      SPRING_DATASOURCE_USERNAME: govos_user
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-govos_dev_secret}
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD:-govos_redis_dev}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-govos_minio_admin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-govos_minio_secret}
+      OPENSEARCH_URIS: http://opensearch:9200
+      JWT_SECRET: ${JWT_SECRET:-govos_jwt_dev_secret_minimum_32_chars}
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-govos_internal_dev_key}
+      AI_SERVICE_URL: http://govos-ai:8000
+      SPRING_PROFILES_ACTIVE: dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    networks:
+      - govos-network
+
+  govos-realtime:
+    build:
+      context: ../../govos-realtime
+      dockerfile: Dockerfile
+    container_name: govos-realtime
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://govos_user:${POSTGRES_PASSWORD:-govos_dev_secret}@postgres:5432/govos_db
+      REDIS_URL: redis://:${REDIS_PASSWORD:-govos_redis_dev}@redis:6379
+      JWT_SECRET: ${JWT_SECRET:-govos_jwt_dev_secret_minimum_32_chars}
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-govos_internal_dev_key}
+      FRONTEND_URL: http://localhost:5173
+      MSG91_API_KEY: ${MSG91_API_KEY:-}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_WHATSAPP_FROM: ${TWILIO_WHATSAPP_FROM:-}
+      FIREBASE_CREDENTIALS: ${FIREBASE_CREDENTIALS:-}
+      NODE_ENV: development
+      PORT: 3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - govos-network
+
+  govos-ai:
+    build:
+      context: ../../govos-ai
+      dockerfile: Dockerfile
+    container_name: govos-ai
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://govos_user:${POSTGRES_PASSWORD:-govos_dev_secret}@postgres:5432/govos_db
+      REDIS_URL: redis://:${REDIS_PASSWORD:-govos_redis_dev}@redis:6379
+      OPENSEARCH_URL: http://opensearch:9200
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-govos_minio_admin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-govos_minio_secret}
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-govos_internal_dev_key}
+      CORE_API_URL: http://govos-core-api:8080
+      GCP_PROJECT_ID: ${GCP_PROJECT_ID:-}
+      GCP_LOCATION: ${GCP_LOCATION:-asia-south1}
+      GOOGLE_APPLICATION_CREDENTIALS: /app/credentials/gcp-key.json
+      ENVIRONMENT: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      govos-core-api:
+        condition: service_healthy
+    volumes:
+      - ./credentials:/app/credentials:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - govos-network
+
+  # ====================================================================
+  # NGINX REVERSE PROXY / API GATEWAY
+  # ====================================================================
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: govos-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ../nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - govos-core-api
+      - govos-realtime
+      - govos-ai
+    networks:
+      - govos-network

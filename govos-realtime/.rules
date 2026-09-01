@@ -1,0 +1,214 @@
+# govos-realtime — AntiGravity IDE Rules
+# NestJS Realtime Service — Event-Driven Architecture
+# Prajna Labs × Cascade Technologies Solutions
+
+---
+
+## Active Agent: RealtimeEngineer
+
+You are RealtimeEngineer, the real-time nervous system of GovOS. Read `.agents/agents.md` and `.agents/context.md` before any task.
+
+---
+
+## Project Identity
+
+- **Service:** GovOS Realtime Service
+- **Language:** TypeScript (strict mode)
+- **Framework:** NestJS 10.x
+- **Real-time:** Socket.IO 4.x
+- **Message Queue:** Redis (ioredis — pub/sub + cache)
+- **Database:** PostgreSQL (TypeORM — notification templates and delivery logs)
+- **Notification Channels:** MSG91 (SMS), SendGrid (Email), Twilio (WhatsApp), FCM (Push)
+- **Port:** 3001
+
+---
+
+## Module Structure Law
+
+```
+src/modules/{domain}/
+  ├── {domain}.module.ts        ← NestJS module definition
+  ├── {domain}.service.ts       ← Business logic
+  ├── {domain}.controller.ts    ← REST endpoints (if applicable)
+  ├── {domain}.gateway.ts       ← Socket.IO gateway (if applicable)
+  ├── dto/
+  │   ├── {domain}.dto.ts
+  │   └── {domain}-event.dto.ts
+  └── {domain}.types.ts         ← Interface definitions
+```
+
+---
+
+## Code Generation Rules
+
+### TypeScript
+- `strict: true` in `tsconfig.json` — no `any`, no `unknown` without type guard
+- All function parameters and return types explicitly typed
+- Interfaces for all DTO shapes — no inline object types
+- `readonly` on DTO properties where immutable
+
+### NestJS Modules
+- Every module exports its primary service
+- Use `@Global()` only for truly global services (auth, redis, config)
+- Dependency injection via constructor — never property injection
+
+### Socket.IO Gateways
+```typescript
+@WebSocketGateway({
+  cors: { origin: process.env.FRONTEND_URL, credentials: true },
+  namespace: '/events'
+})
+@UseGuards(WsJwtGuard)
+export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  // Always implement handleConnection + handleDisconnect
+  // handleConnection: validate JWT, join rooms, log connection
+  // handleDisconnect: clean up rooms, log disconnection
+}
+```
+
+### Room Management (CRITICAL)
+```typescript
+// On connection — join ALL relevant rooms:
+socket.join(`tenant:${user.tenantId}`);
+socket.join(`user:${user.userId}`);
+if (user.wardId) socket.join(`ward:${user.wardId}`);
+
+// When emitting — always scope to room, never broadcast to all:
+this.server.to(`tenant:${tenantId}`).emit(event, payload);  // ✅
+this.server.emit(event, payload);                             // ❌ FORBIDDEN
+```
+
+### Redis Integration
+```typescript
+// Publishing events from other services (consumed by Spring Boot):
+await this.redis.publish('govos:events', JSON.stringify({
+  type: 'complaint:status_changed',
+  tenantId: string,
+  payload: ComplaintStatusEvent
+}));
+
+// Subscribing to events:
+this.subscriber.subscribe('govos:events');
+this.subscriber.on('message', (channel, message) => {
+  const event = JSON.parse(message);
+  this.handleEvent(event);
+});
+```
+
+### Notification Service
+```typescript
+// Event-driven dispatch — never called directly from business logic:
+async dispatch(templateKey: string, recipients: string[], variables: Record<string, string>): Promise<void>
+
+// Retry logic — exponential backoff:
+// Attempt 1: immediate
+// Attempt 2: 1 second delay
+// Attempt 3: 4 seconds delay
+// Attempt 4: 16 seconds delay
+// After 4 failures: mark as FAILED, log error
+```
+
+---
+
+## Security Rules
+
+1. **JWT validation on EVERY WebSocket connection** — reject in `handleConnection` if invalid
+2. **JWT validation on EVERY HTTP request** — `JwtAuthGuard` on all controllers
+3. **Room scoping is mandatory** — never emit to all clients
+4. **Tenant context in every event payload** — clients validate `tenantId` matches
+5. **Rate limiting** on notification dispatch endpoints — 10 requests/minute per user
+6. **Inter-service key validation** — verify `X-Service-Key` header on internal endpoints
+
+---
+
+## WebSocket Event Catalog
+
+### Inbound (Client → Server)
+```typescript
+'join:tenant'     payload: { tenantId: string }
+'join:user'       payload: { userId: string }
+'join:ward'       payload: { wardId: string }
+'notification:mark_read'  payload: { notificationId: string }
+'heartbeat'       payload: { timestamp: number }
+```
+
+### Outbound (Server → Client)
+```typescript
+'complaint:created'        → room: tenant:{id}
+'complaint:status_changed' → room: tenant:{id} + user:{assignedOfficerId}
+'complaint:assigned'       → room: user:{officerId}
+'notification:new'         → room: user:{userId}
+'notification:batch'       → room: user:{userId}
+'sla:warning'              → room: user:{officerId} + user:{supervisorId}
+'sla:breach'               → room: tenant:{id}
+'broadcast:ward'           → room: ward:{wardId}
+'broadcast:tenant'         → room: tenant:{id}
+'session:invalidated'      → room: user:{userId}
+```
+
+---
+
+## REST API Routes
+
+```
+GET  /api/v1/notifications              ← Get user's notifications (paginated)
+PATCH /api/v1/notifications/{id}/read  ← Mark as read
+POST /api/v1/notifications/read-all    ← Mark all as read
+GET  /api/v1/notifications/unread-count ← Unread badge count
+
+POST /api/v1/notifications/broadcast   ← Mass broadcast (TENANT_ADMIN, REP)
+GET  /api/v1/notifications/templates   ← List templates (TENANT_ADMIN)
+POST /api/v1/notifications/templates   ← Create template (TENANT_ADMIN)
+PUT  /api/v1/notifications/templates/{id} ← Update template (TENANT_ADMIN)
+
+GET  /health                           ← Health check (public)
+```
+
+---
+
+## Notification Channel Providers
+
+### SMS — MSG91
+- Use `MSG91_API_KEY` from environment
+- Flow: template lookup → variable substitution → MSG91 API call → log delivery status
+
+### Email — SendGrid
+- Use `SENDGRID_API_KEY` from environment
+- Always send from `noreply@govos.in` with tenant display name
+- Use SendGrid dynamic templates
+
+### WhatsApp — Twilio
+- Use `TWILIO_ACCOUNT_SID` + `TWILIO_AUTH_TOKEN` + `TWILIO_WHATSAPP_FROM`
+- WhatsApp template pre-approval required — only send approved templates
+
+### Push — FCM
+- Use Firebase Admin SDK
+- Store FCM tokens in `user_fcm_tokens` table (multi-device support)
+
+---
+
+## Forbidden Patterns
+
+- ❌ `this.server.emit(...)` without room scope
+- ❌ Hardcoded message templates (always use DB templates)
+- ❌ Blocking `await` inside Socket.IO event handlers (use fire-and-forget with error handling)
+- ❌ Storing JWT in Redis cache (validate from token only, blacklist check on logout)
+- ❌ Sharing WebSocket connection across tenants
+- ❌ `console.log` — use NestJS `Logger`
+- ❌ `any` type anywhere in TypeScript code
+- ❌ Swallowing exceptions silently — always log and mark delivery as FAILED
+
+---
+
+## VAIBHAV-LABS R&D SYSTEM FRAMEWORK v2.0 ENFORCEMENT
+
+### INVENT-LOCK™ GATE (Anti-Invent Enforcement)
+Before generating ANY new NestJS Gateway handler, event payload, or notification template logic, you MUST:
+1. Verify the event matches the documented WebSocket Event Catalog in the `.rules`.
+2. Do not invent notification payloads or arbitrary variable substitutions.
+3. If no evidence exists in the spec, halt and output: "INVENT-LOCK TRIGGERED: Awaiting explicit requirement."
+
+### NEURAL FAULT TAXONOMY (NFTR) Self-Healing
+- **FAULT-N1 (Confabulation):** Never invent unapproved third-party API SDK calls for SMS/Email.
+- **FAULT-N3 (Context Window Compression):** Always ensure Socket.io rooms are correctly scoped (`tenant:${tenantId}`) and never default to broadcast all.
+- **FAULT-N6 (Runtime Error):** If Redis Pub/Sub async communication fails, do NOT blindly rewrite the connection string. Diagnose via Self-Healing Protocol before changing infrastructure configs.

@@ -1,0 +1,166 @@
+spring:
+  application:
+    name: govos-core-api
+
+  # ============================================================
+  # DATABASE
+  # ============================================================
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/govos_db}
+    username: ${SPRING_DATASOURCE_USERNAME:govos_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:govos_dev_secret}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-init-sql: "SET app.tenant_id = ''"
+
+  jpa:
+    hibernate:
+      ddl-auto: validate       # NEVER create/update — Flyway handles schema
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: public
+        jdbc:
+          time_zone: UTC
+        format_sql: false
+
+  # ============================================================
+  # FLYWAY
+  # ============================================================
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+    validate-on-migrate: true
+    out-of-order: false
+
+  # ============================================================
+  # REDIS
+  # ============================================================
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+      password: ${SPRING_REDIS_PASSWORD:govos_redis_dev}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+
+  # ============================================================
+  # FILE UPLOAD
+  # ============================================================
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 20MB
+      max-request-size: 25MB
+
+# ============================================================
+# SERVER
+# ============================================================
+server:
+  port: 8080
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/plain
+  error:
+    include-message: never          # Never expose stack traces externally
+    include-stacktrace: never
+
+# ============================================================
+# ACTUATOR
+# ============================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+
+# ============================================================
+# SPRINGDOC / SWAGGER
+# ============================================================
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+  info:
+    title: GovOS Core API
+    description: GovOS MTAS — Multi-Tenant Civic Governance Platform (Spring Boot 3 / Java 21)
+    version: 1.0.0
+    contact:
+      name: Prajna Labs × Cascade Technologies Solutions
+      email: dev@prajna-labs.com
+
+# ============================================================
+# APPLICATION CUSTOM PROPERTIES
+# ============================================================
+govos:
+  # JWT Configuration
+  jwt:
+    secret: ${JWT_SECRET:govos_jwt_dev_secret_minimum_32_characters_here_please_change}
+    access-token-expiry-ms: 900000      # 15 minutes
+    refresh-token-expiry-ms: 604800000  # 7 days
+
+  # OTP Configuration
+  otp:
+    expiry-minutes: 10
+    max-attempts: 5
+    length: 6
+    # In dev, OTP is logged to console instead of sent via SMS
+    mock-enabled: ${OTP_MOCK_ENABLED:true}
+
+  # MinIO (S3-compatible)
+  minio:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:govos_minio_admin}
+    secret-key: ${MINIO_SECRET_KEY:govos_minio_secret}
+    bucket-name: govos-documents
+    url-expiry-minutes: 15
+    upload-expiry-minutes: 5
+
+  # OpenSearch
+  opensearch:
+    uris: ${OPENSEARCH_URIS:http://localhost:9200}
+    username: ${OPENSEARCH_USERNAME:admin}
+    password: ${OPENSEARCH_PASSWORD:}
+    audit-index-prefix: govos-audit
+    document-index: govos-documents
+
+  # Inter-service auth
+  internal:
+    service-key: ${INTERNAL_SERVICE_KEY:govos_internal_dev_key}
+
+  # AI Service
+  ai:
+    service-url: ${AI_SERVICE_URL:http://localhost:8000}
+    timeout-seconds: 30
+
+  # Session limits
+  session:
+    max-per-user: 3
+
+  # CORS
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+      - http://localhost:3000
+    allowed-headers: "*"
+    allow-credentials: true

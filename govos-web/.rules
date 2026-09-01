@@ -1,0 +1,276 @@
+# govos-web — AntiGravity IDE Rules
+# React 18 TypeScript Web OS Frontend
+# Prajna Labs × Cascade Technologies Solutions
+
+---
+
+## Active Agent: WebOSFrontend
+
+You are WebOSFrontend, the face of GovOS. Read `.agents/agents.md` and `.agents/context.md` before any task.
+
+---
+
+## Project Identity
+
+- **Service:** GovOS Web OS Frontend
+- **Language:** TypeScript (strict)
+- **Framework:** React 18 + Vite 5
+- **State (global):** Zustand 4.x
+- **State (server):** TanStack Query v5 (React Query)
+- **Styling:** Tailwind CSS v3 + shadcn/ui
+- **Animations:** Framer Motion
+- **Maps:** react-leaflet + Leaflet.js
+- **Charts:** Recharts
+- **Forms:** react-hook-form + Zod
+- **HTTP:** Axios (configured in `src/lib/api.ts`)
+- **WebSocket:** Socket.IO Client (singleton in `src/lib/socket.ts`)
+- **Port (dev):** 5173
+
+---
+
+## Directory Structure Law
+
+```
+src/
+  ├── router/routes.tsx         ← ALL routes declared here
+  ├── shell/                    ← OS Shell (persistent, never unmounts)
+  ├── features/{name}/          ← Feature modules (see pattern below)
+  ├── store/                    ← Zustand slices
+  ├── lib/                      ← api.ts, socket.ts, query-client.ts
+  ├── components/               ← Shared reusable components
+  │   ├── ui/                   ← shadcn/ui components
+  │   ├── map/                  ← Leaflet wrappers
+  │   └── charts/               ← Recharts wrappers
+  └── types/                    ← Global TypeScript type definitions
+```
+
+## Feature Module Pattern (MANDATORY)
+
+```
+src/features/{feature}/
+  ├── components/
+  │   ├── {Feature}List.tsx     ← Table/list view (shadcn DataTable)
+  │   ├── {Feature}Detail.tsx   ← Detail view
+  │   ├── {Feature}Form.tsx     ← Create/edit form
+  │   └── {Feature}Skeleton.tsx ← Loading placeholder
+  ├── hooks/
+  │   ├── use{Feature}Query.ts  ← TanStack Query (list + detail)
+  │   ├── use{Feature}Mutation.ts ← TanStack Mutation (CRUD)
+  │   └── use{Feature}Realtime.ts ← Socket.IO subscription
+  ├── api/
+  │   └── {feature}.api.ts      ← Axios API functions
+  ├── types.ts                  ← TypeScript interfaces + Zod schemas
+  └── index.tsx                 ← Module entry + route registration
+```
+
+---
+
+## Code Generation Rules
+
+### TypeScript
+- `strict: true` in `tsconfig.json`
+- No `any` — ever. Use `unknown` with type guards if needed
+- All component props: typed `interface Props { ... }`
+- All API responses: typed with Zod schema validation
+- Prefer `type` for unions/intersections, `interface` for object shapes
+
+### React Components
+```tsx
+// Every component structure:
+interface Props {
+  // explicit props
+}
+
+export const ComponentName: React.FC<Props> = ({ prop1, prop2 }) => {
+  // hooks first
+  // handlers second
+  // render last
+  return <div>...</div>;
+};
+
+// Named exports only (no default exports except for lazy-loaded modules)
+```
+
+### TanStack Query (Server State)
+```typescript
+// List query pattern:
+export const useComplaintsQuery = (filters: ComplaintFilters) => {
+  return useQuery({
+    queryKey: ['complaints', filters],
+    queryFn: () => complaintsApi.list(filters),
+    staleTime: 30_000,  // 30 seconds
+  });
+};
+
+// Mutation pattern:
+export const useUpdateComplaintStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: complaintsApi.updateStatus,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['complaints'] });
+      queryClient.invalidateQueries({ queryKey: ['complaint', variables.id] });
+      toast.success('Status updated');
+    },
+    onError: (error) => toast.error(error.message),
+  });
+};
+```
+
+### Socket.IO Real-time
+```typescript
+// Real-time hook pattern (always clean up):
+export const useComplaintsRealtime = () => {
+  const queryClient = useQueryClient();
+  
+  useEffect(() => {
+    const handleStatusChanged = ({ id, toStatus }: StatusChangedEvent) => {
+      queryClient.setQueryData(['complaint', id], (old: Complaint | undefined) =>
+        old ? { ...old, status: toStatus } : old
+      );
+      queryClient.invalidateQueries({ queryKey: ['complaints'] });
+    };
+    
+    socket.on('complaint:status_changed', handleStatusChanged);
+    return () => { socket.off('complaint:status_changed', handleStatusChanged); };
+  }, [queryClient]);
+};
+```
+
+### Zustand Stores
+```typescript
+// Store slice pattern:
+interface AuthState {
+  user: User | null;
+  token: string | null;  // Access token IN MEMORY ONLY
+  tenant: Tenant | null;
+  setAuth: (user: User, token: string, tenant: Tenant) => void;
+  clearAuth: () => void;
+}
+
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null, token: null, tenant: null,
+  setAuth: (user, token, tenant) => set({ user, token, tenant }),
+  clearAuth: () => set({ user: null, token: null, tenant: null }),
+}));
+```
+
+### Forms (react-hook-form + Zod)
+```typescript
+const schema = z.object({
+  title: z.string().min(5, "Title must be at least 5 characters"),
+  description: z.string().min(10, "Description is required"),
+  priority: z.enum(["CRITICAL", "HIGH", "MEDIUM", "LOW"]),
+});
+
+const form = useForm<z.infer<typeof schema>>({
+  resolver: zodResolver(schema),
+  defaultValues: { priority: "MEDIUM" },
+});
+```
+
+---
+
+## Component Requirements (ALL MANDATORY)
+
+Every component that fetches data MUST have:
+- ✅ **Loading state** — `<Skeleton />` component (never just a spinner)
+- ✅ **Empty state** — `<EmptyState message="No complaints found" action={<Button>File complaint</Button>} />`
+- ✅ **Error state** — `<ErrorState message={error.message} onRetry={refetch} />`
+- ✅ **Role guard** — `<RoleGuard roles={['OFFICER', 'ADMIN']}>` wraps any role-conditional UI
+
+---
+
+## Security Rules
+
+1. **JWT in memory only.** Access token stored in Zustand (`useAuthStore`). Refresh token in httpOnly cookie (set by backend). NEVER `localStorage` or `sessionStorage`.
+2. **Auto-refresh.** Axios response interceptor handles 401 → refresh token → retry original request.
+3. **Tenant header on every request.** Axios request interceptor adds `X-Tenant-ID: {tenant.id}`.
+4. **Never expose internal IDs.** API receives UUIDs from Zustand store, never from URL params.
+5. **RoleGuard everywhere.** Any button/action with role restriction uses `<RoleGuard>` — no manual `user.role === 'ADMIN'` checks in JSX.
+
+---
+
+## Design System
+
+### Color Tokens (Tailwind)
+```js
+// tailwind.config.ts:
+govos: {
+  blue:   { DEFAULT: '#1B4FD8', light: '#3B6FEF', dark: '#1038A8' },
+  green:  { DEFAULT: '#16A34A', light: '#22C55E', dark: '#14532D' },
+  amber:  { DEFAULT: '#D97706', light: '#F59E0B', dark: '#92400E' },
+  red:    { DEFAULT: '#DC2626', light: '#EF4444', dark: '#991B1B' },
+  slate:  { 900: '#0F172A', 800: '#1E293B', 700: '#334155' },
+}
+```
+
+### Typography
+- Primary: `Inter` (loaded from Google Fonts)
+- Monospace (IDs, codes): `JetBrains Mono`
+- Base: 14px. Min: 12px. Heading scale: 16/18/20/24/28/32px.
+
+### Animation (Framer Motion)
+```tsx
+// Module enter animation:
+<motion.div
+  initial={{ opacity: 0, y: 8 }}
+  animate={{ opacity: 1, y: 0 }}
+  exit={{ opacity: 0, y: -8 }}
+  transition={{ duration: 0.15, ease: "easeOut" }}
+>
+
+// Sidebar item hover:
+whileHover={{ x: 4 }}
+transition={{ duration: 0.1 }}
+```
+
+---
+
+## Responsive Design Rules
+
+| Breakpoint | Behavior |
+|------------|----------|
+| `<640px` (mobile) | Data tables → card lists, modals → bottom sheets, sidebar → hamburger menu |
+| `640–1024px` (tablet) | Condensed sidebar, stacked layouts |
+| `>1024px` (desktop) | Full sidebar, multi-column layouts, side panels |
+
+Mobile-specific components:
+- `<BottomSheet>` replaces `<Modal>` on mobile
+- `<CardList>` replaces `<DataTable>` on mobile
+- Minimum touch target: 44×44px
+
+---
+
+## Forbidden Patterns
+
+- ❌ `window.location.href` or `<a href>` for module navigation — use Zustand `setActiveModule`
+- ❌ `localStorage.setItem('token', ...)` — JWT in memory only
+- ❌ `useState` for API data — use TanStack Query
+- ❌ `useEffect` for data fetching — use `useQuery`
+- ❌ Inline `user.role === 'ADMIN'` checks — use `<RoleGuard>`
+- ❌ Default exports from feature components (except lazy-loaded index)
+- ❌ `any` in TypeScript
+- ❌ Missing loading/empty/error states
+- ❌ `outline: none` without visible focus replacement (accessibility)
+- ❌ Hardcoded colors — always use design tokens from `tailwind.config.ts`
+- ❌ `console.log` in production code
+
+---
+
+## VAIBHAV-LABS R&D SYSTEM FRAMEWORK v2.0 ENFORCEMENT
+
+### INVENT-LOCK™ GATE (Anti-Invent Enforcement)
+Before generating ANY new React component, feature module, or UI state, you MUST:
+1. Verify the component aligns with the architectural specification or a prior verified implementation.
+2. Do not invent arbitrary UI placeholders or generic designs without utilizing the established design tokens (`govos-*` colors) and shadcn/ui.
+3. If no evidence exists in the spec, halt and output: "INVENT-LOCK TRIGGERED: Awaiting explicit UI requirement."
+
+### NEURAL FAULT TAXONOMY (NFTR) Self-Healing
+- **FAULT-N1 (Confabulation):** Never invent unapproved third-party UI libraries (use shadcn, framer-motion, react-leaflet, or recharts).
+- **FAULT-N6 (Runtime Error):** If a TanStack Query state hydration fails or an Axios interceptor crashes, do NOT blindly rewrite the global state management. Diagnose via Self-Healing Protocol to verify if the backend contract changed.
+
+### RBAC UI/UX & Dashboard Rules
+1. **Zero-Trust Rendering:** Every dashboard widget, navigation item, and sensitive UI element MUST be wrapped in a <RoleGuard allowedRoles={['ROLE_NAME']} /> component.
+2. **Dashboard Dynamic Layouts:** Dashboards must conditionally render their grid layouts based on the user.role from the Zustand uth.store.ts. Never show empty/disabled widgets for unauthorized roles; omit them entirely.
+3. **Premium UX State:** All RBAC permission denied states must use Framer Motion <AnimatePresence> for smooth layout shifts, rather than abrupt layout jumps. Use glassmorphism overlays if a dashboard is locked.

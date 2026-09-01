@@ -1,0 +1,47 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/govos_db
+    username: govos_user
+    password: govos_dev_secret
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: govos_redis_dev
+
+logging:
+  level:
+    root: INFO
+    com.govos.core: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+govos:
+  jwt:
+    secret: "govos_jwt_dev_secret_minimum_32_characters_here_please_change"
+  otp:
+    mock-enabled: true
+  minio:
+    endpoint: http://localhost:9000
+    access-key: govos_minio_admin
+    secret-key: govos_minio_secret
+  opensearch:
+    uris: http://localhost:9200
+    username: admin
+    password: GovOS_Search_Dev_2024!
+  internal:
+    service-key: govos_internal_dev_key
+  ai:
+    service-url: http://localhost:8000

@@ -1,0 +1,103 @@
+# GovOS — Root Repository .gitignore
+
+# ====================================================================
+# Environment & Secrets (CRITICAL — Never commit these)
+# ====================================================================
+.env
+.env.*
+!.env.example
+!**/.env.example
+*.pem
+*.key
+*.p12
+gcp-key.json
+
+
+# ====================================================================
+# IDE & Editor
+# ====================================================================
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ====================================================================
+# Temporary / Generated Files
+# ====================================================================
+*.txt
+!README.md
+!ARCHITECTURE.md
+docs_extracted.txt
+GovOS_AntiGravity_IDE_Build_Document_v1.0_extracted.txt
+GovOS_Frontend_Full_Documentation_v1.0_extracted.txt
+
+# ====================================================================
+# govos-core-api (Spring Boot / Maven)
+# ====================================================================
+govos-core-api/target/
+govos-core-api/.mvn/wrapper/maven-wrapper.jar
+govos-core-api/**/*.class
+govos-core-api/**/*.jar
+govos-core-api/.settings/
+govos-core-api/.classpath
+govos-core-api/.project
+govos-core-api/bin/
+
+# ====================================================================
+# govos-realtime (Node.js / NestJS)
+# ====================================================================
+govos-realtime/node_modules/
+govos-realtime/dist/
+govos-realtime/.env
+govos-realtime/coverage/
+
+# ====================================================================
+# govos-ai (Python / FastAPI)
+# ====================================================================
+govos-ai/__pycache__/
+govos-ai/**/__pycache__/
+govos-ai/*.pyc
+govos-ai/**/*.pyc
+govos-ai/.venv/
+govos-ai/venv/
+govos-ai/.env
+govos-ai/.pytest_cache/
+govos-ai/htmlcov/
+govos-ai/.mypy_cache/
+govos-ai/.ruff_cache/
+
+# ====================================================================
+# govos-web (React / Vite)
+# ====================================================================
+govos-web/node_modules/
+govos-web/dist/
+govos-web/.env.local
+govos-web/coverage/
+govos-web/playwright-report/
+
+# ====================================================================
+# public-landing-page (React / Vite)
+# ====================================================================
+public-landing-page/node_modules/
+public-landing-page/dist/
+public-landing-page/.env.local
+public-landing-page/coverage/
+
+# ====================================================================
+# Docker & Infrastructure
+# ====================================================================
+infra/docker/postgres/data/
+infra/docker/redis/data/
+infra/docker/minio/data/
+infra/docker/opensearch/data/
+
+# ====================================================================
+# Logs & Temp files
+# ====================================================================
+*.log
+logs/
+curl_output.html
+

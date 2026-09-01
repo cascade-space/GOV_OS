@@ -1,0 +1,16 @@
+{
+  "title": "Test Complaint - Broken Street Light",
+  "description": "The street light on Main Street has been broken for 3 days",
+  "category": "infrastructure",
+  "subCategory": "Street Lights",
+  "priority": "medium",
+  "location": {
+    "address": "Main Street, Test Area",
+    "latitude": 12.9716,
+    "longitude": 77.5946,
+    "ward": "Test Ward"
+  },
+  "citizenName": "Test User",
+  "citizenMobile": "9876543210",
+  "citizenEmail": "test@example.com"
+}
