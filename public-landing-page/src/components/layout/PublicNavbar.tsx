@@ -114,9 +114,19 @@ export function PublicNavbar() {
                                             </Link>
                                         );
                                     })}
+                                    <div className="p-2 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl">
+                                        <Link
+                                            href="/login"
+                                            className="flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition"
+                                        >
+                                            <Shield className="w-3.5 h-3.5 text-blue-400" />
+                                            <span>Unified Stakeholder Login →</span>
+                                        </Link>
+                                    </div>
                                 </div>
                             )}
                         </div>
+
 
                         {/* Primary CTA */}
                         <Link
