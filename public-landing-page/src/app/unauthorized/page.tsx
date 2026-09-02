@@ -19,11 +19,12 @@ export default function UnauthorizedPage() {
 
                 <div className="space-y-3">
                     <Link 
-                        href="/citizen" 
+                        href="/" 
                         className="block w-full bg-civic-blue text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
                     >
                         Go to Citizen Portal
                     </Link>
+
                     
                     <Link 
                         href="/admin/login" 

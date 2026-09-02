@@ -77,9 +77,10 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                     {[
                         { href: "/admin/dashboard", label: "Admin Portal" },
                         { href: "/mla/dashboard", label: "MLA Portal" },
-                        { href: "/citizen", label: "Citizen Portal" },
+                        { href: "/", label: "Citizen Portal" },
                         { href: "/officer/dashboard", label: "Officer Portal" },
                     ].map(({ href, label }) => (
+
                         <Link key={href} href={href} target="_blank"
                             className="flex items-center gap-2 px-3 py-2 text-xs text-slate-400 hover:text-white hover:bg-white/8 rounded-lg transition-colors">
                             <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />

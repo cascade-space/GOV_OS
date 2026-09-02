@@ -26,12 +26,13 @@ export function PublicNavbar() {
     const [portalsOpen, setPortalsOpen] = useState(false);
 
     const portals = [
-        { name: "Citizen Portal", href: "/citizen", icon: UserCheck, desc: "Submit and track personal reports" },
+        { name: "Citizen Portal", href: "/", icon: UserCheck, desc: "Submit and track personal reports" },
         { name: "Field Officer Portal", href: "/officer/dashboard", icon: Briefcase, desc: "On-ground task resolution & evidence" },
         { name: "MLA Oversight Portal", href: "/mla/dashboard", icon: Crown, desc: "Constituency KPIs & executive directives" },
         { name: "Tenant Admin Console", href: "/admin/dashboard", icon: Building2, desc: "Department workflows & SLA management" },
         { name: "GovOS SuperAdmin", href: "/superadmin/dashboard", icon: Shield, desc: "Multi-tenant master administration" },
     ];
+
 
     return (
         <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 transition-all duration-200">

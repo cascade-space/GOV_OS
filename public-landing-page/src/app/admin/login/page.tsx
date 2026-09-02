@@ -228,12 +228,13 @@ export default function AdminLoginPage() {
 
                     <div className="mt-6 text-center">
                         <Link 
-                            href="/citizen" 
+                            href="/" 
                             className="text-sm text-civic-blue hover:text-blue-700 font-medium"
                         >
                             ← Back to Citizen Portal
                         </Link>
                     </div>
+
                 </div>
 
                 <div className="text-center mt-6">

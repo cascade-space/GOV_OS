@@ -17,10 +17,10 @@ export function CitizenLayout({ children }: { children: React.ReactNode }) {
     const { user, logout } = useLogin();
 
     const CITIZEN_NAV = [
-        { href: "/citizen", label: t('nav.home') },
+        { href: "/", label: t('nav.home') },
         { href: "/citizen/report", label: t('nav.reportIssue') },
         { href: "/citizen/track", label: t('nav.trackIssue') },
-        { href: "/public", label: t('nav.publicDashboard') },
+        { href: "/public/dashboard", label: t('nav.publicDashboard') },
     ];
 
     return (
@@ -30,7 +30,8 @@ export function CitizenLayout({ children }: { children: React.ReactNode }) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
                     <div className="flex items-center justify-between h-16">
                         {/* Logo */}
-                        <Link href="/citizen" className="flex items-center gap-2.5">
+                        <Link href="/" className="flex items-center gap-2.5">
+
                             <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
                                 <MapPin className="w-5 h-5 text-white" />
                             </div>
