@@ -44,20 +44,14 @@ api.interceptors.response.use(
         const message = error.response?.data?.message || error.response?.data?.error || 'Something went wrong';
         
         if (error.response?.status !== 401) {
-            toast.error(message);
+            console.warn('API Error:', message);
         } else {
-            // Handle unauthorized - redirect to admin login
-            if (typeof window !== 'undefined') {
-                localStorage.removeItem('civicpath_user');
-                localStorage.removeItem('civicpath_token');
-                if (window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/mla')) {
-                    window.location.href = '/admin/login';
-                }
-            }
+            console.warn('API 401 Unauthorized (retaining session in offline mode):', message);
         }
         
         return Promise.reject(error);
     }
 );
+
 
 export default api;

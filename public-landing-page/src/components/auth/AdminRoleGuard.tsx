@@ -1,73 +1,54 @@
 "use client";
-import { useAdminRole } from '@/contexts/AdminRoleContext';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAdminRole } from "@/contexts/AdminRoleContext";
 
 interface AdminRoleGuardProps {
-    requiredRole: 'admin' | 'mla';
+    requiredRole: "admin" | "mla";
     children: React.ReactNode;
 }
 
 export function AdminRoleGuard({ requiredRole, children }: AdminRoleGuardProps) {
-    const { user, role, loading, canAccessAdmin, canAccessMLA, error } = useAdminRole();
+    const { role } = useAdminRole();
     const router = useRouter();
+    const [authorized, setAuthorized] = useState<boolean | null>(null);
 
     useEffect(() => {
-        if (!loading) {
-            const storedUser = typeof window !== "undefined" ? localStorage.getItem('civicpath_user') : null;
-            let storedRole: string | null = null;
-            if (storedUser) {
+        let activeRole = role;
+        if (!activeRole && typeof window !== "undefined") {
+            const stored = localStorage.getItem("civicpath_user");
+            if (stored) {
                 try {
-                    const parsed = JSON.parse(storedUser);
-                    storedRole = parsed.role;
+                    const parsed = JSON.parse(stored);
+                    activeRole = parsed.role;
                 } catch { /* empty */ }
             }
-
-            const activeRole = role || storedRole;
-
-            if (!activeRole) {
-                router.replace('/login');
-                return;
-            }
-
-            if (requiredRole === 'admin' && activeRole !== 'admin' && activeRole !== 'superadmin') {
-                router.replace('/login');
-                return;
-            }
-            
-            if (requiredRole === 'mla' && activeRole !== 'mla' && activeRole !== 'admin' && activeRole !== 'superadmin') {
-                router.replace('/login');
-                return;
-            }
         }
-    }, [loading, user, role, requiredRole, canAccessAdmin, canAccessMLA, router, error]);
 
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-civic-blue mx-auto mb-4"></div>
-                    <p className="text-gray-600">Verifying session...</p>
-                </div>
-            </div>
-        );
-    }
+        if (!activeRole) {
+            setAuthorized(false);
+            router.replace("/login");
+            return;
+        }
 
+        if (requiredRole === "admin" && activeRole !== "admin" && activeRole !== "superadmin") {
+            setAuthorized(false);
+            router.replace("/login");
+            return;
+        }
 
-    // If no user, don't render anything (redirect will happen via useEffect)
-    if (!user || !role) {
+        if (requiredRole === "mla" && activeRole !== "mla" && activeRole !== "admin" && activeRole !== "superadmin") {
+            setAuthorized(false);
+            router.replace("/login");
+            return;
+        }
+
+        setAuthorized(true);
+    }, [role, requiredRole, router]);
+
+    if (authorized === false) {
         return null;
     }
 
-    // Check access permissions
-    if (requiredRole === 'admin' && !canAccessAdmin) {
-        return null; // Will redirect via useEffect
-    }
-    
-    if (requiredRole === 'mla' && !canAccessMLA) {
-        return null; // Will redirect via useEffect
-    }
-
-    // Access granted - render children
     return <>{children}</>;
 }
