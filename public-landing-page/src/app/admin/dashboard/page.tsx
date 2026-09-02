@@ -7,6 +7,8 @@ import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
 import { formatDateTime, getSLAStatus, cn } from "@/lib/utils";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { MOCK_COMPLAINTS, MOCK_STATS, MOCK_TREND_DATA, MOCK_CATEGORY_DATA } from "@/lib/mockData";
+
 import {
     FileText, Clock, AlertTriangle, CheckCircle2, TrendingUp,
     Users, ArrowRight, Bell, Zap, Plus, Loader2
@@ -238,8 +240,11 @@ function AdminDashboardContent() {
 
 export default function AdminDashboardPage() {
     return (
-        <AdminRoleGuard requiredRole="admin">
-            <AdminDashboardContent />
-        </AdminRoleGuard>
+        <AdminRoleProvider>
+            <AdminRoleGuard requiredRole="admin">
+                <AdminDashboardContent />
+            </AdminRoleGuard>
+        </AdminRoleProvider>
     );
 }
+

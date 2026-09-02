@@ -29,8 +29,9 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
     const handleLogout = () => {
         logout();
-        router.push('/admin-login');
+        router.push('/login');
     };
+
 
     return (
         <div className="min-h-screen bg-gray-50 flex">
@@ -167,8 +168,11 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
     return (
-        <NotificationProvider>
-            <AdminLayoutContent>{children}</AdminLayoutContent>
-        </NotificationProvider>
+        <AdminRoleProvider>
+            <NotificationProvider>
+                <AdminLayoutContent>{children}</AdminLayoutContent>
+            </NotificationProvider>
+        </AdminRoleProvider>
     );
 }
+
