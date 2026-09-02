@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { NotificationProvider, useNotifications } from "@/contexts/NotificationContext";
-import { useAdminRole } from "@/contexts/AdminRoleContext";
+import { AdminRoleProvider, useAdminRole } from "@/contexts/AdminRoleContext";
+
 
 const ICONS: Record<string, React.ReactNode> = {
     LayoutDashboard: <LayoutDashboard className="w-4 h-4" />,
