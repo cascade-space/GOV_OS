@@ -55,22 +55,19 @@ export default function OfficerDashboardPage() {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
-            if (res.status === 401) {
-                localStorage.removeItem('officer_session');
-                router.replace('/officer/login');
-                return;
-            }
-
-            const data = await res.json();
-            if (data.success && data.data?.tasks?.length) {
-                setTasks(data.data.tasks);
-                setStats(data.data.stats);
-                setLoading(false);
-                return;
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success && data.data?.tasks?.length) {
+                    setTasks(data.data.tasks);
+                    setStats(data.data.stats);
+                    setLoading(false);
+                    return;
+                }
             }
         } catch (err) {
             console.warn('Backend offline, using demo officer task data');
         }
+
 
         // Demo fallback tasks
         const demoTasks: Task[] = [
