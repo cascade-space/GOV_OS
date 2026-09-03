@@ -112,7 +112,7 @@ function HeroSection() {
     };
 
     return (
-        <section className="relative w-full overflow-hidden flex flex-col justify-between min-h-[620px] md:min-h-[580px] lg:min-h-0 lg:aspect-[1600/757]">
+        <section className="relative w-full overflow-hidden flex flex-col justify-between min-h-[680px] lg:min-h-0 lg:aspect-[1600/757] xl:min-h-[760px]">
             {/* Background: herosection.jpeg fills whole section with 1600:757 aspect ratio to avoid any cropping */}
             <img
                 src="/herosection.jpeg"
@@ -121,145 +121,145 @@ function HeroSection() {
             />
 
             {/* ── Top Area: Left Headline & 4 Stat Chips + Right Track Complaint Card ── */}
-            <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 sm:pt-7 md:pt-8">
-                <div className="flex flex-col lg:flex-row items-start justify-between gap-5">
+            <div className="relative z-10 w-full max-w-[1520px] mx-auto px-6 sm:px-10 lg:px-12 pt-6 sm:pt-10 md:pt-12">
+                <div className="flex flex-col lg:flex-row items-start justify-between gap-8 lg:gap-12">
 
                     {/* ── LEFT: Headline + subtitle + stat chips ── */}
-                    <div className="flex-1 max-w-xl space-y-2">
+                    <div className="flex-1 max-w-2xl xl:max-w-3xl space-y-4 sm:space-y-6">
                         {/* Headline */}
                         <div>
-                            <h1 className="text-3xl sm:text-4xl lg:text-[45px] font-extrabold text-gray-900 leading-[1.08] tracking-tight">
+                            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[68px] 2xl:text-[74px] font-extrabold text-gray-900 leading-[1.05] tracking-tight">
                                 Together, We Build<br />
                                 <span className="text-[#16a34a]">Better Communities</span>
                             </h1>
-                            <p className="mt-1.5 text-xs sm:text-sm text-gray-700 leading-snug font-medium max-w-md">
+                            <p className="mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg xl:text-xl text-gray-700 leading-relaxed font-medium max-w-xl">
                                 Report. Track. Resolve. Your voice<br className="hidden sm:inline" /> drives real change in your city.
                             </p>
                         </div>
 
-                        {/* 4 Stat chips in ONE single horizontal row matching Screenshot 2 */}
-                        <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full no-scrollbar">
-                            <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-xl px-2.5 py-1.5 shadow-sm border border-gray-100/90 shrink-0">
-                                <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                                    <Users className="w-3.5 h-3.5" />
+                        {/* 4 Stat chips in ONE single horizontal row matching Screenshot 2 with enlarged presence */}
+                        <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto pb-2 max-w-full no-scrollbar pt-1">
+                            <div className="flex items-center gap-3 bg-white/95 backdrop-blur-md rounded-2xl px-4 py-2.5 sm:px-5 sm:py-3 shadow-md border border-gray-100/90 shrink-0 hover:shadow-lg transition">
+                                <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                    <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
                                 <div className="pr-1">
-                                    <div className="text-xs font-extrabold text-gray-900 leading-tight">12,400+</div>
-                                    <div className="text-[9px] text-gray-500 leading-none">Citizens Connected</div>
+                                    <div className="text-sm sm:text-base lg:text-lg font-black text-gray-900 leading-tight">12,400+</div>
+                                    <div className="text-[10px] sm:text-xs text-gray-500 font-medium leading-none mt-0.5">Citizens Connected</div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-xl px-2.5 py-1.5 shadow-sm border border-gray-100/90 shrink-0">
-                                <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
-                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                            <div className="flex items-center gap-3 bg-white/95 backdrop-blur-md rounded-2xl px-4 py-2.5 sm:px-5 sm:py-3 shadow-md border border-gray-100/90 shrink-0 hover:shadow-lg transition">
+                                <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                                    <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
                                 <div className="pr-1">
-                                    <div className="text-xs font-extrabold text-gray-900 leading-tight">2,450+</div>
-                                    <div className="text-[9px] text-gray-500 leading-none">Issues Resolved</div>
+                                    <div className="text-sm sm:text-base lg:text-lg font-black text-gray-900 leading-tight">2,450+</div>
+                                    <div className="text-[10px] sm:text-xs text-gray-500 font-medium leading-none mt-0.5">Issues Resolved</div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-xl px-2.5 py-1.5 shadow-sm border border-gray-100/90 shrink-0">
-                                <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                                    <Heart className="w-3.5 h-3.5" />
+                            <div className="flex items-center gap-3 bg-white/95 backdrop-blur-md rounded-2xl px-4 py-2.5 sm:px-5 sm:py-3 shadow-md border border-gray-100/90 shrink-0 hover:shadow-lg transition">
+                                <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                                    <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
                                 <div className="pr-1">
-                                    <div className="text-xs font-extrabold text-gray-900 leading-tight">94%</div>
-                                    <div className="text-[9px] text-gray-500 leading-none">Satisfaction Rate</div>
+                                    <div className="text-sm sm:text-base lg:text-lg font-black text-gray-900 leading-tight">94%</div>
+                                    <div className="text-[10px] sm:text-xs text-gray-500 font-medium leading-none mt-0.5">Satisfaction Rate</div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-xl px-2.5 py-1.5 shadow-sm border border-gray-100/90 shrink-0">
-                                <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                                    <Building2 className="w-3.5 h-3.5" />
+                            <div className="flex items-center gap-3 bg-white/95 backdrop-blur-md rounded-2xl px-4 py-2.5 sm:px-5 sm:py-3 shadow-md border border-gray-100/90 shrink-0 hover:shadow-lg transition">
+                                <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                                    <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
                                 <div className="pr-1">
-                                    <div className="text-xs font-extrabold text-gray-900 leading-tight">6</div>
-                                    <div className="text-[9px] text-gray-500 leading-none">Departments</div>
+                                    <div className="text-sm sm:text-base lg:text-lg font-black text-gray-900 leading-tight">6</div>
+                                    <div className="text-[10px] sm:text-xs text-gray-500 font-medium leading-none mt-0.5">Departments</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* ── RIGHT: Track Your Complaint floating card ── */}
-                    <div className="w-full lg:w-auto lg:min-w-[320px] xl:min-w-[360px] shrink-0">
-                        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-5 space-y-3">
-                            <div className="text-center space-y-0.5">
-                                <h3 className="text-base font-bold text-gray-900">Track Your Complaint</h3>
-                                <p className="text-[11px] text-gray-500">Enter your Complaint ID or registered mobile number</p>
+                    {/* ── RIGHT: Track Your Complaint floating card (Enlarged & Prominent) ── */}
+                    <div className="w-full lg:w-[420px] xl:w-[460px] 2xl:w-[490px] shrink-0">
+                        <div className="bg-white/98 rounded-3xl shadow-2xl border border-gray-100 p-6 sm:p-7 xl:p-8 space-y-4 sm:space-y-5">
+                            <div className="text-center space-y-1">
+                                <h3 className="text-lg sm:text-xl xl:text-2xl font-extrabold text-gray-900 tracking-tight">Track Your Complaint</h3>
+                                <p className="text-xs sm:text-sm text-gray-500">Enter your Complaint ID or registered mobile number</p>
                             </div>
-                            <div className="flex gap-2">
-                                <div className="flex-1 flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 focus-within:border-emerald-500 focus-within:bg-white transition">
-                                    <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                            <div className="flex gap-2.5">
+                                <div className="flex-1 flex items-center gap-2.5 border-2 border-gray-200 rounded-xl px-3.5 py-2.5 sm:py-3 bg-gray-50/80 focus-within:border-emerald-500 focus-within:bg-white transition">
+                                    <Search className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 shrink-0" />
                                     <input
                                         type="text"
                                         value={trackId}
                                         onChange={(e) => setTrackId(e.target.value)}
                                         onKeyDown={(e) => e.key === "Enter" && handleTrack()}
                                         placeholder="CMP-2024-00341 or 9876543210"
-                                        className="flex-1 text-[11px] bg-transparent outline-none text-gray-700 placeholder-gray-400"
+                                        className="flex-1 text-xs sm:text-sm bg-transparent outline-none text-gray-700 placeholder-gray-400 font-medium"
                                     />
                                 </div>
                                 <button
                                     onClick={handleTrack}
-                                    className="px-4 py-2 rounded-lg bg-[#16a34a] hover:bg-[#15803d] text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm"
+                                    className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-[#16a34a] hover:bg-[#15803d] text-white text-xs sm:text-sm font-bold transition flex items-center gap-2 shrink-0 shadow-md shadow-emerald-600/20 active:scale-95"
                                 >
-                                    <Search className="w-3.5 h-3.5" />
+                                    <Search className="w-4 h-4" />
                                     <span>Track</span>
                                 </button>
                             </div>
-                            <p className="text-[10px] text-gray-500 text-center">
+                            <p className="text-xs sm:text-sm text-gray-500 text-center pt-0.5">
                                 Demo: Try{" "}
-                                <button onClick={() => setTrackId("CMP-2024-00341")} className="text-emerald-600 font-semibold hover:underline">CMP-2024-00341</button>
+                                <button onClick={() => setTrackId("CMP-2024-00341")} className="text-emerald-600 font-bold hover:underline">CMP-2024-00341</button>
                                 {" "}or{" "}
-                                <button onClick={() => setTrackId("CMP-2024-00342")} className="text-emerald-600 font-semibold hover:underline">CMP-2024-00342</button>
+                                <button onClick={() => setTrackId("CMP-2024-00342")} className="text-emerald-600 font-bold hover:underline">CMP-2024-00342</button>
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* ── Bottom Floating Stats Bar (Inside hero section on grass) ── */}
-            <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-3 sm:pb-4">
-                <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-lg border border-gray-100 py-3 px-4 sm:px-6">
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 items-center divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
-                        <div className="flex items-center gap-2.5 px-2">
-                            <TrendingUp className="w-5 h-5 text-emerald-600 shrink-0" />
+            {/* ── Bottom Floating Stats Bar (Inside hero section on grass with safe bottom margin) ── */}
+            <div className="relative z-10 w-full max-w-[1380px] mx-auto px-4 sm:px-8 pt-10 pb-5 sm:pb-7 xl:pb-8">
+                <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-100 py-4 px-5 sm:px-8">
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 sm:gap-6 items-center divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+                        <div className="flex items-center gap-3 px-2">
+                            <TrendingUp className="w-6 h-6 text-emerald-600 shrink-0" />
                             <div>
-                                <div className="text-sm sm:text-base font-extrabold text-gray-900 leading-tight">3.2 days</div>
-                                <div className="text-[10px] sm:text-[11px] text-gray-500">Avg. Resolution Time</div>
+                                <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">3.2 days</div>
+                                <div className="text-xs sm:text-sm text-gray-500 font-medium">Avg. Resolution Time</div>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2.5 px-2 pt-2 sm:pt-0">
-                            <Users className="w-5 h-5 text-emerald-600 shrink-0" />
+                        <div className="flex items-center gap-3 px-2 pt-2 sm:pt-0">
+                            <Users className="w-6 h-6 text-emerald-600 shrink-0" />
                             <div>
-                                <div className="text-sm sm:text-base font-extrabold text-gray-900 leading-tight">12,400+</div>
-                                <div className="text-[10px] sm:text-[11px] text-gray-500">Citizens Served</div>
+                                <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">12,400+</div>
+                                <div className="text-xs sm:text-sm text-gray-500 font-medium">Citizens Served</div>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2.5 px-2 pt-2 sm:pt-0">
-                            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                        <div className="flex items-center gap-3 px-2 pt-2 sm:pt-0">
+                            <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
                             <div>
-                                <div className="text-sm sm:text-base font-extrabold text-gray-900 leading-tight">1,832</div>
-                                <div className="text-[10px] sm:text-[11px] text-gray-500">Issues Resolved</div>
+                                <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">1,832</div>
+                                <div className="text-xs sm:text-sm text-gray-500 font-medium">Issues Resolved</div>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2.5 px-2 pt-2 sm:pt-0">
-                            <Clock className="w-5 h-5 text-amber-500 shrink-0" />
+                        <div className="flex items-center gap-3 px-2 pt-2 sm:pt-0">
+                            <Clock className="w-6 h-6 text-amber-500 shrink-0" />
                             <div>
-                                <div className="text-sm sm:text-base font-extrabold text-gray-900 leading-tight">315</div>
-                                <div className="text-[10px] sm:text-[11px] text-gray-500">Active Issues</div>
+                                <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">315</div>
+                                <div className="text-xs sm:text-sm text-gray-500 font-medium">Active Issues</div>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2.5 px-2 pt-2 sm:pt-0 col-span-2 sm:col-span-1">
-                            <Star className="w-5 h-5 text-amber-400 fill-amber-400 shrink-0" />
+                        <div className="flex items-center gap-3 px-2 pt-2 sm:pt-0 col-span-2 sm:col-span-1">
+                            <Star className="w-6 h-6 text-amber-400 fill-amber-400 shrink-0" />
                             <div>
-                                <div className="text-sm sm:text-base font-extrabold text-gray-900 leading-tight">94%</div>
-                                <div className="text-[10px] sm:text-[11px] text-gray-500">Satisfaction Rate</div>
+                                <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">94%</div>
+                                <div className="text-xs sm:text-sm text-gray-500 font-medium">Satisfaction Rate</div>
                             </div>
                         </div>
                     </div>
