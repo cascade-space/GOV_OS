@@ -211,89 +211,14 @@ function HeroSection() {
                     </div>
                 </div>
 
-                {/* Park Illustration (SVG) */}
-                <div className="relative h-48 sm:h-56 mt-4 overflow-hidden">
-                    {/* Ground */}
-                    <div className="absolute bottom-0 left-0 right-0 h-24 bg-green-500 rounded-t-3xl" />
-                    <div className="absolute bottom-6 left-0 right-0 h-20 bg-green-400 rounded-t-3xl opacity-70" />
-
-                    {/* City Skyline */}
-                    <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex items-end gap-2 opacity-30">
-                        {[60,90,70,110,75,95,65,85].map((h, i) => (
-                            <div key={i} style={{height: h}} className="w-8 sm:w-10 bg-blue-300 rounded-t-sm" />
-                        ))}
-                    </div>
-
-                    {/* Trees left */}
-                    <div className="absolute bottom-16 left-8">
-                        <div className="w-12 h-16 bg-green-600 rounded-full" style={{borderRadius:"50% 50% 40% 40%"}} />
-                        <div className="w-3 h-6 bg-amber-800 mx-auto" />
-                    </div>
-                    <div className="absolute bottom-16 left-24">
-                        <div className="w-10 h-14 bg-green-500 rounded-full" style={{borderRadius:"50% 50% 40% 40%"}} />
-                        <div className="w-2.5 h-5 bg-amber-800 mx-auto" />
-                    </div>
-
-                    {/* Trees right */}
-                    <div className="absolute bottom-16 right-12">
-                        <div className="w-12 h-18 bg-green-600 rounded-full" style={{borderRadius:"50% 50% 40% 40%", height:72}} />
-                        <div className="w-3 h-6 bg-amber-800 mx-auto" />
-                    </div>
-
-                    {/* Solar panel right */}
-                    <div className="absolute bottom-16 right-32 flex flex-col items-center">
-                        <div className="w-10 h-6 bg-blue-400 border-2 border-blue-600 rounded-sm transform -rotate-6" />
-                        <div className="w-1 h-8 bg-gray-400" />
-                    </div>
-
-                    {/* Bench */}
-                    <div className="absolute bottom-18 left-40" style={{bottom:72}}>
-                        <div className="w-12 h-2 bg-amber-700 rounded" />
-                        <div className="flex justify-between w-12">
-                            <div className="w-1.5 h-4 bg-amber-800" />
-                            <div className="w-1.5 h-4 bg-amber-800" />
-                        </div>
-                    </div>
-
-                    {/* Recycle bin */}
-                    <div className="absolute bottom-16 right-56 flex flex-col items-center">
-                        <div className="w-4 h-3 bg-green-800 rounded-sm opacity-80" />
-                        <div className="w-5 h-6 bg-green-700 rounded-b-sm" />
-                    </div>
-
-                    {/* Family illustration */}
-                    <div className="absolute bottom-16 right-20 flex items-end gap-1">
-                        {/* Child */}
-                        <div className="flex flex-col items-center">
-                            <div className="w-5 h-5 bg-amber-300 rounded-full" />
-                            <div className="w-4 h-8 bg-yellow-400 rounded-sm" />
-                            <div className="flex gap-0.5">
-                                <div className="w-2 h-3 bg-blue-600 rounded-sm" />
-                                <div className="w-2 h-3 bg-blue-600 rounded-sm" />
-                            </div>
-                        </div>
-                        {/* Parent 1 */}
-                        <div className="flex flex-col items-center">
-                            <div className="w-6 h-6 bg-amber-400 rounded-full" />
-                            <div className="w-5 h-10 bg-amber-500 rounded-sm" />
-                            <div className="flex gap-0.5">
-                                <div className="w-2.5 h-3.5 bg-gray-800 rounded-sm" />
-                                <div className="w-2.5 h-3.5 bg-gray-800 rounded-sm" />
-                            </div>
-                        </div>
-                        {/* Parent 2 */}
-                        <div className="flex flex-col items-center">
-                            <div className="w-6 h-6 bg-amber-300 rounded-full" />
-                            <div className="w-5 h-10 bg-green-500 rounded-sm" />
-                            <div className="flex gap-0.5">
-                                <div className="w-2.5 h-3.5 bg-gray-800 rounded-sm" />
-                                <div className="w-2.5 h-3.5 bg-gray-800 rounded-sm" />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Path / walkway */}
-                    <div className="absolute bottom-10 left-1/3 w-32 h-4 bg-amber-100 opacity-60 rounded-full" style={{transform:"perspective(100px) rotateX(40deg)"}} />
+                {/* Park Illustration — real image */}
+                <div className="w-full mt-4 overflow-hidden">
+                    <img
+                        src="/hero-park.jpeg"
+                        alt="Community park illustration with city skyline"
+                        className="w-full object-cover object-bottom"
+                        style={{ maxHeight: 220, minHeight: 140 }}
+                    />
                 </div>
             </div>
 
