@@ -24,77 +24,8 @@ import {
     Building2,
     TrendingUp,
 } from "lucide-react";
-
-/* ─────────────────────────────────────────────
-   NAVBAR
-───────────────────────────────────────────── */
-function Navbar() {
-    const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
-    const navItems = [
-        { label: "Home", href: "/" },
-        { label: "Report Issue", href: "/citizen/report" },
-        { label: "Track Issue", href: "/citizen/track" },
-        { label: "Public Dashboard", href: "/public/dashboard" },
-    ];
-
-    return (
-        <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16">
-                    {/* Brand */}
-                    <Link href="/" className="flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-lg bg-green-600 flex items-center justify-center">
-                            <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-white" stroke="currentColor" strokeWidth="2">
-                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
-                                <circle cx="12" cy="9" r="2.5" fill="white" stroke="none" />
-                            </svg>
-                        </div>
-                        <div>
-                            <div className="text-lg font-extrabold text-gray-900 leading-none">
-                                <span className="text-green-600">Civic</span>Path
-                            </div>
-                            <div className="text-[10px] text-gray-500 font-medium">Digital Governance</div>
-                        </div>
-                    </Link>
-
-                    {/* Desktop Nav */}
-                    <nav className="hidden md:flex items-center gap-1">
-                        {navItems.map((item) => {
-                            const active = item.href === "/citizen/track";
-                            return (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${active
-                                        ? "bg-green-50 text-green-700 border border-green-200"
-                                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                                        }`}
-                                >
-                                    {item.label}
-                                </Link>
-                            );
-                        })}
-                    </nav>
-
-                    {/* Right */}
-                    <div className="flex items-center gap-3">
-                        <button className="hidden sm:flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900">
-                            <Globe className="w-4 h-4" />
-                            <span>English</span>
-                        </button>
-                        <Link
-                            href="/login"
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-semibold transition"
-                        >
-                            <UserCircle className="w-4 h-4" />
-                            <span>Login</span>
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        </header>
-    );
-}
+import { PublicNavbar } from "@/components/layout/PublicNavbar";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 
 /* ─────────────────────────────────────────────
    HERO
@@ -480,108 +411,19 @@ function RecentlyResolved() {
 }
 
 /* ─────────────────────────────────────────────
-   FOOTER
-───────────────────────────────────────────── */
-function Footer() {
-    return (
-        <footer className="bg-white border-t border-gray-200 pt-10 pb-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-8 border-b border-gray-100">
-                    {/* Brand */}
-                    <div className="space-y-4">
-                        <Link href="/" className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center">
-                                <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-white" stroke="currentColor" strokeWidth="2">
-                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
-                                    <circle cx="12" cy="9" r="2.5" fill="white" stroke="none" />
-                                </svg>
-                            </div>
-                            <div>
-                                <div className="font-extrabold text-gray-900">
-                                    <span className="text-green-600">Civic</span>Path
-                                </div>
-                            </div>
-                        </Link>
-                        <p className="text-xs text-gray-500 leading-relaxed">
-                            Empowering citizens to report and track civic issues for a better community.
-                        </p>
-                        <div className="flex items-center gap-3">
-                            <a href="#" className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition">
-                                <Facebook className="w-4 h-4" />
-                            </a>
-                            <a href="#" className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition">
-                                <Twitter className="w-4 h-4" />
-                            </a>
-                            <a href="#" className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-pink-100 hover:text-pink-600 transition">
-                                <Instagram className="w-4 h-4" />
-                            </a>
-                            <a href="#" className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-red-100 hover:text-red-600 transition">
-                                <Youtube className="w-4 h-4" />
-                            </a>
-                        </div>
-                    </div>
-
-                    {/* Quick Links */}
-                    <div className="space-y-3">
-                        <h5 className="text-sm font-extrabold text-gray-900">Quick Links</h5>
-                        <ul className="space-y-2 text-sm text-gray-600">
-                            <li><Link href="/citizen/report" className="hover:text-green-600 transition">Report Issue</Link></li>
-                            <li><Link href="/citizen/track" className="hover:text-green-600 transition">Track Complaint</Link></li>
-                            <li><Link href="/public/dashboard" className="hover:text-green-600 transition">Public Dashboard</Link></li>
-                        </ul>
-                    </div>
-
-                    {/* Resources */}
-                    <div className="space-y-3">
-                        <h5 className="text-sm font-extrabold text-gray-900">Resources</h5>
-                        <ul className="space-y-2 text-sm text-gray-600">
-                            <li><Link href="/" className="hover:text-green-600 transition">How It Works</Link></li>
-                            <li><span className="cursor-pointer hover:text-green-600 transition">FAQs</span></li>
-                            <li><span className="cursor-pointer hover:text-green-600 transition">Privacy Policy</span></li>
-                            <li><span className="cursor-pointer hover:text-green-600 transition">Terms of Service</span></li>
-                        </ul>
-                    </div>
-
-                    {/* Helpline */}
-                    <div className="space-y-3">
-                        <h5 className="text-sm font-extrabold text-gray-900">Helpline</h5>
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                                <Phone className="w-4 h-4 text-green-600" />
-                                <span className="text-sm font-semibold text-gray-900">1800-XXX-XXXX (Toll Free)</span>
-                            </div>
-                            <div className="space-y-0.5 pt-2">
-                                <p className="text-xs text-gray-500">Powered by</p>
-                                <p className="text-sm font-bold text-green-600">Cascade Technologies Solutions</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Copyright */}
-                <div className="pt-5 flex items-center justify-center gap-2 text-xs text-gray-400">
-                    <span>© 2024 CivicPath. All rights reserved.</span>
-                    <span className="text-green-500">🌿</span>
-                </div>
-            </div>
-        </footer>
-    );
-}
-
-/* ─────────────────────────────────────────────
    PAGE
 ───────────────────────────────────────────── */
 export default function HomePage() {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-            <Navbar />
+            <PublicNavbar />
             <main className="flex-1">
                 <HeroSection />
                 <HowItWorks />
                 <CTABanner />
                 <RecentlyResolved />
             </main>
-            <Footer />
+            <PublicFooter />
         </div>
     );
 }

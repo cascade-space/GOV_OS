@@ -15,6 +15,8 @@ import { MapPin, Upload, X, Loader2, CheckCircle2, Camera, ArrowLeft } from "luc
 import { useDropzone } from "react-dropzone";
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { PublicNavbar } from "@/components/layout/PublicNavbar";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 
 const CivicMapbox = dynamic(() => import("@/components/ui/CivicMapbox"), { ssr: false });
 
@@ -229,8 +231,9 @@ export default function ReportPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 px-4">
-            <div className="max-w-3xl mx-auto">
+        <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+            <PublicNavbar />
+            <div className="flex-1 max-w-3xl w-full mx-auto py-10 px-4">
                 {/* Back Button */}
                 <div className="mb-6">
                     <Link href="/">
@@ -663,6 +666,7 @@ export default function ReportPage() {
                     </div>
                 </form>
             </div>
+            <PublicFooter />
         </div>
     );
 }
