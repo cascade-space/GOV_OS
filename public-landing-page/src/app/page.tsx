@@ -20,6 +20,9 @@ import {
     Timer,
     Star,
     Plus,
+    Heart,
+    Building2,
+    TrendingUp,
 } from "lucide-react";
 
 /* ─────────────────────────────────────────────
@@ -109,131 +112,163 @@ function HeroSection() {
     };
 
     return (
-        <div>
-            {/* ── Hero image area ── */}
-            <section
-                className="relative overflow-hidden"
-                style={{ minHeight: 520 }}
-            >
-                {/* Background: herosection.jpeg fills the whole section */}
-                <img
-                    src="/herosection.jpeg"
-                    alt="CivicPath community park hero"
-                    className="absolute inset-0 w-full h-full object-cover object-top pointer-events-none select-none"
-                />
+        <section className="relative w-full overflow-hidden flex flex-col justify-between min-h-[620px] md:min-h-[580px] lg:min-h-0 lg:aspect-[1600/757]">
+            {/* Background: herosection.jpeg fills whole section with 1600:757 aspect ratio to avoid any cropping */}
+            <img
+                src="/herosection.jpeg"
+                alt="CivicPath community park hero"
+                className="absolute inset-0 w-full h-full object-cover object-bottom sm:object-center pointer-events-none select-none"
+            />
 
-                {/* Content grid pinned to the top, floating over the image */}
-                <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pt-6 pb-0">
-                    <div className="flex flex-col lg:flex-row items-start justify-between gap-4">
+            {/* ── Top Area: Left Headline & 4 Stat Chips + Right Track Complaint Card ── */}
+            <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 sm:pt-7 md:pt-8">
+                <div className="flex flex-col lg:flex-row items-start justify-between gap-5">
 
-                        {/* ── LEFT: Headline + subtitle + stat chips ── */}
-                        <div className="flex-1 max-w-lg space-y-2">
-                            {/* Headline */}
-                            <div>
-                                <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-[1.1]">
-                                    Together, We Build<br />
-                                    <span className="text-green-600">Better Communities</span>
-                                </h1>
-                                <p className="mt-1 text-[14px] text-gray-700 leading-snug font-medium">
-                                    Report. Track. Resolve. Your voice<br />
-                                    drives real change in your city.
-                                </p>
-                            </div>
-
-                            {/* Stat chips — all 4 in ONE row, no wrap */}
-                            <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1">
-                                {[
-                                    { icon: Users,        value: "12,400+", label: "Citizens Connected",  iColor: "text-blue-600",  iBg: "bg-blue-50"  },
-                                    { icon: CheckCircle2, value: "2,450+",  label: "Issues Resolved",     iColor: "text-blue-500",  iBg: "bg-blue-50"  },
-                                    { icon: Star,         value: "94%",     label: "Satisfaction Rate",   iColor: "text-pink-500",  iBg: "bg-pink-50"  },
-                                    { icon: Shield,       value: "6",       label: "Departments",         iColor: "text-amber-600", iBg: "bg-amber-50" },
-                                ].map((s, i) => {
-                                    const Icon = s.icon;
-                                    return (
-                                        <div
-                                            key={i}
-                                            className="flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-xl px-2.5 py-2 shadow-sm border border-gray-100/80"
-                                        >
-                                            <div className={`w-6 h-6 rounded-lg ${s.iBg} flex items-center justify-center shrink-0`}>
-                                                <Icon className={`w-3 h-3 ${s.iColor}`} />
-                                            </div>
-                                            <div>
-                                                <div className="text-xs font-extrabold text-gray-900 leading-none">{s.value}</div>
-                                                <div className="text-[9px] text-gray-500 leading-none mt-0.5">{s.label}</div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                    {/* ── LEFT: Headline + subtitle + stat chips ── */}
+                    <div className="flex-1 max-w-xl space-y-2">
+                        {/* Headline */}
+                        <div>
+                            <h1 className="text-3xl sm:text-4xl lg:text-[45px] font-extrabold text-gray-900 leading-[1.08] tracking-tight">
+                                Together, We Build<br />
+                                <span className="text-[#16a34a]">Better Communities</span>
+                            </h1>
+                            <p className="mt-1.5 text-xs sm:text-sm text-gray-700 leading-snug font-medium max-w-md">
+                                Report. Track. Resolve. Your voice<br className="hidden sm:inline" /> drives real change in your city.
+                            </p>
                         </div>
 
-                        {/* ── RIGHT: Track Your Complaint card ── */}
-                        <div className="w-full lg:w-auto lg:min-w-[300px] xl:min-w-[340px] shrink-0">
-                            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 space-y-3">
-                                <div className="text-center space-y-0.5">
-                                    <h3 className="text-base font-bold text-gray-900">Track Your Complaint</h3>
-                                    <p className="text-[11px] text-gray-500">Enter your Complaint ID or registered mobile number</p>
+                        {/* 4 Stat chips in ONE single horizontal row matching Screenshot 2 */}
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full no-scrollbar">
+                            <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-xl px-2.5 py-1.5 shadow-sm border border-gray-100/90 shrink-0">
+                                <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                    <Users className="w-3.5 h-3.5" />
                                 </div>
-                                <div className="flex gap-2">
-                                    <div className="flex-1 flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 focus-within:border-green-500 focus-within:bg-white transition">
-                                        <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                                        <input
-                                            type="text"
-                                            value={trackId}
-                                            onChange={(e) => setTrackId(e.target.value)}
-                                            onKeyDown={(e) => e.key === "Enter" && handleTrack()}
-                                            placeholder="CMP-2024-00341 or 9876543210"
-                                            className="flex-1 text-[11px] bg-transparent outline-none text-gray-700 placeholder-gray-400"
-                                        />
-                                    </div>
-                                    <button
-                                        onClick={handleTrack}
-                                        className="px-3.5 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0"
-                                    >
-                                        <Search className="w-3 h-3" />
-                                        Track
-                                    </button>
+                                <div className="pr-1">
+                                    <div className="text-xs font-extrabold text-gray-900 leading-tight">12,400+</div>
+                                    <div className="text-[9px] text-gray-500 leading-none">Citizens Connected</div>
                                 </div>
-                                <p className="text-[10px] text-gray-500 text-center">
-                                    Demo: Try{" "}
-                                    <button onClick={() => setTrackId("CMP-2024-00341")} className="text-green-600 font-semibold hover:underline">CMP-2024-00341</button>
-                                    {" "}or{" "}
-                                    <button onClick={() => setTrackId("CMP-2024-00342")} className="text-green-600 font-semibold hover:underline">CMP-2024-00342</button>
-                                </p>
+                            </div>
+
+                            <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-xl px-2.5 py-1.5 shadow-sm border border-gray-100/90 shrink-0">
+                                <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                </div>
+                                <div className="pr-1">
+                                    <div className="text-xs font-extrabold text-gray-900 leading-tight">2,450+</div>
+                                    <div className="text-[9px] text-gray-500 leading-none">Issues Resolved</div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-xl px-2.5 py-1.5 shadow-sm border border-gray-100/90 shrink-0">
+                                <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                                    <Heart className="w-3.5 h-3.5" />
+                                </div>
+                                <div className="pr-1">
+                                    <div className="text-xs font-extrabold text-gray-900 leading-tight">94%</div>
+                                    <div className="text-[9px] text-gray-500 leading-none">Satisfaction Rate</div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-xl px-2.5 py-1.5 shadow-sm border border-gray-100/90 shrink-0">
+                                <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                                    <Building2 className="w-3.5 h-3.5" />
+                                </div>
+                                <div className="pr-1">
+                                    <div className="text-xs font-extrabold text-gray-900 leading-tight">6</div>
+                                    <div className="text-[9px] text-gray-500 leading-none">Departments</div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Spacer — tall enough to show full park scene including people's legs */}
-                    <div className="h-48 sm:h-56 lg:h-64" />
-                </div>
-            </section>
-
-            {/* ── White Stats Bar (below hero image, outside the section) ── */}
-            <div className="bg-white border border-gray-200 shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-wrap items-center justify-around py-4 gap-x-6 gap-y-3 divide-x divide-gray-100">
-                        {[
-                            { emoji: "📈", value: "3.2 days",  label: "Avg. Resolution Time" },
-                            { emoji: "👥", value: "12,400+",   label: "Citizens Served"       },
-                            { emoji: "✅", value: "1,832",     label: "Issues Resolved"       },
-                            { emoji: "🕐", value: "315",       label: "Active Issues"         },
-                            { emoji: "⭐", value: "94%",       label: "Satisfaction Rate"     },
-                        ].map((s, i) => (
-                            <div key={i} className="flex items-center gap-2 px-4 first:pl-0 last:pr-0">
-                                <span className="text-xl">{s.emoji}</span>
-                                <div>
-                                    <div className="text-base font-extrabold text-gray-900 leading-tight">{s.value}</div>
-                                    <div className="text-[11px] text-gray-500">{s.label}</div>
-                                </div>
+                    {/* ── RIGHT: Track Your Complaint floating card ── */}
+                    <div className="w-full lg:w-auto lg:min-w-[320px] xl:min-w-[360px] shrink-0">
+                        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-5 space-y-3">
+                            <div className="text-center space-y-0.5">
+                                <h3 className="text-base font-bold text-gray-900">Track Your Complaint</h3>
+                                <p className="text-[11px] text-gray-500">Enter your Complaint ID or registered mobile number</p>
                             </div>
-                        ))}
+                            <div className="flex gap-2">
+                                <div className="flex-1 flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 focus-within:border-emerald-500 focus-within:bg-white transition">
+                                    <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                    <input
+                                        type="text"
+                                        value={trackId}
+                                        onChange={(e) => setTrackId(e.target.value)}
+                                        onKeyDown={(e) => e.key === "Enter" && handleTrack()}
+                                        placeholder="CMP-2024-00341 or 9876543210"
+                                        className="flex-1 text-[11px] bg-transparent outline-none text-gray-700 placeholder-gray-400"
+                                    />
+                                </div>
+                                <button
+                                    onClick={handleTrack}
+                                    className="px-4 py-2 rounded-lg bg-[#16a34a] hover:bg-[#15803d] text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm"
+                                >
+                                    <Search className="w-3.5 h-3.5" />
+                                    <span>Track</span>
+                                </button>
+                            </div>
+                            <p className="text-[10px] text-gray-500 text-center">
+                                Demo: Try{" "}
+                                <button onClick={() => setTrackId("CMP-2024-00341")} className="text-emerald-600 font-semibold hover:underline">CMP-2024-00341</button>
+                                {" "}or{" "}
+                                <button onClick={() => setTrackId("CMP-2024-00342")} className="text-emerald-600 font-semibold hover:underline">CMP-2024-00342</button>
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+
+            {/* ── Bottom Floating Stats Bar (Inside hero section on grass) ── */}
+            <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-3 sm:pb-4">
+                <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-lg border border-gray-100 py-3 px-4 sm:px-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 items-center divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+                        <div className="flex items-center gap-2.5 px-2">
+                            <TrendingUp className="w-5 h-5 text-emerald-600 shrink-0" />
+                            <div>
+                                <div className="text-sm sm:text-base font-extrabold text-gray-900 leading-tight">3.2 days</div>
+                                <div className="text-[10px] sm:text-[11px] text-gray-500">Avg. Resolution Time</div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2.5 px-2 pt-2 sm:pt-0">
+                            <Users className="w-5 h-5 text-emerald-600 shrink-0" />
+                            <div>
+                                <div className="text-sm sm:text-base font-extrabold text-gray-900 leading-tight">12,400+</div>
+                                <div className="text-[10px] sm:text-[11px] text-gray-500">Citizens Served</div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2.5 px-2 pt-2 sm:pt-0">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                            <div>
+                                <div className="text-sm sm:text-base font-extrabold text-gray-900 leading-tight">1,832</div>
+                                <div className="text-[10px] sm:text-[11px] text-gray-500">Issues Resolved</div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2.5 px-2 pt-2 sm:pt-0">
+                            <Clock className="w-5 h-5 text-amber-500 shrink-0" />
+                            <div>
+                                <div className="text-sm sm:text-base font-extrabold text-gray-900 leading-tight">315</div>
+                                <div className="text-[10px] sm:text-[11px] text-gray-500">Active Issues</div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2.5 px-2 pt-2 sm:pt-0 col-span-2 sm:col-span-1">
+                            <Star className="w-5 h-5 text-amber-400 fill-amber-400 shrink-0" />
+                            <div>
+                                <div className="text-sm sm:text-base font-extrabold text-gray-900 leading-tight">94%</div>
+                                <div className="text-[10px] sm:text-[11px] text-gray-500">Satisfaction Rate</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     );
 }
+
 
 
 /* ─────────────────────────────────────────────
