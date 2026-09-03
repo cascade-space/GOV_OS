@@ -125,57 +125,57 @@ function HeroSection() {
                 <div className="flex flex-col lg:flex-row items-start justify-between gap-8 lg:gap-12">
 
                     {/* ── LEFT: Headline + subtitle + stat chips ── */}
-                    <div className="flex-1 max-w-2xl xl:max-w-3xl space-y-4 sm:space-y-6">
+                    <div className="flex-1 min-w-0 space-y-4 sm:space-y-6">
                         {/* Headline */}
                         <div>
                             <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[68px] 2xl:text-[74px] font-extrabold text-gray-900 leading-[1.05] tracking-tight">
                                 Together, We Build<br />
                                 <span className="text-[#16a34a]">Better Communities</span>
                             </h1>
-                            <p className="mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg xl:text-xl text-gray-700 leading-relaxed font-medium max-w-xl">
+                            <p className="mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg xl:text-xl text-gray-700 leading-relaxed font-medium max-w-2xl">
                                 Report. Track. Resolve. Your voice<br className="hidden sm:inline" /> drives real change in your city.
                             </p>
                         </div>
 
-                        {/* 4 Stat chips in ONE single horizontal row matching Screenshot 2 with enlarged presence */}
-                        <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto pb-2 max-w-full no-scrollbar pt-1">
-                            <div className="flex items-center gap-3 bg-white/95 backdrop-blur-md rounded-2xl px-4 py-2.5 sm:px-5 sm:py-3 shadow-md border border-gray-100/90 shrink-0 hover:shadow-lg transition">
-                                <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                        {/* 4 Stat chips in ONE single row - fully visible with no cropping */}
+                        <div className="flex items-center gap-2 sm:gap-2.5 xl:gap-3.5 flex-wrap sm:flex-nowrap pt-1">
+                            <div className="flex items-center gap-2.5 bg-white/95 backdrop-blur-md rounded-2xl px-3 py-2 sm:px-3.5 sm:py-2.5 xl:px-4 xl:py-3 shadow-md border border-gray-100/90 shrink-0 hover:shadow-lg transition">
+                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                                     <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
-                                <div className="pr-1">
-                                    <div className="text-sm sm:text-base lg:text-lg font-black text-gray-900 leading-tight">12,400+</div>
-                                    <div className="text-[10px] sm:text-xs text-gray-500 font-medium leading-none mt-0.5">Citizens Connected</div>
+                                <div className="pr-0.5">
+                                    <div className="text-xs sm:text-sm xl:text-base font-black text-gray-900 leading-tight">12,400+</div>
+                                    <div className="text-[9px] sm:text-[11px] text-gray-500 font-medium leading-none mt-0.5 whitespace-nowrap">Citizens Connected</div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3 bg-white/95 backdrop-blur-md rounded-2xl px-4 py-2.5 sm:px-5 sm:py-3 shadow-md border border-gray-100/90 shrink-0 hover:shadow-lg transition">
-                                <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                            <div className="flex items-center gap-2.5 bg-white/95 backdrop-blur-md rounded-2xl px-3 py-2 sm:px-3.5 sm:py-2.5 xl:px-4 xl:py-3 shadow-md border border-gray-100/90 shrink-0 hover:shadow-lg transition">
+                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
                                     <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
-                                <div className="pr-1">
-                                    <div className="text-sm sm:text-base lg:text-lg font-black text-gray-900 leading-tight">2,450+</div>
-                                    <div className="text-[10px] sm:text-xs text-gray-500 font-medium leading-none mt-0.5">Issues Resolved</div>
+                                <div className="pr-0.5">
+                                    <div className="text-xs sm:text-sm xl:text-base font-black text-gray-900 leading-tight">2,450+</div>
+                                    <div className="text-[9px] sm:text-[11px] text-gray-500 font-medium leading-none mt-0.5 whitespace-nowrap">Issues Resolved</div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3 bg-white/95 backdrop-blur-md rounded-2xl px-4 py-2.5 sm:px-5 sm:py-3 shadow-md border border-gray-100/90 shrink-0 hover:shadow-lg transition">
-                                <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                            <div className="flex items-center gap-2.5 bg-white/95 backdrop-blur-md rounded-2xl px-3 py-2 sm:px-3.5 sm:py-2.5 xl:px-4 xl:py-3 shadow-md border border-gray-100/90 shrink-0 hover:shadow-lg transition">
+                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
                                     <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
-                                <div className="pr-1">
-                                    <div className="text-sm sm:text-base lg:text-lg font-black text-gray-900 leading-tight">94%</div>
-                                    <div className="text-[10px] sm:text-xs text-gray-500 font-medium leading-none mt-0.5">Satisfaction Rate</div>
+                                <div className="pr-0.5">
+                                    <div className="text-xs sm:text-sm xl:text-base font-black text-gray-900 leading-tight">94%</div>
+                                    <div className="text-[9px] sm:text-[11px] text-gray-500 font-medium leading-none mt-0.5 whitespace-nowrap">Satisfaction Rate</div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3 bg-white/95 backdrop-blur-md rounded-2xl px-4 py-2.5 sm:px-5 sm:py-3 shadow-md border border-gray-100/90 shrink-0 hover:shadow-lg transition">
-                                <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                            <div className="flex items-center gap-2.5 bg-white/95 backdrop-blur-md rounded-2xl px-3 py-2 sm:px-3.5 sm:py-2.5 xl:px-4 xl:py-3 shadow-md border border-gray-100/90 shrink-0 hover:shadow-lg transition">
+                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
                                     <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
-                                <div className="pr-1">
-                                    <div className="text-sm sm:text-base lg:text-lg font-black text-gray-900 leading-tight">6</div>
-                                    <div className="text-[10px] sm:text-xs text-gray-500 font-medium leading-none mt-0.5">Departments</div>
+                                <div className="pr-0.5">
+                                    <div className="text-xs sm:text-sm xl:text-base font-black text-gray-900 leading-tight">6</div>
+                                    <div className="text-[9px] sm:text-[11px] text-gray-500 font-medium leading-none mt-0.5 whitespace-nowrap">Departments</div>
                                 </div>
                             </div>
                         </div>
