@@ -113,13 +113,13 @@ function HeroSection() {
             {/* ── Hero image area ── */}
             <section
                 className="relative overflow-hidden"
-                style={{ minHeight: 420 }}
+                style={{ minHeight: 520 }}
             >
                 {/* Background: herosection.jpeg fills the whole section */}
                 <img
                     src="/herosection.jpeg"
                     alt="CivicPath community park hero"
-                    className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none"
+                    className="absolute inset-0 w-full h-full object-cover object-top pointer-events-none select-none"
                 />
 
                 {/* Content grid pinned to the top, floating over the image */}
@@ -204,8 +204,8 @@ function HeroSection() {
                         </div>
                     </div>
 
-                    {/* Spacer — park/family illustration visible right below content */}
-                    <div className="h-28 sm:h-36 lg:h-44" />
+                    {/* Spacer — tall enough to show full park scene including people's legs */}
+                    <div className="h-48 sm:h-56 lg:h-64" />
                 </div>
             </section>
 
