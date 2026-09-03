@@ -110,22 +110,18 @@ function HeroSection() {
     };
 
     return (
-        <section className="relative overflow-hidden bg-gradient-to-b from-sky-100 via-blue-50 to-green-50 pt-12 pb-0">
-            {/* Decorative sky elements */}
-            <div className="absolute top-6 right-24 w-16 h-16 opacity-40">
-                <svg viewBox="0 0 64 32" fill="none">
-                    <ellipse cx="32" cy="20" rx="30" ry="14" fill="#93c5fd" />
-                    <ellipse cx="18" cy="22" rx="16" ry="10" fill="#bfdbfe" />
-                    <ellipse cx="46" cy="22" rx="16" ry="10" fill="#bfdbfe" />
-                </svg>
-            </div>
-            <div className="absolute top-10 left-32 w-10 h-10 opacity-30">
-                <svg viewBox="0 0 40 20" fill="none">
-                    <ellipse cx="20" cy="14" rx="18" ry="8" fill="#93c5fd" />
-                </svg>
-            </div>
+        <section className="relative overflow-hidden pt-12 pb-0" style={{minHeight: 480}}>
+            {/* Full-hero background park image */}
+            <img
+                src="/hero-park.jpeg"
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 w-full h-full object-cover object-bottom pointer-events-none select-none"
+            />
+            {/* Gradient overlay — solid at top for text, fades to transparent at bottom to reveal park */}
+            <div className="absolute inset-0 bg-gradient-to-b from-sky-100/90 via-blue-50/75 to-transparent pointer-events-none" />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 
                     {/* Left: Hero Text + Stats */}
@@ -150,7 +146,7 @@ function HeroSection() {
                             ].map((stat, i) => {
                                 const Icon = stat.icon;
                                 return (
-                                    <div key={i} className="flex items-center gap-2 bg-white rounded-xl px-3 py-3 shadow-sm border border-gray-100">
+                                    <div key={i} className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-3 shadow-sm border border-gray-100">
                                         <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center shrink-0`}>
                                             <Icon className={`w-4 h-4 ${stat.color}`} />
                                         </div>
@@ -165,8 +161,8 @@ function HeroSection() {
                     </div>
 
                     {/* Right: Track Complaint Widget */}
-                    <div className="flex justify-end items-start pt-4">
-                        <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl border border-gray-100 p-6 space-y-4">
+                    <div className="flex justify-end items-start pt-4 pb-8">
+                        <div className="w-full max-w-sm bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-6 space-y-4">
                             <div className="text-center space-y-1">
                                 <h3 className="text-lg font-bold text-gray-900">Track Your Complaint</h3>
                                 <p className="text-xs text-gray-500">Enter your Complaint ID or registered mobile number</p>
@@ -211,15 +207,8 @@ function HeroSection() {
                     </div>
                 </div>
 
-                {/* Park Illustration — real image */}
-                <div className="w-full mt-4 overflow-hidden">
-                    <img
-                        src="/hero-park.jpeg"
-                        alt="Community park illustration with city skyline"
-                        className="w-full object-cover object-bottom"
-                        style={{ maxHeight: 220, minHeight: 140 }}
-                    />
-                </div>
+                {/* Spacer so the full background image is visible at the bottom */}
+                <div className="h-40 sm:h-52 lg:h-64" />
             </div>
 
             {/* Stats Bar */}
