@@ -65,11 +65,10 @@ function Navbar() {
                                 <Link
                                     key={item.href}
                                     href={item.href}
-                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                                        active
-                                            ? "bg-green-50 text-green-700 border border-green-200"
-                                            : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                                    }`}
+                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${active
+                                        ? "bg-green-50 text-green-700 border border-green-200"
+                                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                                        }`}
                                 >
                                     {item.label}
                                 </Link>
@@ -112,10 +111,10 @@ function HeroSection() {
     };
 
     return (
-        <section className="relative w-full overflow-hidden flex flex-col justify-between min-h-[680px] lg:min-h-0 lg:aspect-[1600/757] xl:min-h-[760px]">
-            {/* Background: herosection.jpeg fills whole section with 1600:757 aspect ratio to avoid any cropping */}
+        <section className="relative w-full overflow-hidden flex flex-col justify-between min-h-[660px] lg:min-h-0 lg:aspect-[1600/686] xl:min-h-[720px]">
+            {/* Background: herosection.jpg (1600x686) fills whole section without cropping */}
             <img
-                src="/herosection.jpeg"
+                src="/herosection.jpg"
                 alt="CivicPath community park hero"
                 className="absolute inset-0 w-full h-full object-cover object-bottom sm:object-center pointer-events-none select-none"
             />
