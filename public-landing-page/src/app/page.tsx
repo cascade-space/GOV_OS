@@ -100,7 +100,6 @@ function Navbar() {
 function HeroSection() {
     const [trackId, setTrackId] = useState("");
     const router = useRouter();
-
     const handleTrack = () => {
         if (trackId.trim()) {
             router.push(`/citizen/track?id=${encodeURIComponent(trackId.trim())}`);
@@ -108,61 +107,60 @@ function HeroSection() {
             router.push("/citizen/track");
         }
     };
-
     return (
-        <section className="relative overflow-hidden pt-12 pb-0" style={{minHeight: 480}}>
-            {/* Full-hero background park image */}
+        <section className="relative overflow-hidden" style={{ minHeight: 520 }}>
+            {/* Full background park image */}
             <img
                 src="/hero-park.jpeg"
                 alt=""
                 aria-hidden="true"
                 className="absolute inset-0 w-full h-full object-cover object-bottom pointer-events-none select-none"
             />
-            {/* Gradient overlay — solid at top for text, fades to transparent at bottom to reveal park */}
-            <div className="absolute inset-0 bg-gradient-to-b from-sky-100/90 via-blue-50/75 to-transparent pointer-events-none" />
-
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-
-                    {/* Left: Hero Text + Stats */}
-                    <div className="pt-6 pb-8 space-y-8">
-                        <div className="space-y-4">
+            {/* Minimal top-only sky tint so headline text is readable — transparent below 60% */}
+            <div
+                className="absolute inset-0 pointer-events-none"
+                style={{ background: "linear-gradient(to bottom, rgba(219,239,254,0.88) 0%, rgba(240,249,255,0.60) 35%, rgba(240,249,255,0.10) 60%, transparent 80%)" }}
+            />
+            {/* Content directly over image */}
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
+                    {/* LEFT: Title + subtitle + stat chips */}
+                    <div className="flex-1 max-w-lg space-y-6">
+                        <div>
                             <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight">
                                 Together, We Build<br />
                                 <span className="text-green-600">Better Communities</span>
                             </h1>
-                            <p className="text-base text-gray-600 leading-relaxed max-w-md">
+                            <p className="text-base text-gray-700 leading-relaxed mt-3">
                                 Report. Track. Resolve. Your voice<br />drives real change in your city.
                             </p>
                         </div>
-
-                        {/* Quick Stats */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {/* Stat chips */}
+                        <div className="flex flex-wrap gap-2.5">
                             {[
-                                { icon: Users, value: "12,400+", label: "Citizens Connected", color: "text-blue-600", bg: "bg-blue-50" },
-                                { icon: CheckCircle2, value: "2,450+", label: "Issues Resolved", color: "text-blue-500", bg: "bg-blue-50" },
-                                { icon: Star, value: "94%", label: "Satisfaction Rate", color: "text-pink-500", bg: "bg-pink-50" },
-                                { icon: Shield, value: "6", label: "Departments", color: "text-amber-600", bg: "bg-amber-50" },
-                            ].map((stat, i) => {
-                                const Icon = stat.icon;
+                                { icon: Users,        value: "12,400+", label: "Citizens Connected",  iconColor: "text-blue-600",  iconBg: "bg-blue-50"  },
+                                { icon: CheckCircle2, value: "2,450+",  label: "Issues Resolved",     iconColor: "text-blue-500",  iconBg: "bg-blue-50"  },
+                                { icon: Star,         value: "94%",     label: "Satisfaction Rate",   iconColor: "text-pink-500",  iconBg: "bg-pink-50"  },
+                                { icon: Shield,       value: "6",       label: "Departments",         iconColor: "text-amber-600", iconBg: "bg-amber-50" },
+                            ].map((s, i) => {
+                                const Icon = s.icon;
                                 return (
-                                    <div key={i} className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-3 shadow-sm border border-gray-100">
-                                        <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center shrink-0`}>
-                                            <Icon className={`w-4 h-4 ${stat.color}`} />
+                                    <div key={i} className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2.5 shadow-sm border border-white/60">
+                                        <div className={`w-7 h-7 rounded-lg ${s.iconBg} flex items-center justify-center shrink-0`}>
+                                            <Icon className={`w-3.5 h-3.5 ${s.iconColor}`} />
                                         </div>
                                         <div>
-                                            <div className="text-sm font-extrabold text-gray-900 leading-tight">{stat.value}</div>
-                                            <div className="text-[10px] text-gray-500 leading-tight">{stat.label}</div>
+                                            <div className="text-sm font-extrabold text-gray-900">{s.value}</div>
+                                            <div className="text-[10px] text-gray-500 leading-none">{s.label}</div>
                                         </div>
                                     </div>
                                 );
                             })}
                         </div>
                     </div>
-
-                    {/* Right: Track Complaint Widget */}
-                    <div className="flex justify-end items-start pt-4 pb-8">
-                        <div className="w-full max-w-sm bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-6 space-y-4">
+                    {/* RIGHT: Track Complaint card */}
+                    <div className="w-full lg:w-auto lg:min-w-[340px] lg:max-w-sm">
+                        <div className="bg-white/96 backdrop-blur-md rounded-2xl shadow-2xl border border-white/80 p-6 space-y-4">
                             <div className="text-center space-y-1">
                                 <h3 className="text-lg font-bold text-gray-900">Track Your Complaint</h3>
                                 <p className="text-xs text-gray-500">Enter your Complaint ID or registered mobile number</p>
@@ -181,7 +179,7 @@ function HeroSection() {
                                 </div>
                                 <button
                                     onClick={handleTrack}
-                                    className="px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-bold transition flex items-center gap-1.5"
+                                    className="px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-bold transition flex items-center gap-1.5 shrink-0"
                                 >
                                     <Search className="w-3.5 h-3.5" />
                                     Track
@@ -189,26 +187,15 @@ function HeroSection() {
                             </div>
                             <div className="text-xs text-gray-500 text-center">
                                 Demo: Try{" "}
-                                <button
-                                    onClick={() => setTrackId("CMP-2024-00341")}
-                                    className="text-green-600 font-semibold hover:underline"
-                                >
-                                    CMP-2024-00341
-                                </button>
+                                <button onClick={() => setTrackId("CMP-2024-00341")} className="text-green-600 font-semibold hover:underline">CMP-2024-00341</button>
                                 {" "}or{" "}
-                                <button
-                                    onClick={() => setTrackId("CMP-2024-00342")}
-                                    className="text-green-600 font-semibold hover:underline"
-                                >
-                                    CMP-2024-00342
-                                </button>
+                                <button onClick={() => setTrackId("CMP-2024-00342")} className="text-green-600 font-semibold hover:underline">CMP-2024-00342</button>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                {/* Spacer so the full background image is visible at the bottom */}
-                <div className="h-40 sm:h-52 lg:h-64" />
+                {/* Spacer — bottom of image (trees, family, cityscape) shows below content */}
+                <div className="h-48 sm:h-60 lg:h-64" />
             </div>
 
             {/* Stats Bar */}
