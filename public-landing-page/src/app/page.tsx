@@ -1,400 +1,640 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
-    PlusCircle,
     Search,
     CheckCircle2,
-    ShieldCheck,
     Users,
-    Building2,
     Clock,
     ArrowRight,
-    MapPin,
-    Wrench,
-    Zap,
-    Droplets,
-    Trees,
-    Activity,
-    CheckCircle,
-    Sparkles,
+    Phone,
+    Facebook,
+    Twitter,
+    Instagram,
+    Youtube,
+    Globe,
+    UserCircle,
+    FileText,
+    Shield,
+    Timer,
     Star,
-    Layers,
-    ChevronRight,
+    Plus,
 } from "lucide-react";
-import { PublicNavbar } from "@/components/layout/PublicNavbar";
-import { PublicFooter } from "@/components/layout/PublicFooter";
-import { StatCard, ProgressCard } from "@/components/ui/StatCard";
-import { DEPARTMENTS, CATEGORIES } from "@/lib/constants";
 
-export default function HomePage() {
-    // Verified Recent Resolved Showcase
-    const recentResolutions = [
-        {
-            id: "CP-2026-8941",
-            title: "Pothole Remediation & Road Resurfacing",
-            ward: "Ward 1 • Saptapur",
-            department: "Roads & Public Works",
-            resolvedTime: "Resolved 2 hours ago",
-            beforeImage: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=500&q=80",
-            afterImage: "https://images.unsplash.com/photo-1541888946425-d0fbb18086f6?w=500&q=80",
-            status: "Verified Completed",
-            impact: "Safe transit for 3,400 daily commuters",
-        },
-        {
-            id: "CP-2026-8920",
-            title: "Water Main Leakage & Valve Repair",
-            ward: "Ward 3 • Line Bazaar",
-            department: "Water Supply & Sewerage",
-            resolvedTime: "Resolved 4 hours ago",
-            beforeImage: "https://images.unsplash.com/photo-1584467735815-f778f274e296?w=500&q=80",
-            afterImage: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=500&q=80",
-            status: "Verified Completed",
-            impact: "Zero water wastage, clean supply restored",
-        },
-        {
-            id: "CP-2026-8894",
-            title: "Smart LED Streetlight Replacement (4 Poles)",
-            ward: "Ward 8 • Sadhankeri",
-            department: "Street Light Operations",
-            resolvedTime: "Resolved yesterday",
-            beforeImage: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=500&q=80",
-            afterImage: "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=500&q=80",
-            status: "Verified Completed",
-            impact: "Illuminated pedestrian corridor",
-        },
-    ];
-
-    // Active Government Work in Progress
-    const activeProjects = [
-        {
-            title: "Kalyan Nagar Underground Stormwater Drain Upgrade",
-            department: "Drainage & Irrigation",
-            ward: "Ward 2",
-            progress: 78,
-            targetDate: "Sep 15, 2026",
-            status: "Ahead of Schedule",
-            beneficiaries: "12,000 residents",
-            budget: "₹42.5 Lakhs",
-        },
-        {
-            title: "Kelgeri Lakefront Public Park & Walking Track",
-            department: "Parks & Urban Greenery",
-            ward: "Ward 5",
-            progress: 92,
-            targetDate: "Sep 08, 2026",
-            status: "Final Verification",
-            beneficiaries: "8,500 families",
-            budget: "₹65.0 Lakhs",
-        },
-        {
-            title: "Toll Naka to University Road Asphalting",
-            department: "Roads & Public Works",
-            ward: "Ward 4",
-            progress: 64,
-            targetDate: "Sep 22, 2026",
-            status: "Active Execution",
-            beneficiaries: "25,000 daily vehicles",
-            budget: "₹88.0 Lakhs",
-        },
+/* ─────────────────────────────────────────────
+   NAVBAR
+───────────────────────────────────────────── */
+function Navbar() {
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
+    const navItems = [
+        { label: "Home", href: "/" },
+        { label: "Report Issue", href: "/citizen/report" },
+        { label: "Track Issue", href: "/citizen/track" },
+        { label: "Public Dashboard", href: "/public/dashboard" },
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col selection:bg-blue-600 selection:text-white font-sans">
-            <PublicNavbar />
-
-            {/* ── 1. Hero Section ────────────────────────────────────────────── */}
-            <section className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 text-white pt-16 pb-24 sm:pt-20 sm:pb-28">
-                {/* Background ambient lighting */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[450px] bg-blue-600/15 blur-[120px] rounded-full pointer-events-none" />
-                <div className="absolute bottom-0 right-10 w-[400px] h-[300px] bg-emerald-500/10 blur-[100px] rounded-full pointer-events-none" />
-
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center space-y-6 max-w-3xl mx-auto">
-                        {/* Civic Trust Badge */}
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/80 text-xs font-semibold text-emerald-400 backdrop-blur-md shadow-lg shadow-black/20 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                            <span>GovOS Multi-Tenant Governance Platform</span>
-                            <span className="text-slate-500">•</span>
-                            <span className="text-slate-300">Dharwad Municipal Corporation</span>
+        <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between h-16">
+                    {/* Brand */}
+                    <Link href="/" className="flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-lg bg-green-600 flex items-center justify-center">
+                            <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-white" stroke="currentColor" strokeWidth="2">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                                <circle cx="12" cy="9" r="2.5" fill="white" stroke="none" />
+                            </svg>
                         </div>
-
-                        {/* Main Title */}
-                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
-                            Together, We Build <br />
-                            <span className="bg-gradient-to-r from-blue-400 via-emerald-400 to-teal-300 bg-clip-text text-transparent">
-                                Better Communities.
-                            </span>
-                        </h1>
-
-                        {/* Supporting Message */}
-                        <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto font-normal leading-relaxed">
-                            Report civic issues with photo proof, track real-time government officer action, and witness visible improvements across your neighborhood.
-                        </p>
-
-                        {/* Action Buttons */}
-                        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
-                            <Link
-                                href="/citizen/report"
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white font-bold text-sm shadow-xl shadow-blue-600/25 transition duration-200 group"
-                            >
-                                <PlusCircle className="w-4 h-4 text-emerald-200 group-hover:rotate-90 transition duration-300" />
-                                <span>Report an Issue</span>
-                            </Link>
-
-                            <Link
-                                href="/citizen/track"
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-slate-200 font-semibold text-sm transition duration-200"
-                            >
-                                <Search className="w-4 h-4 text-blue-400" />
-                                <span>Track Progress</span>
-                            </Link>
-
-                            <Link
-                                href="/constituency"
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-slate-300 hover:text-white font-medium text-sm transition duration-200 hover:bg-slate-800/40"
-                            >
-                                <span>Constituency View</span>
-                                <ArrowRight className="w-4 h-4" />
-                            </Link>
-                        </div>
-                    </div>
-
-                    {/* ── Hero Metrics Grid ─────────────────────────────────── */}
-                    <div className="mt-16 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                        <div className="bg-slate-800/60 backdrop-blur-md rounded-2xl p-5 border border-slate-700/60 shadow-lg text-center space-y-1">
-                            <div className="w-10 h-10 mx-auto rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center mb-2">
-                                <Users className="w-5 h-5" />
+                        <div>
+                            <div className="text-lg font-extrabold text-gray-900 leading-none">
+                                <span className="text-green-600">Civic</span>Path
                             </div>
-                            <h3 className="text-2xl sm:text-3xl font-extrabold text-white">145,200+</h3>
-                            <p className="text-xs font-medium text-slate-400">Citizens Connected</p>
+                            <div className="text-[10px] text-gray-500 font-medium">Digital Governance</div>
                         </div>
+                    </Link>
 
-                        <div className="bg-slate-800/60 backdrop-blur-md rounded-2xl p-5 border border-slate-700/60 shadow-lg text-center space-y-1">
-                            <div className="w-10 h-10 mx-auto rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-2">
-                                <CheckCircle2 className="w-5 h-5" />
-                            </div>
-                            <h3 className="text-2xl sm:text-3xl font-extrabold text-white">98.4%</h3>
-                            <p className="text-xs font-medium text-slate-400">Issues Resolved</p>
-                        </div>
+                    {/* Desktop Nav */}
+                    <nav className="hidden md:flex items-center gap-1">
+                        {navItems.map((item) => {
+                            const active = item.href === "/citizen/track";
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                                        active
+                                            ? "bg-green-50 text-green-700 border border-green-200"
+                                            : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                                    }`}
+                                >
+                                    {item.label}
+                                </Link>
+                            );
+                        })}
+                    </nav>
 
-                        <div className="bg-slate-800/60 backdrop-blur-md rounded-2xl p-5 border border-slate-700/60 shadow-lg text-center space-y-1">
-                            <div className="w-10 h-10 mx-auto rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center mb-2">
-                                <Building2 className="w-5 h-5" />
-                            </div>
-                            <h3 className="text-2xl sm:text-3xl font-extrabold text-white">24</h3>
-                            <p className="text-xs font-medium text-slate-400">Departments Connected</p>
-                        </div>
-
-                        <div className="bg-slate-800/60 backdrop-blur-md rounded-2xl p-5 border border-slate-700/60 shadow-lg text-center space-y-1">
-                            <div className="w-10 h-10 mx-auto rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center mb-2">
-                                <Star className="w-5 h-5" />
-                            </div>
-                            <h3 className="text-2xl sm:text-3xl font-extrabold text-white">4.8 / 5</h3>
-                            <p className="text-xs font-medium text-slate-400">Citizen Satisfaction</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* ── 2. How It Works (4 Steps) ─────────────────────────────────── */}
-            <section className="py-16 sm:py-20 bg-white border-b border-slate-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center space-y-3 max-w-2xl mx-auto">
-                        <span className="text-xs font-extrabold text-blue-600 uppercase tracking-wider">Transparent & Fast</span>
-                        <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">How CivicPath Works</h2>
-                        <p className="text-sm text-slate-600">
-                            From the moment an issue is submitted to verified field resolution, every step is logged and transparent.
-                        </p>
-                    </div>
-
-                    <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {/* Step 1 */}
-                        <div className="relative p-6 rounded-2xl bg-slate-50 border border-slate-200/80 hover:border-blue-200 hover:bg-blue-50/20 transition-all duration-200 space-y-3 group">
-                            <div className="w-12 h-12 rounded-xl bg-blue-600 text-white font-extrabold text-sm flex items-center justify-center shadow-md shadow-blue-600/20">
-                                01
-                            </div>
-                            <h4 className="text-lg font-bold text-slate-900">Report Your Issue</h4>
-                            <p className="text-xs text-slate-600 leading-relaxed">
-                                Share photos, exact GPS location, ward details, and description in under 60 seconds.
-                            </p>
-                            <span className="inline-flex items-center text-xs font-semibold text-blue-600 group-hover:translate-x-1 transition duration-200">
-                                Citizen Voice <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
-                            </span>
-                        </div>
-
-                        {/* Step 2 */}
-                        <div className="relative p-6 rounded-2xl bg-slate-50 border border-slate-200/80 hover:border-purple-200 hover:bg-purple-50/20 transition-all duration-200 space-y-3 group">
-                            <div className="w-12 h-12 rounded-xl bg-purple-600 text-white font-extrabold text-sm flex items-center justify-center shadow-md shadow-purple-600/20">
-                                02
-                            </div>
-                            <h4 className="text-lg font-bold text-slate-900">Validation & Routing</h4>
-                            <p className="text-xs text-slate-600 leading-relaxed">
-                                AI duplicate detection & supervisor validation routes the grievance to the right department with SLA.
-                            </p>
-                            <span className="inline-flex items-center text-xs font-semibold text-purple-600 group-hover:translate-x-1 transition duration-200">
-                                Automated Triage <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
-                            </span>
-                        </div>
-
-                        {/* Step 3 */}
-                        <div className="relative p-6 rounded-2xl bg-slate-50 border border-slate-200/80 hover:border-amber-200 hover:bg-amber-50/20 transition-all duration-200 space-y-3 group">
-                            <div className="w-12 h-12 rounded-xl bg-amber-600 text-white font-extrabold text-sm flex items-center justify-center shadow-md shadow-amber-600/20">
-                                03
-                            </div>
-                            <h4 className="text-lg font-bold text-slate-900">Expert Officer Action</h4>
-                            <p className="text-xs text-slate-600 leading-relaxed">
-                                Assigned field engineers arrive on-site, perform maintenance, and capture real-time progress updates.
-                            </p>
-                            <span className="inline-flex items-center text-xs font-semibold text-amber-600 group-hover:translate-x-1 transition duration-200">
-                                Field Execution <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
-                            </span>
-                        </div>
-
-                        {/* Step 4 */}
-                        <div className="relative p-6 rounded-2xl bg-slate-50 border border-slate-200/80 hover:border-emerald-200 hover:bg-emerald-50/20 transition-all duration-200 space-y-3 group">
-                            <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white font-extrabold text-sm flex items-center justify-center shadow-md shadow-emerald-600/20">
-                                04
-                            </div>
-                            <h4 className="text-lg font-bold text-slate-900">Resolution & Quality Proof</h4>
-                            <p className="text-xs text-slate-600 leading-relaxed">
-                                Photo evidence is verified, citizen is notified via SMS/WhatsApp, and progress is logged in the public feed.
-                            </p>
-                            <span className="inline-flex items-center text-xs font-semibold text-emerald-600 group-hover:translate-x-1 transition duration-200">
-                                Verified Closure <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* ── 3. Community Progress: "See the Difference We're Making" ─── */}
-            <section className="py-16 sm:py-20 bg-slate-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                        <div className="space-y-2">
-                            <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Visible Governance</span>
-                            <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                                See the Difference We’re Making
-                            </h2>
-                            <p className="text-xs sm:text-sm text-slate-600 max-w-xl">
-                                Verified before-and-after resolution proof uploaded by field engineers across Dharwad Municipal Corporation.
-                            </p>
-                        </div>
+                    {/* Right */}
+                    <div className="flex items-center gap-3">
+                        <button className="hidden sm:flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900">
+                            <Globe className="w-4 h-4" />
+                            <span>English</span>
+                        </button>
                         <Link
-                            href="/public/dashboard"
-                            className="inline-flex items-center gap-2 text-xs font-bold text-blue-600 hover:text-blue-700 self-start md:self-end"
+                            href="/login"
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-semibold transition"
                         >
-                            <span>Open Public Analytics Dashboard</span>
-                            <ArrowRight className="w-4 h-4" />
+                            <UserCircle className="w-4 h-4" />
+                            <span>Login</span>
                         </Link>
                     </div>
+                </div>
+            </div>
+        </header>
+    );
+}
 
-                    {/* Recently Resolved Cards Grid */}
-                    <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {recentResolutions.map((item) => (
-                            <div
-                                key={item.id}
-                                className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition duration-200 overflow-hidden flex flex-col"
-                            >
-                                {/* Before / After Photo Comparison */}
-                                <div className="grid grid-cols-2 gap-1 p-2 bg-slate-100">
-                                    <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-slate-200">
-                                        <img
-                                            src={item.beforeImage}
-                                            alt="Before"
-                                            className="w-full h-full object-cover"
-                                        />
-                                        <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded bg-black/60 backdrop-blur-md text-white text-[10px] font-bold">
-                                            Before
+/* ─────────────────────────────────────────────
+   HERO
+───────────────────────────────────────────── */
+function HeroSection() {
+    const [trackId, setTrackId] = useState("");
+    const router = useRouter();
+
+    const handleTrack = () => {
+        if (trackId.trim()) {
+            router.push(`/citizen/track?id=${encodeURIComponent(trackId.trim())}`);
+        } else {
+            router.push("/citizen/track");
+        }
+    };
+
+    return (
+        <section className="relative overflow-hidden bg-gradient-to-b from-sky-100 via-blue-50 to-green-50 pt-12 pb-0">
+            {/* Decorative sky elements */}
+            <div className="absolute top-6 right-24 w-16 h-16 opacity-40">
+                <svg viewBox="0 0 64 32" fill="none">
+                    <ellipse cx="32" cy="20" rx="30" ry="14" fill="#93c5fd" />
+                    <ellipse cx="18" cy="22" rx="16" ry="10" fill="#bfdbfe" />
+                    <ellipse cx="46" cy="22" rx="16" ry="10" fill="#bfdbfe" />
+                </svg>
+            </div>
+            <div className="absolute top-10 left-32 w-10 h-10 opacity-30">
+                <svg viewBox="0 0 40 20" fill="none">
+                    <ellipse cx="20" cy="14" rx="18" ry="8" fill="#93c5fd" />
+                </svg>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+
+                    {/* Left: Hero Text + Stats */}
+                    <div className="pt-6 pb-8 space-y-8">
+                        <div className="space-y-4">
+                            <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight">
+                                Together, We Build<br />
+                                <span className="text-green-600">Better Communities</span>
+                            </h1>
+                            <p className="text-base text-gray-600 leading-relaxed max-w-md">
+                                Report. Track. Resolve. Your voice<br />drives real change in your city.
+                            </p>
+                        </div>
+
+                        {/* Quick Stats */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            {[
+                                { icon: Users, value: "12,400+", label: "Citizens Connected", color: "text-blue-600", bg: "bg-blue-50" },
+                                { icon: CheckCircle2, value: "2,450+", label: "Issues Resolved", color: "text-blue-500", bg: "bg-blue-50" },
+                                { icon: Star, value: "94%", label: "Satisfaction Rate", color: "text-pink-500", bg: "bg-pink-50" },
+                                { icon: Shield, value: "6", label: "Departments", color: "text-amber-600", bg: "bg-amber-50" },
+                            ].map((stat, i) => {
+                                const Icon = stat.icon;
+                                return (
+                                    <div key={i} className="flex items-center gap-2 bg-white rounded-xl px-3 py-3 shadow-sm border border-gray-100">
+                                        <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center shrink-0`}>
+                                            <Icon className={`w-4 h-4 ${stat.color}`} />
+                                        </div>
+                                        <div>
+                                            <div className="text-sm font-extrabold text-gray-900 leading-tight">{stat.value}</div>
+                                            <div className="text-[10px] text-gray-500 leading-tight">{stat.label}</div>
                                         </div>
                                     </div>
-                                    <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-slate-200">
-                                        <img
-                                            src={item.afterImage}
-                                            alt="After"
-                                            className="w-full h-full object-cover"
-                                        />
-                                        <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded bg-emerald-600/90 backdrop-blur-md text-white text-[10px] font-bold flex items-center gap-1">
-                                            <CheckCircle2 className="w-2.5 h-2.5" />
-                                            After
-                                        </div>
-                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Right: Track Complaint Widget */}
+                    <div className="flex justify-end items-start pt-4">
+                        <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl border border-gray-100 p-6 space-y-4">
+                            <div className="text-center space-y-1">
+                                <h3 className="text-lg font-bold text-gray-900">Track Your Complaint</h3>
+                                <p className="text-xs text-gray-500">Enter your Complaint ID or registered mobile number</p>
+                            </div>
+                            <div className="flex gap-2">
+                                <div className="flex-1 flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50 focus-within:border-green-400 focus-within:bg-white transition">
+                                    <Search className="w-4 h-4 text-gray-400 shrink-0" />
+                                    <input
+                                        type="text"
+                                        value={trackId}
+                                        onChange={(e) => setTrackId(e.target.value)}
+                                        onKeyDown={(e) => e.key === "Enter" && handleTrack()}
+                                        placeholder="CMP-2024-00341 or 9876543210"
+                                        className="flex-1 text-xs bg-transparent outline-none text-gray-700 placeholder-gray-400"
+                                    />
                                 </div>
+                                <button
+                                    onClick={handleTrack}
+                                    className="px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-bold transition flex items-center gap-1.5"
+                                >
+                                    <Search className="w-3.5 h-3.5" />
+                                    Track
+                                </button>
+                            </div>
+                            <div className="text-xs text-gray-500 text-center">
+                                Demo: Try{" "}
+                                <button
+                                    onClick={() => setTrackId("CMP-2024-00341")}
+                                    className="text-green-600 font-semibold hover:underline"
+                                >
+                                    CMP-2024-00341
+                                </button>
+                                {" "}or{" "}
+                                <button
+                                    onClick={() => setTrackId("CMP-2024-00342")}
+                                    className="text-green-600 font-semibold hover:underline"
+                                >
+                                    CMP-2024-00342
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                                {/* Card Details */}
-                                <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="font-semibold text-slate-500">{item.ward}</span>
-                                            <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-200">
-                                                {item.status}
-                                            </span>
-                                        </div>
-                                        <h4 className="font-bold text-slate-900 text-base leading-snug">{item.title}</h4>
-                                        <p className="text-xs text-slate-500 flex items-center gap-1.5">
-                                            <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                                            {item.department}
-                                        </p>
-                                    </div>
+                {/* Park Illustration (SVG) */}
+                <div className="relative h-48 sm:h-56 mt-4 overflow-hidden">
+                    {/* Ground */}
+                    <div className="absolute bottom-0 left-0 right-0 h-24 bg-green-500 rounded-t-3xl" />
+                    <div className="absolute bottom-6 left-0 right-0 h-20 bg-green-400 rounded-t-3xl opacity-70" />
 
-                                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                                        <span className="font-medium text-emerald-700 bg-emerald-50/50 px-2.5 py-1 rounded-md">
-                                            {item.impact}
-                                        </span>
-                                        <span className="text-[11px] text-slate-400">{item.resolvedTime}</span>
-                                    </div>
+                    {/* City Skyline */}
+                    <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex items-end gap-2 opacity-30">
+                        {[60,90,70,110,75,95,65,85].map((h, i) => (
+                            <div key={i} style={{height: h}} className="w-8 sm:w-10 bg-blue-300 rounded-t-sm" />
+                        ))}
+                    </div>
+
+                    {/* Trees left */}
+                    <div className="absolute bottom-16 left-8">
+                        <div className="w-12 h-16 bg-green-600 rounded-full" style={{borderRadius:"50% 50% 40% 40%"}} />
+                        <div className="w-3 h-6 bg-amber-800 mx-auto" />
+                    </div>
+                    <div className="absolute bottom-16 left-24">
+                        <div className="w-10 h-14 bg-green-500 rounded-full" style={{borderRadius:"50% 50% 40% 40%"}} />
+                        <div className="w-2.5 h-5 bg-amber-800 mx-auto" />
+                    </div>
+
+                    {/* Trees right */}
+                    <div className="absolute bottom-16 right-12">
+                        <div className="w-12 h-18 bg-green-600 rounded-full" style={{borderRadius:"50% 50% 40% 40%", height:72}} />
+                        <div className="w-3 h-6 bg-amber-800 mx-auto" />
+                    </div>
+
+                    {/* Solar panel right */}
+                    <div className="absolute bottom-16 right-32 flex flex-col items-center">
+                        <div className="w-10 h-6 bg-blue-400 border-2 border-blue-600 rounded-sm transform -rotate-6" />
+                        <div className="w-1 h-8 bg-gray-400" />
+                    </div>
+
+                    {/* Bench */}
+                    <div className="absolute bottom-18 left-40" style={{bottom:72}}>
+                        <div className="w-12 h-2 bg-amber-700 rounded" />
+                        <div className="flex justify-between w-12">
+                            <div className="w-1.5 h-4 bg-amber-800" />
+                            <div className="w-1.5 h-4 bg-amber-800" />
+                        </div>
+                    </div>
+
+                    {/* Recycle bin */}
+                    <div className="absolute bottom-16 right-56 flex flex-col items-center">
+                        <div className="w-4 h-3 bg-green-800 rounded-sm opacity-80" />
+                        <div className="w-5 h-6 bg-green-700 rounded-b-sm" />
+                    </div>
+
+                    {/* Family illustration */}
+                    <div className="absolute bottom-16 right-20 flex items-end gap-1">
+                        {/* Child */}
+                        <div className="flex flex-col items-center">
+                            <div className="w-5 h-5 bg-amber-300 rounded-full" />
+                            <div className="w-4 h-8 bg-yellow-400 rounded-sm" />
+                            <div className="flex gap-0.5">
+                                <div className="w-2 h-3 bg-blue-600 rounded-sm" />
+                                <div className="w-2 h-3 bg-blue-600 rounded-sm" />
+                            </div>
+                        </div>
+                        {/* Parent 1 */}
+                        <div className="flex flex-col items-center">
+                            <div className="w-6 h-6 bg-amber-400 rounded-full" />
+                            <div className="w-5 h-10 bg-amber-500 rounded-sm" />
+                            <div className="flex gap-0.5">
+                                <div className="w-2.5 h-3.5 bg-gray-800 rounded-sm" />
+                                <div className="w-2.5 h-3.5 bg-gray-800 rounded-sm" />
+                            </div>
+                        </div>
+                        {/* Parent 2 */}
+                        <div className="flex flex-col items-center">
+                            <div className="w-6 h-6 bg-amber-300 rounded-full" />
+                            <div className="w-5 h-10 bg-green-500 rounded-sm" />
+                            <div className="flex gap-0.5">
+                                <div className="w-2.5 h-3.5 bg-gray-800 rounded-sm" />
+                                <div className="w-2.5 h-3.5 bg-gray-800 rounded-sm" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Path / walkway */}
+                    <div className="absolute bottom-10 left-1/3 w-32 h-4 bg-amber-100 opacity-60 rounded-full" style={{transform:"perspective(100px) rotateX(40deg)"}} />
+                </div>
+            </div>
+
+            {/* Stats Bar */}
+            <div className="bg-white border-t border-gray-200 shadow-sm">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex flex-wrap items-center justify-around py-4 gap-4">
+                        {[
+                            { icon: "📈", value: "3.2 days", label: "Avg. Resolution Time" },
+                            { icon: "👥", value: "12,400+", label: "Citizens Served" },
+                            { icon: "✅", value: "1,832", label: "Issues Resolved" },
+                            { icon: "🕐", value: "315", label: "Active Issues" },
+                            { icon: "⭐", value: "94%", label: "Satisfaction Rate" },
+                        ].map((s, i) => (
+                            <div key={i} className="flex items-center gap-2">
+                                <span className="text-lg">{s.icon}</span>
+                                <div>
+                                    <div className="text-base font-extrabold text-gray-900">{s.value}</div>
+                                    <div className="text-xs text-gray-500">{s.label}</div>
                                 </div>
                             </div>
                         ))}
                     </div>
+                </div>
+            </div>
+        </section>
+    );
+}
 
-                    {/* Active Work in Progress Header */}
-                    <div className="mt-16 pt-12 border-t border-slate-200">
-                        <div className="flex items-center justify-between mb-8">
-                            <div>
-                                <h3 className="text-xl font-bold text-slate-900">Government Work in Progress</h3>
-                                <p className="text-xs text-slate-500">Active municipal improvement works currently under execution</p>
+/* ─────────────────────────────────────────────
+   HOW IT WORKS
+───────────────────────────────────────────── */
+function HowItWorks() {
+    const steps = [
+        {
+            num: "01",
+            icon: FileText,
+            title: "Report Your Issue",
+            desc: "Share details, photos, and location in just a few taps.",
+            color: "bg-green-100 text-green-700",
+            numColor: "text-green-600",
+            iconBg: "bg-green-600",
+        },
+        {
+            num: "02",
+            icon: Shield,
+            title: "AI Validation",
+            desc: "Our AI verifies and routes your issue to the right department.",
+            color: "bg-blue-100 text-blue-700",
+            numColor: "text-blue-600",
+            iconBg: "bg-blue-600",
+        },
+        {
+            num: "03",
+            icon: UserCircle,
+            title: "Expert Assignment",
+            desc: "The responsible officer is assigned with a clear SLA deadline.",
+            color: "bg-purple-100 text-purple-700",
+            numColor: "text-purple-600",
+            iconBg: "bg-purple-600",
+        },
+        {
+            num: "04",
+            icon: Timer,
+            title: "Resolution & Updates",
+            desc: "Get real-time updates until the issue is resolved and verified.",
+            color: "bg-amber-100 text-amber-700",
+            numColor: "text-amber-600",
+            iconBg: "bg-amber-500",
+        },
+    ];
+
+    return (
+        <section className="py-14 bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center space-y-2 mb-10">
+                    <div className="flex items-center justify-center gap-2">
+                        <span className="text-green-600 text-lg">🌿</span>
+                        <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">How It Works</h2>
+                        <span className="text-green-600 text-lg">🌿</span>
+                    </div>
+                    <p className="text-sm text-gray-500">Simple steps to a better, cleaner, and stronger community</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
+                    {steps.map((step, i) => {
+                        const Icon = step.icon;
+                        return (
+                            <React.Fragment key={i}>
+                                <div className="relative bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-200 space-y-3">
+                                    <div className="flex items-start gap-3">
+                                        <div className={`w-12 h-12 rounded-xl ${step.iconBg} flex items-center justify-center shrink-0`}>
+                                            <Icon className="w-6 h-6 text-white" />
+                                        </div>
+                                        <div className={`text-2xl font-black ${step.numColor} opacity-80`}>{step.num}</div>
+                                    </div>
+                                    <h4 className="font-bold text-gray-900 text-sm">{step.title}</h4>
+                                    <p className="text-xs text-gray-500 leading-relaxed">{step.desc}</p>
+                                </div>
+                                {i < steps.length - 1 && (
+                                    <div className="hidden lg:flex absolute items-center" style={{ left: `calc(${(i + 1) * 25}% - 10px)`, top: "50%", transform: "translateY(-50%)" }}>
+                                        <ArrowRight className="w-5 h-5 text-gray-300" />
+                                    </div>
+                                )}
+                            </React.Fragment>
+                        );
+                    })}
+                </div>
+            </div>
+        </section>
+    );
+}
+
+/* ─────────────────────────────────────────────
+   CTA BANNER
+───────────────────────────────────────────── */
+function CTABanner() {
+    return (
+        <section className="mx-4 sm:mx-8 lg:mx-16 my-6 rounded-2xl overflow-hidden bg-gradient-to-r from-green-50 to-blue-50 border border-green-200">
+            <div className="flex flex-col md:flex-row items-center justify-between px-8 py-8 gap-6">
+                {/* Left: Park illustration mini */}
+                <div className="hidden md:flex items-end gap-1 shrink-0">
+                    <div className="w-8 h-12 bg-green-600 rounded-t-full" />
+                    <div className="w-2 h-5 bg-amber-800" />
+                    <div className="w-12 h-16 bg-green-500 rounded-t-full" />
+                    <div className="w-2.5 h-6 bg-amber-700" />
+                    <div className="w-10 h-10 bg-amber-200 rounded-sm" />
+                    <div className="w-2 h-3 bg-amber-700" />
+                </div>
+
+                <div className="flex-1 space-y-2 text-center md:text-left">
+                    <h3 className="text-xl font-extrabold text-gray-900">See something that needs attention?</h3>
+                    <p className="text-sm text-gray-600">Report it today and help make your city better for everyone.</p>
+                </div>
+
+                <div className="flex gap-3 shrink-0">
+                    <Link
+                        href="/citizen/report"
+                        className="flex items-center gap-2 px-6 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-sm transition shadow-md shadow-green-600/20"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Report Issue
+                    </Link>
+                    <Link
+                        href="/citizen/track"
+                        className="flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-green-600 text-green-700 font-bold text-sm hover:bg-green-50 transition"
+                    >
+                        Track Status
+                        <ArrowRight className="w-4 h-4" />
+                    </Link>
+                </div>
+
+                {/* Right city skyline */}
+                <div className="hidden md:flex items-end gap-1 opacity-30 shrink-0">
+                    {[40, 60, 45, 80, 55].map((h, i) => (
+                        <div key={i} style={{ height: h }} className="w-6 bg-blue-400 rounded-t-sm" />
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+}
+
+/* ─────────────────────────────────────────────
+   RECENTLY RESOLVED
+───────────────────────────────────────────── */
+function RecentlyResolved() {
+    const items = [
+        {
+            title: "Pothole repaired on Nehru Street",
+            category: "Roads",
+            ward: "Ward 12",
+            time: "2h ago",
+            color: "text-green-600",
+            bg: "bg-green-50",
+        },
+        {
+            title: "Water supply restored in Block C",
+            category: "Water",
+            ward: "Ward 7",
+            time: "1d ago",
+            color: "text-blue-600",
+            bg: "bg-blue-50",
+        },
+        {
+            title: "Street lights replaced on MG Road",
+            category: "Lighting",
+            ward: "Ward 5",
+            time: "2d ago",
+            color: "text-amber-600",
+            bg: "bg-amber-50",
+        },
+        {
+            title: "Garbage bins cleared at Market Road",
+            category: "Sanitation",
+            ward: "Ward 3",
+            time: "3d ago",
+            color: "text-teal-600",
+            bg: "bg-teal-50",
+        },
+    ];
+
+    return (
+        <section className="py-10 bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5 text-green-600" />
+                        <h2 className="text-lg font-extrabold text-gray-900">Recently Resolved</h2>
+                    </div>
+                    <Link href="/public/dashboard" className="text-sm text-green-600 font-semibold flex items-center gap-1 hover:underline">
+                        View All <ArrowRight className="w-4 h-4" />
+                    </Link>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {items.map((item, i) => (
+                        <div key={i} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition space-y-3">
+                            <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
+                                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                </div>
+                                <p className="text-sm font-semibold text-gray-900 leading-snug">{item.title}</p>
                             </div>
-                            <Link href="/constituency" className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1">
-                                View all projects <ChevronRight className="w-3.5 h-3.5" />
-                            </Link>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className={`text-xs font-semibold ${item.color}`}>{item.category}</span>
+                                <span className="text-gray-300">•</span>
+                                <span className="text-xs text-gray-500">{item.ward}</span>
+                                <span className="ml-auto text-xs text-gray-400">{item.time}</span>
+                            </div>
                         </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {activeProjects.map((p, idx) => (
-                                <ProgressCard key={idx} {...p} />
-                            ))}
-                        </div>
-                    </div>
+                    ))}
                 </div>
-            </section>
+            </div>
+        </section>
+    );
+}
 
-            {/* ── 4. Positive Community Call to Action ──────────────────────── */}
-            <section className="bg-gradient-to-r from-blue-700 via-blue-800 to-slate-900 text-white py-16">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-                    <div className="inline-flex p-3 rounded-2xl bg-white/10 backdrop-blur-md text-emerald-300">
-                        <Sparkles className="w-7 h-7" />
-                    </div>
-                    <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-                        See Something That Needs Attention?
-                    </h2>
-                    <p className="text-sm sm:text-base text-blue-100 max-w-2xl mx-auto">
-                        Report potholes, broken street lights, water leaks, or garbage accumulation. Your voice drives visible municipal action.
-                    </p>
-                    <div className="pt-2">
-                        <Link
-                            href="/citizen/report"
-                            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm shadow-xl shadow-emerald-500/20 transition duration-200"
-                        >
-                            <PlusCircle className="w-5 h-5" />
-                            <span>Report an Issue Today</span>
+/* ─────────────────────────────────────────────
+   FOOTER
+───────────────────────────────────────────── */
+function Footer() {
+    return (
+        <footer className="bg-white border-t border-gray-200 pt-10 pb-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-8 border-b border-gray-100">
+                    {/* Brand */}
+                    <div className="space-y-4">
+                        <Link href="/" className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center">
+                                <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-white" stroke="currentColor" strokeWidth="2">
+                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                                    <circle cx="12" cy="9" r="2.5" fill="white" stroke="none" />
+                                </svg>
+                            </div>
+                            <div>
+                                <div className="font-extrabold text-gray-900">
+                                    <span className="text-green-600">Civic</span>Path
+                                </div>
+                            </div>
                         </Link>
+                        <p className="text-xs text-gray-500 leading-relaxed">
+                            Empowering citizens to report and track civic issues for a better community.
+                        </p>
+                        <div className="flex items-center gap-3">
+                            <a href="#" className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition">
+                                <Facebook className="w-4 h-4" />
+                            </a>
+                            <a href="#" className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition">
+                                <Twitter className="w-4 h-4" />
+                            </a>
+                            <a href="#" className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-pink-100 hover:text-pink-600 transition">
+                                <Instagram className="w-4 h-4" />
+                            </a>
+                            <a href="#" className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-red-100 hover:text-red-600 transition">
+                                <Youtube className="w-4 h-4" />
+                            </a>
+                        </div>
+                    </div>
+
+                    {/* Quick Links */}
+                    <div className="space-y-3">
+                        <h5 className="text-sm font-extrabold text-gray-900">Quick Links</h5>
+                        <ul className="space-y-2 text-sm text-gray-600">
+                            <li><Link href="/citizen/report" className="hover:text-green-600 transition">Report Issue</Link></li>
+                            <li><Link href="/citizen/track" className="hover:text-green-600 transition">Track Complaint</Link></li>
+                            <li><Link href="/public/dashboard" className="hover:text-green-600 transition">Public Dashboard</Link></li>
+                        </ul>
+                    </div>
+
+                    {/* Resources */}
+                    <div className="space-y-3">
+                        <h5 className="text-sm font-extrabold text-gray-900">Resources</h5>
+                        <ul className="space-y-2 text-sm text-gray-600">
+                            <li><Link href="/" className="hover:text-green-600 transition">How It Works</Link></li>
+                            <li><span className="cursor-pointer hover:text-green-600 transition">FAQs</span></li>
+                            <li><span className="cursor-pointer hover:text-green-600 transition">Privacy Policy</span></li>
+                            <li><span className="cursor-pointer hover:text-green-600 transition">Terms of Service</span></li>
+                        </ul>
+                    </div>
+
+                    {/* Helpline */}
+                    <div className="space-y-3">
+                        <h5 className="text-sm font-extrabold text-gray-900">Helpline</h5>
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                                <Phone className="w-4 h-4 text-green-600" />
+                                <span className="text-sm font-semibold text-gray-900">1800-XXX-XXXX (Toll Free)</span>
+                            </div>
+                            <div className="space-y-0.5 pt-2">
+                                <p className="text-xs text-gray-500">Powered by</p>
+                                <p className="text-sm font-bold text-green-600">Cascade Technologies Solutions</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </section>
 
-            <PublicFooter />
+                {/* Copyright */}
+                <div className="pt-5 flex items-center justify-center gap-2 text-xs text-gray-400">
+                    <span>© 2024 CivicPath. All rights reserved.</span>
+                    <span className="text-green-500">🌿</span>
+                </div>
+            </div>
+        </footer>
+    );
+}
+
+/* ─────────────────────────────────────────────
+   PAGE
+───────────────────────────────────────────── */
+export default function HomePage() {
+    return (
+        <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+            <Navbar />
+            <main className="flex-1">
+                <HeroSection />
+                <HowItWorks />
+                <CTABanner />
+                <RecentlyResolved />
+            </main>
+            <Footer />
         </div>
     );
 }
