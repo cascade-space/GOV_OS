@@ -123,25 +123,25 @@ function HeroSection() {
                 />
 
                 {/* Content grid pinned to the top, floating over the image */}
-                <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pt-8 pb-6">
-                    <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
+                <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pt-6 pb-0">
+                    <div className="flex flex-col lg:flex-row items-start justify-between gap-4">
 
                         {/* ── LEFT: Headline + subtitle + stat chips ── */}
-                        <div className="flex-1 max-w-md space-y-5">
+                        <div className="flex-1 max-w-lg space-y-2">
                             {/* Headline */}
                             <div>
                                 <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-[1.1]">
                                     Together, We Build<br />
                                     <span className="text-green-600">Better Communities</span>
                                 </h1>
-                                <p className="mt-3 text-[15px] text-gray-700 leading-snug font-medium">
+                                <p className="mt-1 text-[14px] text-gray-700 leading-snug font-medium">
                                     Report. Track. Resolve. Your voice<br />
                                     drives real change in your city.
                                 </p>
                             </div>
 
-                            {/* Stat chips — single row, compact */}
-                            <div className="flex flex-wrap gap-2">
+                            {/* Stat chips — all 4 in ONE row, no wrap */}
+                            <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1">
                                 {[
                                     { icon: Users,        value: "12,400+", label: "Citizens Connected",  iColor: "text-blue-600",  iBg: "bg-blue-50"  },
                                     { icon: CheckCircle2, value: "2,450+",  label: "Issues Resolved",     iColor: "text-blue-500",  iBg: "bg-blue-50"  },
@@ -168,8 +168,8 @@ function HeroSection() {
                         </div>
 
                         {/* ── RIGHT: Track Your Complaint card ── */}
-                        <div className="w-full lg:w-auto lg:min-w-[320px] xl:min-w-[360px]">
-                            <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 space-y-4">
+                        <div className="w-full lg:w-auto lg:min-w-[300px] xl:min-w-[340px] shrink-0">
+                            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 space-y-3">
                                 <div className="text-center space-y-0.5">
                                     <h3 className="text-base font-bold text-gray-900">Track Your Complaint</h3>
                                     <p className="text-[11px] text-gray-500">Enter your Complaint ID or registered mobile number</p>
@@ -204,8 +204,8 @@ function HeroSection() {
                         </div>
                     </div>
 
-                    {/* Spacer so the park / family / tree illustration shows at the bottom */}
-                    <div className="h-44 sm:h-52 lg:h-56" />
+                    {/* Spacer — park/family illustration visible right below content */}
+                    <div className="h-28 sm:h-36 lg:h-44" />
                 </div>
             </section>
 
