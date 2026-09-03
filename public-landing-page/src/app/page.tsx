@@ -107,122 +107,134 @@ function HeroSection() {
             router.push("/citizen/track");
         }
     };
-    return (
-        <section className="relative overflow-hidden" style={{ minHeight: 520 }}>
-            {/* Full background park image */}
-            <img
-                src="/hero-park.jpeg"
-                alt=""
-                aria-hidden="true"
-                className="absolute inset-0 w-full h-full object-cover object-bottom pointer-events-none select-none"
-            />
-            {/* Minimal top-only sky tint so headline text is readable — transparent below 60% */}
-            <div
-                className="absolute inset-0 pointer-events-none"
-                style={{ background: "linear-gradient(to bottom, rgba(219,239,254,0.88) 0%, rgba(240,249,255,0.60) 35%, rgba(240,249,255,0.10) 60%, transparent 80%)" }}
-            />
-            {/* Content directly over image */}
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
-                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
-                    {/* LEFT: Title + subtitle + stat chips */}
-                    <div className="flex-1 max-w-lg space-y-6">
-                        <div>
-                            <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight">
-                                Together, We Build<br />
-                                <span className="text-green-600">Better Communities</span>
-                            </h1>
-                            <p className="text-base text-gray-700 leading-relaxed mt-3">
-                                Report. Track. Resolve. Your voice<br />drives real change in your city.
-                            </p>
-                        </div>
-                        {/* Stat chips */}
-                        <div className="flex flex-wrap gap-2.5">
-                            {[
-                                { icon: Users,        value: "12,400+", label: "Citizens Connected",  iconColor: "text-blue-600",  iconBg: "bg-blue-50"  },
-                                { icon: CheckCircle2, value: "2,450+",  label: "Issues Resolved",     iconColor: "text-blue-500",  iconBg: "bg-blue-50"  },
-                                { icon: Star,         value: "94%",     label: "Satisfaction Rate",   iconColor: "text-pink-500",  iconBg: "bg-pink-50"  },
-                                { icon: Shield,       value: "6",       label: "Departments",         iconColor: "text-amber-600", iconBg: "bg-amber-50" },
-                            ].map((s, i) => {
-                                const Icon = s.icon;
-                                return (
-                                    <div key={i} className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2.5 shadow-sm border border-white/60">
-                                        <div className={`w-7 h-7 rounded-lg ${s.iconBg} flex items-center justify-center shrink-0`}>
-                                            <Icon className={`w-3.5 h-3.5 ${s.iconColor}`} />
-                                        </div>
-                                        <div>
-                                            <div className="text-sm font-extrabold text-gray-900">{s.value}</div>
-                                            <div className="text-[10px] text-gray-500 leading-none">{s.label}</div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                    {/* RIGHT: Track Complaint card */}
-                    <div className="w-full lg:w-auto lg:min-w-[340px] lg:max-w-sm">
-                        <div className="bg-white/96 backdrop-blur-md rounded-2xl shadow-2xl border border-white/80 p-6 space-y-4">
-                            <div className="text-center space-y-1">
-                                <h3 className="text-lg font-bold text-gray-900">Track Your Complaint</h3>
-                                <p className="text-xs text-gray-500">Enter your Complaint ID or registered mobile number</p>
-                            </div>
-                            <div className="flex gap-2">
-                                <div className="flex-1 flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50 focus-within:border-green-400 focus-within:bg-white transition">
-                                    <Search className="w-4 h-4 text-gray-400 shrink-0" />
-                                    <input
-                                        type="text"
-                                        value={trackId}
-                                        onChange={(e) => setTrackId(e.target.value)}
-                                        onKeyDown={(e) => e.key === "Enter" && handleTrack()}
-                                        placeholder="CMP-2024-00341 or 9876543210"
-                                        className="flex-1 text-xs bg-transparent outline-none text-gray-700 placeholder-gray-400"
-                                    />
-                                </div>
-                                <button
-                                    onClick={handleTrack}
-                                    className="px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-bold transition flex items-center gap-1.5 shrink-0"
-                                >
-                                    <Search className="w-3.5 h-3.5" />
-                                    Track
-                                </button>
-                            </div>
-                            <div className="text-xs text-gray-500 text-center">
-                                Demo: Try{" "}
-                                <button onClick={() => setTrackId("CMP-2024-00341")} className="text-green-600 font-semibold hover:underline">CMP-2024-00341</button>
-                                {" "}or{" "}
-                                <button onClick={() => setTrackId("CMP-2024-00342")} className="text-green-600 font-semibold hover:underline">CMP-2024-00342</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {/* Spacer — bottom of image (trees, family, cityscape) shows below content */}
-                <div className="h-48 sm:h-60 lg:h-64" />
-            </div>
 
-            {/* Stats Bar */}
-            <div className="bg-white border-t border-gray-200 shadow-sm">
+    return (
+        <div>
+            {/* ── Hero image area ── */}
+            <section
+                className="relative overflow-hidden"
+                style={{ minHeight: 420 }}
+            >
+                {/* Background: herosection.jpeg fills the whole section */}
+                <img
+                    src="/herosection.jpeg"
+                    alt="CivicPath community park hero"
+                    className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none"
+                />
+
+                {/* Content grid pinned to the top, floating over the image */}
+                <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pt-8 pb-6">
+                    <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
+
+                        {/* ── LEFT: Headline + subtitle + stat chips ── */}
+                        <div className="flex-1 max-w-md space-y-5">
+                            {/* Headline */}
+                            <div>
+                                <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-[1.1]">
+                                    Together, We Build<br />
+                                    <span className="text-green-600">Better Communities</span>
+                                </h1>
+                                <p className="mt-3 text-[15px] text-gray-700 leading-snug font-medium">
+                                    Report. Track. Resolve. Your voice<br />
+                                    drives real change in your city.
+                                </p>
+                            </div>
+
+                            {/* Stat chips — single row, compact */}
+                            <div className="flex flex-wrap gap-2">
+                                {[
+                                    { icon: Users,        value: "12,400+", label: "Citizens Connected",  iColor: "text-blue-600",  iBg: "bg-blue-50"  },
+                                    { icon: CheckCircle2, value: "2,450+",  label: "Issues Resolved",     iColor: "text-blue-500",  iBg: "bg-blue-50"  },
+                                    { icon: Star,         value: "94%",     label: "Satisfaction Rate",   iColor: "text-pink-500",  iBg: "bg-pink-50"  },
+                                    { icon: Shield,       value: "6",       label: "Departments",         iColor: "text-amber-600", iBg: "bg-amber-50" },
+                                ].map((s, i) => {
+                                    const Icon = s.icon;
+                                    return (
+                                        <div
+                                            key={i}
+                                            className="flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-xl px-2.5 py-2 shadow-sm border border-gray-100/80"
+                                        >
+                                            <div className={`w-6 h-6 rounded-lg ${s.iBg} flex items-center justify-center shrink-0`}>
+                                                <Icon className={`w-3 h-3 ${s.iColor}`} />
+                                            </div>
+                                            <div>
+                                                <div className="text-xs font-extrabold text-gray-900 leading-none">{s.value}</div>
+                                                <div className="text-[9px] text-gray-500 leading-none mt-0.5">{s.label}</div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* ── RIGHT: Track Your Complaint card ── */}
+                        <div className="w-full lg:w-auto lg:min-w-[320px] xl:min-w-[360px]">
+                            <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 space-y-4">
+                                <div className="text-center space-y-0.5">
+                                    <h3 className="text-base font-bold text-gray-900">Track Your Complaint</h3>
+                                    <p className="text-[11px] text-gray-500">Enter your Complaint ID or registered mobile number</p>
+                                </div>
+                                <div className="flex gap-2">
+                                    <div className="flex-1 flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 focus-within:border-green-500 focus-within:bg-white transition">
+                                        <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                        <input
+                                            type="text"
+                                            value={trackId}
+                                            onChange={(e) => setTrackId(e.target.value)}
+                                            onKeyDown={(e) => e.key === "Enter" && handleTrack()}
+                                            placeholder="CMP-2024-00341 or 9876543210"
+                                            className="flex-1 text-[11px] bg-transparent outline-none text-gray-700 placeholder-gray-400"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={handleTrack}
+                                        className="px-3.5 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0"
+                                    >
+                                        <Search className="w-3 h-3" />
+                                        Track
+                                    </button>
+                                </div>
+                                <p className="text-[10px] text-gray-500 text-center">
+                                    Demo: Try{" "}
+                                    <button onClick={() => setTrackId("CMP-2024-00341")} className="text-green-600 font-semibold hover:underline">CMP-2024-00341</button>
+                                    {" "}or{" "}
+                                    <button onClick={() => setTrackId("CMP-2024-00342")} className="text-green-600 font-semibold hover:underline">CMP-2024-00342</button>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Spacer so the park / family / tree illustration shows at the bottom */}
+                    <div className="h-44 sm:h-52 lg:h-56" />
+                </div>
+            </section>
+
+            {/* ── White Stats Bar (below hero image, outside the section) ── */}
+            <div className="bg-white border border-gray-200 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-wrap items-center justify-around py-4 gap-4">
+                    <div className="flex flex-wrap items-center justify-around py-4 gap-x-6 gap-y-3 divide-x divide-gray-100">
                         {[
-                            { icon: "📈", value: "3.2 days", label: "Avg. Resolution Time" },
-                            { icon: "👥", value: "12,400+", label: "Citizens Served" },
-                            { icon: "✅", value: "1,832", label: "Issues Resolved" },
-                            { icon: "🕐", value: "315", label: "Active Issues" },
-                            { icon: "⭐", value: "94%", label: "Satisfaction Rate" },
+                            { emoji: "📈", value: "3.2 days",  label: "Avg. Resolution Time" },
+                            { emoji: "👥", value: "12,400+",   label: "Citizens Served"       },
+                            { emoji: "✅", value: "1,832",     label: "Issues Resolved"       },
+                            { emoji: "🕐", value: "315",       label: "Active Issues"         },
+                            { emoji: "⭐", value: "94%",       label: "Satisfaction Rate"     },
                         ].map((s, i) => (
-                            <div key={i} className="flex items-center gap-2">
-                                <span className="text-lg">{s.icon}</span>
+                            <div key={i} className="flex items-center gap-2 px-4 first:pl-0 last:pr-0">
+                                <span className="text-xl">{s.emoji}</span>
                                 <div>
-                                    <div className="text-base font-extrabold text-gray-900">{s.value}</div>
-                                    <div className="text-xs text-gray-500">{s.label}</div>
+                                    <div className="text-base font-extrabold text-gray-900 leading-tight">{s.value}</div>
+                                    <div className="text-[11px] text-gray-500">{s.label}</div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
     );
 }
+
 
 /* ─────────────────────────────────────────────
    HOW IT WORKS
