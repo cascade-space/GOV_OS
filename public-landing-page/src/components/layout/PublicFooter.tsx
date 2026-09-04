@@ -80,9 +80,9 @@ export function PublicFooter() {
                 </div>
 
                 {/* Bottom Copyright Bar */}
-                <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-400">
+                <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-400 text-center sm:text-left">
                     <p>© 2026 CivicPath — GovOS Technology. All rights reserved. 🌿</p>
-                    <div className="flex items-center gap-5 text-[11px]">
+                    <div className="flex flex-wrap items-center justify-center sm:justify-end gap-3 sm:gap-5 text-[11px]">
                         <span className="hover:text-gray-600 cursor-pointer transition">Privacy Policy</span>
                         <span className="hover:text-gray-600 cursor-pointer transition">Citizen Charter</span>
                         <span className="hover:text-gray-600 cursor-pointer transition">Terms of Service</span>
