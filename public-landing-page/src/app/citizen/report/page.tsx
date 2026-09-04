@@ -231,13 +231,13 @@ export default function ReportPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+        <div className="min-h-screen bg-slate-50/60 flex flex-col font-sans">
             <PublicNavbar />
-            <div className="flex-1 max-w-3xl w-full mx-auto py-10 px-4">
+            <div className="flex-1 max-w-3xl w-full mx-auto py-10 px-4 sm:px-6">
                 {/* Back Button */}
                 <div className="mb-6">
                     <Link href="/">
-                        <Button variant="outline" className="flex items-center gap-2">
+                        <Button variant="ghost" className="flex items-center gap-2 text-slate-600 hover:text-emerald-700">
                             <ArrowLeft className="w-4 h-4" />
                             {t('report.backToHome')}
                         </Button>
@@ -245,33 +245,53 @@ export default function ReportPage() {
                 </div>
 
                 {/* Header */}
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-black text-gray-900 mb-2">{t('report.title')}</h1>
-                    <p className="text-gray-600">{t('report.subtitle')}</p>
+                <div className="text-center mb-10 space-y-2.5">
+                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-100/80 text-emerald-800 text-xs font-bold uppercase tracking-wider border border-emerald-200/60">
+                        <span>Direct Citizen Reporting</span>
+                    </div>
+                    <h1 className="text-3xl sm:text-4xl font-black text-gray-950 tracking-tight">{t('report.title')}</h1>
+                    <p className="text-sm sm:text-base text-gray-600 max-w-lg mx-auto">{t('report.subtitle')}</p>
                 </div>
 
                 {/* Progress Steps */}
-                <div className="flex items-center justify-center mb-8">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                        <div key={s} className="flex items-center">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
-                                s < step ? "bg-civic-green text-white" :
-                                s === step ? "bg-civic-blue text-white" :
-                                "bg-gray-200 text-gray-400"
-                            }`}>
-                                {s < step ? <CheckCircle2 className="w-5 h-5" /> : s}
+                <div className="flex items-center justify-center mb-10 px-2">
+                    {[
+                        { num: 1, label: "Details" },
+                        { num: 2, label: "Location" },
+                        { num: 3, label: "Photos" },
+                        { num: 4, label: "Contact" },
+                        { num: 5, label: "Terms" }
+                    ].map((s, idx) => (
+                        <div key={s.num} className="flex items-center">
+                            <div className="flex flex-col items-center">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all shadow-sm ${
+                                    s.num < step ? "bg-emerald-600 text-white shadow-emerald-600/20" :
+                                    s.num === step ? "bg-emerald-600 text-white ring-4 ring-emerald-100 shadow-md shadow-emerald-600/30 scale-105" :
+                                    "bg-white border-2 border-gray-200 text-gray-400"
+                                }`}>
+                                    {s.num < step ? <CheckCircle2 className="w-5 h-5 stroke-[2.5]" /> : s.num}
+                                </div>
+                                <span className={`text-[11px] font-bold mt-1.5 hidden sm:block ${
+                                    s.num <= step ? "text-emerald-800" : "text-gray-400"
+                                }`}>
+                                    {s.label}
+                                </span>
                             </div>
-                            {s < 5 && <div className={`w-16 h-1 ${s < step ? "bg-civic-green" : "bg-gray-200"}`} />}
+                            {idx < 4 && (
+                                <div className={`w-8 sm:w-16 h-1 mx-1 sm:mx-2 rounded-full mb-0 sm:mb-4 transition-all ${
+                                    s.num < step ? "bg-emerald-500" : "bg-gray-200"
+                                }`} />
+                            )}
                         </div>
                     ))}
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)}>
-                    <div className="civic-card p-8">
+                    <div className="bg-white rounded-3xl border border-gray-200/80 shadow-xl shadow-slate-200/40 p-6 sm:p-10">
                         {/* Step 1: Issue Details */}
                         {step === 1 && (
                             <div className="space-y-5 animate-fade-in">
-                                <h2 className="text-xl font-bold text-gray-900 mb-4">{t('report.issueDetails')}</h2>
+                                <h2 className="text-xl font-extrabold text-gray-950 mb-4">{t('report.issueDetails')}</h2>
                                 
                                 <div>
                                     <label className="label-field">{t('report.issueTitle')} *</label>
@@ -319,7 +339,7 @@ export default function ReportPage() {
 
                                 <div>
                                     <label className="label-field">{t('report.priority')} *</label>
-                                    <div className="grid grid-cols-4 gap-2">
+                                    <div className="grid grid-cols-4 gap-2.5">
                                         {PRIORITIES.map(p => (
                                             <label key={p} className="cursor-pointer">
                                                 <input
@@ -328,7 +348,7 @@ export default function ReportPage() {
                                                     value={p}
                                                     className="sr-only peer"
                                                 />
-                                                <div className="p-3 border-2 rounded-xl text-center font-bold text-sm capitalize peer-checked:border-civic-blue peer-checked:bg-blue-50 hover:border-gray-300 transition-all">
+                                                <div className="p-3 border-2 border-gray-200 rounded-xl text-center font-bold text-sm capitalize peer-checked:border-emerald-600 peer-checked:bg-emerald-50/80 peer-checked:text-emerald-900 hover:border-emerald-300 transition-all">
                                                     {t(`priorities.${p}`)}
                                                 </div>
                                             </label>
@@ -342,20 +362,21 @@ export default function ReportPage() {
                         {step === 2 && (
                             <div className="space-y-5 animate-fade-in">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h2 className="text-xl font-bold text-gray-900">{t('report.location')}</h2>
+                                    <h2 className="text-xl font-extrabold text-gray-950">{t('report.location')}</h2>
                                     <Button
                                         type="button"
                                         size="sm"
                                         variant="ghost"
                                         onClick={getCurrentLocation}
                                         loading={locationLoading}
-                                        leftIcon={<MapPin className="w-4 h-4" />}
+                                        leftIcon={<MapPin className="w-4 h-4 text-emerald-600" />}
+                                        className="text-emerald-700 hover:bg-emerald-50"
                                     >
                                         {t('report.useCurrentLocation')}
                                     </Button>
                                 </div>
 
-                                <div className="h-[400px] rounded-2xl overflow-hidden">
+                                <div className="h-[400px] rounded-2xl overflow-hidden border border-emerald-200 shadow-sm">
                                     <CivicMapbox
                                         center={[longitude, latitude]}
                                         zoom={15}
@@ -377,15 +398,15 @@ export default function ReportPage() {
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>
                                         <label className="label-field">Ward</label>
-                                        <input {...register("ward")} className="input-field bg-gray-50" readOnly />
+                                        <input {...register("ward")} className="input-field bg-slate-50 font-semibold" readOnly />
                                     </div>
                                     <div>
                                         <label className="label-field">Latitude</label>
-                                        <input value={latitude.toFixed(6)} className="input-field bg-gray-50 text-xs" readOnly />
+                                        <input value={latitude.toFixed(6)} className="input-field bg-slate-50 text-xs font-mono" readOnly />
                                     </div>
                                     <div>
                                         <label className="label-field">Longitude</label>
-                                        <input value={longitude.toFixed(6)} className="input-field bg-gray-50 text-xs" readOnly />
+                                        <input value={longitude.toFixed(6)} className="input-field bg-slate-50 text-xs font-mono" readOnly />
                                     </div>
                                 </div>
                             </div>
@@ -394,7 +415,7 @@ export default function ReportPage() {
                         {/* Step 3: Photos */}
                         {step === 3 && (
                             <div className="space-y-5 animate-fade-in">
-                                <h2 className="text-xl font-bold text-gray-900 mb-4">{t('report.uploadPhotos')}</h2>
+                                <h2 className="text-xl font-extrabold text-gray-950 mb-4">{t('report.uploadPhotos')}</h2>
                                 
                                 {!showCamera ? (
                                     <>
@@ -402,12 +423,12 @@ export default function ReportPage() {
                                             <button
                                                 type="button"
                                                 onClick={startCamera}
-                                                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-civic-blue text-white rounded-xl font-semibold hover:bg-navy-700 transition-colors"
+                                                className="flex-1 flex items-center justify-center gap-2 px-5 py-3.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition shadow-md shadow-emerald-600/20 active:scale-95"
                                             >
                                                 <Camera className="w-5 h-5" />
                                                 {t('report.takePhoto')}
                                             </button>
-                                            <div className="flex-1 text-center text-gray-400 flex items-center justify-center">
+                                            <div className="flex-1 text-center text-gray-400 font-semibold flex items-center justify-center">
                                                 or
                                             </div>
                                         </div>
@@ -415,7 +436,7 @@ export default function ReportPage() {
                                         <div
                                             {...getRootProps()}
                                             className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
-                                                isDragActive ? "border-civic-blue bg-blue-50" : "border-gray-300 hover:border-gray-400"
+                                                isDragActive ? "border-emerald-600 bg-emerald-50" : "border-gray-300 hover:border-emerald-400 hover:bg-emerald-50/20"
                                             }`}
                                         >
                                             <input {...getInputProps()} />
@@ -508,9 +529,9 @@ export default function ReportPage() {
                                     {errors.citizenMobile && <p className="text-red-500 text-xs mt-1">{errors.citizenMobile.message}</p>}
                                 </div>
 
-                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                                    <p className="text-sm text-blue-900">
-                                        <strong>Note:</strong> {t('report.contactNote')}
+                                <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-4">
+                                    <p className="text-sm text-emerald-950 font-medium">
+                                        <strong className="text-emerald-800">Note:</strong> {t('report.contactNote')}
                                     </p>
                                 </div>
                             </div>
@@ -519,9 +540,9 @@ export default function ReportPage() {
                         {/* Step 5: Terms and Conditions */}
                         {step === 5 && (
                             <div className="space-y-5 animate-fade-in">
-                                <h2 className="text-xl font-bold text-gray-900 mb-4">{t('report.termsAndConditions')}</h2>
+                                <h2 className="text-xl font-extrabold text-gray-950 mb-4">{t('report.termsAndConditions')}</h2>
                                 
-                                <div className="bg-gray-50 border-2 border-gray-200 rounded-2xl p-6 max-h-[400px] overflow-y-auto">
+                                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 max-h-[400px] overflow-y-auto">
                                     <div className="prose prose-sm max-w-none text-gray-700 space-y-4">
                                         <h3 className="text-base font-bold text-gray-900">{t('report.termsTitle')}</h3>
                                         
@@ -610,23 +631,23 @@ export default function ReportPage() {
                                     </div>
                                 </div>
 
-                                <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4">
+                                <div className="bg-emerald-50/60 border-2 border-emerald-200 rounded-2xl p-4">
                                     <label className="flex items-start gap-3 cursor-pointer">
                                         <input
                                             type="checkbox"
                                             checked={termsAccepted}
                                             onChange={(e) => setTermsAccepted(e.target.checked)}
-                                            className="mt-1 w-5 h-5 rounded border-2 border-amber-400 text-civic-blue focus:ring-2 focus:ring-civic-blue cursor-pointer"
+                                            className="mt-1 w-5 h-5 rounded border-2 border-emerald-400 text-emerald-600 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                                         />
-                                        <span className="text-sm text-gray-900 leading-relaxed">
+                                        <span className="text-sm font-medium text-gray-900 leading-relaxed">
                                             {t('report.agreeCheckbox')}
                                         </span>
                                     </label>
                                 </div>
 
                                 {!termsAccepted && (
-                                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
-                                        <p className="text-xs text-blue-800">
+                                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                                        <p className="text-xs text-amber-800 font-medium">
                                             {t('report.pleaseAcceptTerms')}
                                         </p>
                                     </div>

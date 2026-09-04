@@ -36,20 +36,20 @@
 
   /* ---- Civic Card ---- */
   .civic-card {
-    @apply bg-white rounded-2xl border border-gray-100 shadow-card;
+    @apply bg-white rounded-2xl border border-gray-200/80 shadow-sm hover:border-emerald-200/60 transition-all;
   }
 
   .civic-card-elevated {
-    @apply bg-white rounded-2xl border border-gray-100 shadow-card-lg hover:shadow-card-xl transition-shadow duration-300;
+    @apply bg-white rounded-2xl border border-gray-200/80 shadow-card-lg hover:shadow-card-xl transition-shadow duration-300;
   }
 
   /* ---- Civic Buttons ---- */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-civic-blue text-white font-semibold rounded-xl hover:bg-navy-700 active:bg-navy-800 transition-all duration-200 shadow-card hover:shadow-card-md text-sm;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 active:bg-emerald-800 transition-all duration-200 shadow-md shadow-emerald-600/20 text-sm;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white text-civic-blue font-semibold rounded-xl border-2 border-civic-blue hover:bg-navy-50 transition-all duration-200 text-sm;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white text-emerald-700 font-bold rounded-xl border-2 border-emerald-600 hover:bg-emerald-50 transition-all duration-200 text-sm;
   }
 
   .btn-orange {
@@ -57,7 +57,7 @@
   }
 
   .btn-green {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-civic-green text-white font-semibold rounded-xl hover:bg-green-700 transition-all duration-200 shadow-card-md text-sm;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all duration-200 shadow-card-md text-sm;
   }
 
   .btn-danger {
@@ -65,7 +65,7 @@
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-gray-600 font-medium rounded-xl hover:bg-gray-100 transition-all duration-200 text-sm;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-gray-600 font-semibold rounded-xl hover:bg-emerald-50 hover:text-emerald-700 transition-all duration-200 text-sm;
   }
 
   .btn-sm {
@@ -74,7 +74,7 @@
 
   /* ---- Form Inputs ---- */
   .input-field {
-    @apply w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-civic-blue-light/30 focus:border-civic-blue-light transition-all duration-200 text-sm;
+    @apply w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all duration-200 text-sm;
   }
 
   .input-field-error {

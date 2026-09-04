@@ -35,9 +35,9 @@ export function ComplaintStepper({ currentStatus, className }: StepperProps) {
                             <div
                                 className={cn(
                                     "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300",
-                                    isDone && "bg-civic-green shadow-glow-green",
-                                    isActive && "bg-civic-blue shadow-glow ring-4 ring-blue-100",
-                                    isPending && "bg-gray-100"
+                                    isDone && "bg-emerald-600 text-white shadow-sm",
+                                    isActive && "bg-emerald-600 text-white ring-4 ring-emerald-100 shadow-md shadow-emerald-600/20",
+                                    isPending && "bg-gray-100 text-gray-300"
                                 )}
                             >
                                 {isDone ? (
@@ -49,16 +49,16 @@ export function ComplaintStepper({ currentStatus, className }: StepperProps) {
                                 )}
                             </div>
                             {!isLast && (
-                                <div className={cn("w-0.5 h-8 mt-1", isDone ? "bg-civic-green" : "bg-gray-200")} />
+                                <div className={cn("w-0.5 h-8 mt-1", isDone ? "bg-emerald-500" : "bg-gray-200")} />
                             )}
                         </div>
                         {/* Content */}
                         <div className={cn("pb-6", isLast && "pb-0")}>
                             <p
                                 className={cn(
-                                    "text-sm font-semibold",
-                                    isDone && "text-civic-green",
-                                    isActive && "text-civic-blue",
+                                    "text-sm font-bold",
+                                    isDone && "text-emerald-700",
+                                    isActive && "text-emerald-700",
                                     isPending && "text-gray-400"
                                 )}
                             >

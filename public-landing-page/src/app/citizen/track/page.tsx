@@ -104,55 +104,79 @@ function TrackContent() {
 
     return (
         <CitizenLayout>
-            <div className="max-w-2xl mx-auto px-4 py-10">
+            <div className="max-w-2xl mx-auto px-4 py-12">
                 {/* Header */}
-                <div className="mb-8 text-center">
-                    <h1 className="text-2xl font-black text-gray-900">Track Your Complaint</h1>
-                    <p className="text-gray-500 text-sm mt-1">Enter your Complaint ID or registered mobile number</p>
+                <div className="mb-10 text-center space-y-2.5">
+                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-100/80 text-emerald-800 text-xs font-bold uppercase tracking-wider border border-emerald-200/60">
+                        <span>Real-Time Grievance Tracker</span>
+                    </div>
+                    <h1 className="text-3xl sm:text-4xl font-black text-gray-950 tracking-tight">Track Your Complaint</h1>
+                    <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
+                        Enter your Complaint ID or registered 10-digit mobile number for instant SLA status and live action logs.
+                    </p>
                 </div>
 
                 {/* Search Box */}
-                <div className="civic-card p-5 mb-6">
-                    <div className="flex gap-2">
+                <div className="bg-white rounded-3xl border border-gray-200/80 shadow-xl shadow-slate-200/40 p-6 sm:p-8 mb-8 space-y-4">
+                    <div className="flex flex-col sm:flex-row gap-3">
                         <div className="relative flex-1">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                             <input
                                 value={searchInput}
                                 onChange={(e) => setSearchInput(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                                placeholder="CMP-2024-00341 or 9876543210"
-                                className="input-field pl-10"
+                                placeholder="e.g. CMP-2024-00341 or 9876543210"
+                                className="w-full pl-12 pr-4 py-3.5 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm font-semibold transition-all"
                             />
                         </div>
-                        <Button onClick={handleSearch} loading={loading} leftIcon={<Search className="w-4 h-4" />}>
+                        <Button
+                            onClick={handleSearch}
+                            loading={loading}
+                            leftIcon={<Search className="w-4 h-4 stroke-[2.5]" />}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3.5 rounded-2xl shadow-lg shadow-emerald-600/20 active:scale-95 transition"
+                        >
                             Track
                         </Button>
                     </div>
-                    <p className="text-xs text-gray-400 mt-2">Demo: Try <strong>CMP-2024-00341</strong> or <strong>CMP-2024-00342</strong></p>
+                    <div className="flex flex-wrap items-center gap-2 pt-3 text-xs text-gray-500 border-t border-gray-100">
+                        <span className="font-bold text-gray-600">Quick Test IDs:</span>
+                        {["CMP-2024-00341", "CMP-2024-00342", "CMP-2024-00343"].map((id) => (
+                            <button
+                                key={id}
+                                type="button"
+                                onClick={() => {
+                                    setSearchInput(id);
+                                }}
+                                className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 font-bold transition cursor-pointer"
+                            >
+                                {id}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {/* ── Result ── */}
                 {searched && !complaint && !loading && (
-                    <div className="text-center py-12">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Search className="w-8 h-8 text-gray-300" />
+                    <div className="text-center py-12 bg-white rounded-3xl border border-gray-200/80 p-8 shadow-sm">
+                        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Search className="w-8 h-8 text-gray-400" />
                         </div>
-                        <h3 className="font-bold text-gray-900 text-lg">No Complaint Found</h3>
-                        <p className="text-gray-500 text-sm mt-1">Check the Complaint ID or mobile number and try again.</p>
+                        <h3 className="font-extrabold text-gray-900 text-lg">No Complaint Found</h3>
+                        <p className="text-gray-500 text-sm mt-1">Please verify the Complaint ID or phone number and try again.</p>
                     </div>
                 )}
 
                 {complaint && (
-                    <div className="space-y-5 animate-slide-up">
+                    <div className="space-y-6 animate-slide-up">
                         {/* Main Info Card */}
-                        <div className="civic-card p-5">
+                        <div className="bg-white rounded-3xl border border-gray-200/80 shadow-xl shadow-slate-200/40 p-6 sm:p-8">
                             {/* Success Banner for New Submissions */}
                             {complaint.status === "submitted" && complaint.id && complaint.id.startsWith("temp-") && (
-                                <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 mb-4 flex gap-3">
-                                    <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />
+                                <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 mb-5 flex gap-3.5">
+                                    <CheckCircle2 className="w-6 h-6 text-emerald-600 flex-shrink-0" />
                                     <div>
-                                        <p className="text-sm font-bold text-green-900">Complaint Submitted Successfully!</p>
-                                        <p className="text-xs text-green-700 mt-1">
+                                        <p className="text-sm font-extrabold text-emerald-950">Complaint Submitted Successfully!</p>
+                                        <p className="text-xs text-emerald-800 mt-1 leading-relaxed">
                                             Your complaint has been registered. You will receive SMS/WhatsApp updates on your registered mobile number.
                                             Our team will review and assign it to the appropriate department shortly.
                                         </p>
@@ -160,58 +184,56 @@ function TrackContent() {
                                 </div>
                             )}
                             
-                            <div className="flex items-start justify-between gap-3 mb-4">
+                            <div className="flex items-start justify-between gap-3 mb-5">
                                 <div>
-                                    <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">{complaint.complaintNumber}</p>
-                                    <h2 className="text-lg font-bold text-gray-900 mt-1">{complaint.title}</h2>
+                                    <p className="text-xs text-emerald-700 font-bold uppercase tracking-wider">{complaint.complaintNumber}</p>
+                                    <h2 className="text-xl font-black text-gray-950 mt-1">{complaint.title}</h2>
                                 </div>
                                 <StatusBadge status={complaint.status} />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3 mb-4">
-                                <div className="bg-gray-50 rounded-xl p-3">
-                                    <p className="text-xs text-gray-400 font-medium">Priority</p>
-                                    <div className="mt-1"><PriorityBadge priority={complaint.priority} /></div>
+                            <div className="grid grid-cols-2 gap-3.5 mb-5">
+                                <div className="bg-slate-50 border border-slate-150 rounded-2xl p-3.5">
+                                    <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Priority</p>
+                                    <div className="mt-1.5"><PriorityBadge priority={complaint.priority} /></div>
                                 </div>
-                                <div className="bg-gray-50 rounded-xl p-3">
-                                    <p className="text-xs text-gray-400 font-medium">SLA Status</p>
-                                    <p className={cn("text-sm font-bold mt-1", sla?.color)}>{sla?.label}</p>
+                                <div className="bg-slate-50 border border-slate-150 rounded-2xl p-3.5">
+                                    <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">SLA Status</p>
+                                    <p className={cn("text-sm font-extrabold mt-1.5", sla?.color)}>{sla?.label}</p>
                                 </div>
-                                <div className="bg-gray-50 rounded-xl p-3">
+                                <div className="bg-slate-50 border border-slate-150 rounded-2xl p-3.5">
                                     <div className="flex items-center gap-1.5 mb-1">
-                                        <Building2 className="w-3 h-3 text-gray-400" />
-                                        <p className="text-xs text-gray-400 font-medium">Department</p>
+                                        <Building2 className="w-3.5 h-3.5 text-emerald-600" />
+                                        <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Department</p>
                                     </div>
-                                    <p className="text-sm font-semibold text-gray-800">{complaint.assignedDept || "Pending Assignment"}</p>
+                                    <p className="text-sm font-bold text-gray-900">{complaint.assignedDept || "Pending Assignment"}</p>
                                 </div>
-                                <div className="bg-gray-50 rounded-xl p-3">
+                                <div className="bg-slate-50 border border-slate-150 rounded-2xl p-3.5">
                                     <div className="flex items-center gap-1.5 mb-1">
-                                        <User className="w-3 h-3 text-gray-400" />
-                                        <p className="text-xs text-gray-400 font-medium">Field Officer</p>
+                                        <User className="w-3.5 h-3.5 text-emerald-600" />
+                                        <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Field Officer</p>
                                     </div>
-                                    <p className="text-sm font-semibold text-gray-800">{complaint.assignedOfficer || "Not Assigned"}</p>
+                                    <p className="text-sm font-bold text-gray-900">{complaint.assignedOfficer || "Not Assigned"}</p>
                                 </div>
                             </div>
 
-                            <div className="flex items-start gap-2 text-sm text-gray-600 mb-3">
-                                <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                                <span>{complaint.locationAddress}</span>
+                            <div className="flex items-start gap-2 text-sm text-gray-600 mb-4 bg-slate-50/70 p-3 rounded-xl">
+                                <MapPin className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                                <span className="font-medium">{complaint.locationAddress}</span>
                             </div>
                             
                             {/* Get Directions Button */}
                             <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full"
-                                leftIcon={<MapPin className="w-4 h-4" />}
+                                variant="secondary"
+                                size="md"
+                                className="w-full font-bold"
+                                leftIcon={<MapPin className="w-4 h-4 text-emerald-600" />}
                                 onClick={() => {
-                                    // Use coordinates if available, otherwise use address
                                     let url;
                                     if (complaint.latitude && complaint.longitude && 
                                         complaint.latitude !== 0 && complaint.longitude !== 0) {
                                         url = `https://www.google.com/maps/dir/?api=1&destination=${complaint.latitude},${complaint.longitude}`;
                                     } else {
-                                        // Fallback to address search
                                         const address = encodeURIComponent(complaint.locationAddress || complaint.location_address || '');
                                         url = `https://www.google.com/maps/search/?api=1&query=${address}`;
                                     }
@@ -222,66 +244,66 @@ function TrackContent() {
                                 Get Directions to Location
                             </Button>
                             
-                            <div className="flex items-center gap-2 text-xs text-gray-400 mt-2">
-                                <Clock className="w-3.5 h-3.5" />
+                            <div className="flex items-center gap-2 text-xs text-gray-400 mt-3 font-medium">
+                                <Clock className="w-3.5 h-3.5 text-gray-400" />
                                 Submitted {formatDateTime(complaint.createdAt)}
                             </div>
                         </div>
 
                         {/* Escalation Banner */}
                         {complaint.isEscalated && (
-                            <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex gap-3">
-                                <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                            <div className="bg-rose-50 border-2 border-rose-200 rounded-2xl p-4 flex gap-3">
+                                <AlertTriangle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="text-sm font-bold text-red-800">SLA Breached — Escalated</p>
-                                    <p className="text-xs text-red-600 mt-0.5">This complaint has been escalated to the supervisor for immediate attention.</p>
+                                    <p className="text-sm font-extrabold text-rose-900">SLA Breached — Escalated</p>
+                                    <p className="text-xs text-rose-700 mt-0.5">This complaint has been escalated to the supervisor for immediate resolution.</p>
                                 </div>
                             </div>
                         )}
 
                         {/* Lifecycle Stepper */}
-                        <div className="civic-card p-5">
-                            <h3 className="font-bold text-gray-900 mb-5">Complaint Progress</h3>
+                        <div className="bg-white rounded-3xl border border-gray-200/80 shadow-sm p-6 sm:p-8">
+                            <h3 className="font-extrabold text-gray-950 text-base mb-6">Complaint Progress</h3>
                             <ComplaintStepper currentStatus={complaint.status} />
                         </div>
 
                         {/* Status History */}
-                        <div className="civic-card p-5">
-                            <h3 className="font-bold text-gray-900 mb-4">Update Timeline</h3>
+                        <div className="bg-white rounded-3xl border border-gray-200/80 shadow-sm p-6 sm:p-8">
+                            <h3 className="font-extrabold text-gray-950 text-base mb-5">Update Timeline</h3>
                             {complaint.id && complaint.id.startsWith("temp-") ? (
                                 <div className="space-y-3">
                                     <div className="flex gap-3">
-                                        <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                                            <CheckCircle2 className="w-4 h-4 text-civic-green" />
+                                        <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0 border border-emerald-200">
+                                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-sm font-semibold text-gray-900">Submitted</span>
+                                                <span className="text-sm font-bold text-gray-950">Submitted</span>
                                                 <span className="text-xs text-gray-400">Just now</span>
                                             </div>
-                                            <p className="text-xs text-gray-500">Complaint received and registered in the system — by <strong>System</strong></p>
+                                            <p className="text-xs text-gray-500 mt-0.5">Complaint received and registered in the system — by <strong>System</strong></p>
                                         </div>
                                     </div>
-                                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 ml-11">
-                                        <p className="text-xs text-blue-800">
-                                            <strong>Next Steps:</strong> Your complaint will be validated by our operations team within 24 hours 
+                                    <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3.5 ml-11">
+                                        <p className="text-xs text-emerald-950 leading-relaxed">
+                                            <strong className="text-emerald-800">Next Steps:</strong> Your complaint will be validated by our operations team within 24 hours 
                                             and assigned to the appropriate department. You'll receive updates at each stage.
                                         </p>
                                     </div>
                                 </div>
                             ) : (
-                                <div className="space-y-3">
+                                <div className="space-y-4">
                                 {HISTORY_MOCK.map((h, i) => (
-                                    <div key={i} className="flex gap-3">
-                                        <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                                            <CheckCircle2 className="w-4 h-4 text-civic-blue" />
+                                    <div key={i} className="flex gap-3.5">
+                                        <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0 border border-emerald-200">
+                                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-sm font-semibold text-gray-900">{h.status}</span>
+                                                <span className="text-sm font-bold text-gray-950">{h.status}</span>
                                                 <span className="text-xs text-gray-400">{h.time}</span>
                                             </div>
-                                            <p className="text-xs text-gray-500">{h.note} — by <strong>{h.by}</strong></p>
+                                            <p className="text-xs text-gray-600 mt-0.5">{h.note} — by <strong>{h.by}</strong></p>
                                         </div>
                                     </div>
                                     ))}
@@ -290,13 +312,13 @@ function TrackContent() {
                         </div>
 
                         {/* Help */}
-                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-center gap-3">
-                            <div className="w-10 h-10 bg-civic-blue/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                                <Phone className="w-5 h-5 text-civic-blue" />
+                        <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-2xl p-5 flex items-center gap-4">
+                            <div className="w-12 h-12 bg-emerald-600 text-white rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md shadow-emerald-600/20">
+                                <Phone className="w-5 h-5" />
                             </div>
                             <div>
-                                <p className="text-sm font-semibold text-gray-800">Need Help?</p>
-                                <p className="text-xs text-gray-500">Call our helpline: <strong>1800-XXX-XXXX</strong> (Toll Free, 9AM–6PM)</p>
+                                <p className="text-sm font-extrabold text-emerald-950">Need Assistance?</p>
+                                <p className="text-xs text-gray-600 mt-0.5">Call our civic helpline: <strong className="text-emerald-800 font-bold">1800-425-CIVIC</strong> (Toll Free, 24/7 Citizen Support)</p>
                             </div>
                         </div>
                     </div>

@@ -22,16 +22,16 @@ export function StatCard({
     subtitle,
     icon: Icon,
     trend,
-    color = "blue",
+    color = "green",
     className = "",
 }: StatCardProps) {
     const colorStyles = {
         blue: {
-            iconBg: "bg-blue-50 text-blue-600 border-blue-100",
-            border: "hover:border-blue-300",
+            iconBg: "bg-emerald-50 text-emerald-700 border-emerald-100",
+            border: "hover:border-emerald-300",
         },
         green: {
-            iconBg: "bg-emerald-50 text-emerald-600 border-emerald-100",
+            iconBg: "bg-emerald-50 text-emerald-700 border-emerald-100",
             border: "hover:border-emerald-300",
         },
         orange: {
@@ -52,12 +52,12 @@ export function StatCard({
 
     return (
         <div
-            className={`bg-white rounded-2xl p-5 border border-slate-200 shadow-sm transition-all duration-200 hover:shadow-md ${currentStyle.border} ${className}`}
+            className={`bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm transition-all duration-200 hover:shadow-md ${currentStyle.border} ${className}`}
         >
             <div className="flex items-start justify-between">
                 <div className="space-y-1">
-                    <p className="text-xs font-medium text-slate-500 tracking-wide uppercase">{title}</p>
-                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{value}</h3>
+                    <p className="text-xs font-semibold text-slate-500 tracking-wider uppercase">{title}</p>
+                    <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">{value}</h3>
                 </div>
                 <div className={`w-11 h-11 rounded-xl border flex items-center justify-center ${currentStyle.iconBg}`}>
                     <Icon className="w-5 h-5" />
@@ -69,7 +69,7 @@ export function StatCard({
                     {subtitle && <span className="text-slate-500 font-medium">{subtitle}</span>}
                     {trend && (
                         <span
-                            className={`inline-flex items-center gap-0.5 font-semibold ${
+                            className={`inline-flex items-center gap-0.5 font-bold ${
                                 trend.positive ? "text-emerald-600" : "text-rose-600"
                             }`}
                         >
@@ -109,7 +109,7 @@ export function ProgressCard({
     budget,
 }: ProgressCardProps) {
     return (
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition duration-200 space-y-3.5">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md hover:border-emerald-200 transition duration-200 space-y-3.5">
             <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
@@ -117,11 +117,11 @@ export function ProgressCard({
                             {ward}
                         </span>
                         <span className="text-xs text-slate-400">•</span>
-                        <span className="text-xs font-medium text-blue-600">{department}</span>
+                        <span className="text-xs font-semibold text-emerald-700">{department}</span>
                     </div>
                     <h4 className="font-bold text-slate-900 text-base">{title}</h4>
                 </div>
-                <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold whitespace-nowrap">
+                <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold whitespace-nowrap">
                     {status}
                 </span>
             </div>
@@ -129,11 +129,11 @@ export function ProgressCard({
             <div className="space-y-1.5">
                 <div className="flex justify-between text-xs font-medium">
                     <span className="text-slate-500">Project Execution</span>
-                    <span className="text-slate-900 font-bold">{progress}%</span>
+                    <span className="text-emerald-700 font-bold">{progress}%</span>
                 </div>
                 <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                     <div
-                        className="h-full bg-gradient-to-r from-blue-600 to-emerald-500 rounded-full transition-all duration-500"
+                        className="h-full bg-gradient-to-r from-emerald-500 to-green-600 rounded-full transition-all duration-500"
                         style={{ width: `${progress}%` }}
                     />
                 </div>
