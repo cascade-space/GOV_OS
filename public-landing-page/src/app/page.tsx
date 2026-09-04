@@ -290,39 +290,37 @@ function HowItWorks() {
 ───────────────────────────────────────────── */
 function CTABanner() {
     return (
-        <section className="relative mx-4 sm:mx-8 lg:mx-16 my-8 rounded-2xl overflow-hidden border border-emerald-300 shadow-sm bg-slate-50 min-h-[140px] md:min-h-[150px] flex items-center">
-            {/* Panoramic Park Illustration Background */}
+        <section className="relative mx-4 sm:mx-8 lg:mx-16 my-8 rounded-3xl overflow-hidden border border-emerald-200/80 shadow-sm bg-emerald-50/20">
+            {/* Background Panorama Illustration */}
             <div
-                className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none"
-                style={{ backgroundImage: `url('/cta-banner.jpeg')` }}
+                className="absolute inset-0 bg-no-repeat bg-cover md:bg-[length:100%_100%] bg-bottom pointer-events-none"
+                style={{ backgroundImage: `url('/cta-banner-bg.png')` }}
             />
-            {/* Subtle soft tint overlay to guarantee strong text contrast and button clarity */}
-            <div className="absolute inset-0 bg-white/25 pointer-events-none" />
 
-            <div className="relative z-10 w-full flex flex-col md:flex-row items-center justify-between px-6 sm:px-12 py-7 md:py-8 gap-6">
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between pl-6 sm:pl-32 md:pl-44 lg:pl-52 pr-6 sm:pr-16 md:pr-24 lg:pr-32 py-7 md:py-9 gap-6">
                 <div className="flex-1 space-y-1.5 text-center md:text-left">
-                    <h3 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight drop-shadow-[0_1px_2px_rgba(255,255,255,0.85)]">
+                    <h3 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
                         See something that needs attention?
                     </h3>
-                    <p className="text-sm sm:text-base font-semibold text-gray-700 drop-shadow-[0_1px_2px_rgba(255,255,255,0.85)]">
+                    <p className="text-sm sm:text-base font-medium text-gray-600">
                         Report it today and help make your city better for everyone.
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3.5 shrink-0">
+                <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
                     <Link
                         href="/citizen/report"
-                        className="flex items-center gap-2 px-6 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-sm transition shadow-lg shadow-green-600/30 hover:shadow-green-600/40 transform hover:-translate-y-0.5"
+                        className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition-all shadow-md shadow-emerald-600/20 hover:shadow-emerald-600/30 hover:-translate-y-0.5 active:translate-y-0"
                     >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-4 h-4 stroke-[2.5]" />
                         Report Issue
                     </Link>
                     <Link
                         href="/citizen/track"
-                        className="flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-green-700/80 bg-white/95 hover:bg-white text-green-800 font-bold text-sm transition shadow-sm hover:shadow transform hover:-translate-y-0.5 backdrop-blur-sm"
+                        className="flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-emerald-600 text-emerald-700 bg-white/80 hover:bg-white backdrop-blur-sm font-bold text-sm transition-all hover:border-emerald-700 hover:-translate-y-0.5 active:translate-y-0 shadow-sm"
                     >
                         Track Status
-                        <ArrowRight className="w-4 h-4" />
+                        <ArrowRight className="w-4 h-4 stroke-[2.5]" />
                     </Link>
                 </div>
             </div>
