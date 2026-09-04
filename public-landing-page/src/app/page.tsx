@@ -290,45 +290,40 @@ function HowItWorks() {
 ───────────────────────────────────────────── */
 function CTABanner() {
     return (
-        <section className="mx-4 sm:mx-8 lg:mx-16 my-6 rounded-2xl overflow-hidden bg-gradient-to-r from-green-50 to-blue-50 border border-green-200">
-            <div className="flex flex-col md:flex-row items-center justify-between px-8 py-8 gap-6">
-                {/* Left: Park illustration mini */}
-                <div className="hidden md:flex items-end gap-1 shrink-0">
-                    <div className="w-8 h-12 bg-green-600 rounded-t-full" />
-                    <div className="w-2 h-5 bg-amber-800" />
-                    <div className="w-12 h-16 bg-green-500 rounded-t-full" />
-                    <div className="w-2.5 h-6 bg-amber-700" />
-                    <div className="w-10 h-10 bg-amber-200 rounded-sm" />
-                    <div className="w-2 h-3 bg-amber-700" />
+        <section className="relative mx-4 sm:mx-8 lg:mx-16 my-8 rounded-2xl overflow-hidden border border-emerald-300 shadow-sm bg-slate-50 min-h-[140px] md:min-h-[150px] flex items-center">
+            {/* Panoramic Park Illustration Background */}
+            <div
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none"
+                style={{ backgroundImage: `url('/cta-banner.jpeg')` }}
+            />
+            {/* Subtle soft tint overlay to guarantee strong text contrast and button clarity */}
+            <div className="absolute inset-0 bg-white/25 pointer-events-none" />
+
+            <div className="relative z-10 w-full flex flex-col md:flex-row items-center justify-between px-6 sm:px-12 py-7 md:py-8 gap-6">
+                <div className="flex-1 space-y-1.5 text-center md:text-left">
+                    <h3 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight drop-shadow-[0_1px_2px_rgba(255,255,255,0.85)]">
+                        See something that needs attention?
+                    </h3>
+                    <p className="text-sm sm:text-base font-semibold text-gray-700 drop-shadow-[0_1px_2px_rgba(255,255,255,0.85)]">
+                        Report it today and help make your city better for everyone.
+                    </p>
                 </div>
 
-                <div className="flex-1 space-y-2 text-center md:text-left">
-                    <h3 className="text-xl font-extrabold text-gray-900">See something that needs attention?</h3>
-                    <p className="text-sm text-gray-600">Report it today and help make your city better for everyone.</p>
-                </div>
-
-                <div className="flex gap-3 shrink-0">
+                <div className="flex items-center gap-3.5 shrink-0">
                     <Link
                         href="/citizen/report"
-                        className="flex items-center gap-2 px-6 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-sm transition shadow-md shadow-green-600/20"
+                        className="flex items-center gap-2 px-6 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-sm transition shadow-lg shadow-green-600/30 hover:shadow-green-600/40 transform hover:-translate-y-0.5"
                     >
                         <Plus className="w-4 h-4" />
                         Report Issue
                     </Link>
                     <Link
                         href="/citizen/track"
-                        className="flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-green-600 text-green-700 font-bold text-sm hover:bg-green-50 transition"
+                        className="flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-green-700/80 bg-white/95 hover:bg-white text-green-800 font-bold text-sm transition shadow-sm hover:shadow transform hover:-translate-y-0.5 backdrop-blur-sm"
                     >
                         Track Status
                         <ArrowRight className="w-4 h-4" />
                     </Link>
-                </div>
-
-                {/* Right city skyline */}
-                <div className="hidden md:flex items-end gap-1 opacity-30 shrink-0">
-                    {[40, 60, 45, 80, 55].map((h, i) => (
-                        <div key={i} style={{ height: h }} className="w-6 bg-blue-400 rounded-t-sm" />
-                    ))}
                 </div>
             </div>
         </section>
