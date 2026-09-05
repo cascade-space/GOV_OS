@@ -17,6 +17,24 @@ export interface CreatePublicComplaintDTO {
 
 export const complaintService = {
     /**
+     * Upload an attachment file to MinIO object storage.
+     */
+    uploadFile: async (file: File): Promise<{ success: boolean; url?: string; error?: string }> => {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+            return await res.json();
+        } catch (err: any) {
+            console.error('File upload error:', err);
+            return { success: false, error: err.message || 'Upload failed' };
+        }
+    },
+
+    /**
      * Submit a complaint from the public citizen portal.
      * Calls the GovOS public endpoint — no JWT required.
      */
@@ -31,20 +49,46 @@ export const complaintService = {
         location: { address: string; latitude: number; longitude: number; ward: string };
         attachments?: File[];
     }) => {
+        let finalDescription = data.description;
+        const uploadedUrls: string[] = [];
+
+        // Upload any attached files to MinIO
+        if (data.attachments && data.attachments.length > 0) {
+            try {
+                const uploadResults = await Promise.all(
+                    data.attachments.map((f) => complaintService.uploadFile(f))
+                );
+                uploadResults.forEach((r) => {
+                    if (r.success && r.url) {
+                        uploadedUrls.push(r.url);
+                    }
+                });
+
+                if (uploadedUrls.length > 0) {
+                    finalDescription += `\n\n[Evidence Attachments: ${uploadedUrls.join(', ')}]`;
+                }
+            } catch (uploadErr) {
+                console.warn('Attachments upload warning:', uploadErr);
+            }
+        }
+
         // Map to GovOS public endpoint DTO
         const payload: CreatePublicComplaintDTO = {
             name: data.citizenName,
             mobile: data.citizenMobile,
             title: data.title,
-            description: data.description,
+            description: finalDescription,
             latitude: data.location.latitude,
             longitude: data.location.longitude,
             locationAddress: data.location.address,
             subCategory: data.subCategory,
         };
 
-        const response = await api.post('/public/complaints', payload);
-        return response;
+        const response: any = await api.post('/public/complaints', payload);
+        return {
+            ...response,
+            uploadedAttachments: uploadedUrls,
+        };
     },
 
     /**

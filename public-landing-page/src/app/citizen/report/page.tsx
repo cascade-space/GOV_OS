@@ -202,29 +202,24 @@ export default function ReportPage() {
                 attachments: files,
             });
 
-            const complaintNumber = result?.complaintNumber || `CMP-${Date.now()}`;
+            if (!result?.complaintNumber) {
+                throw new Error(result?.message || 'Complaint submission did not return an ID');
+            }
+
+            const complaintNumber = result.complaintNumber;
             
-            // Show success notification with complaint number
             toast.success(
-                `Complaint submitted successfully! Your complaint ID is ${complaintNumber}. You will receive updates on your mobile.`,
-                { duration: 5000 }
+                `Complaint submitted successfully! Complaint ID: ${complaintNumber}.`,
+                { duration: 6000 }
             );
             
             setTimeout(() => {
                 router.push(`/citizen/track?id=${complaintNumber}`);
-            }, 2000);
+            }, 1500);
         } catch (error: any) {
-            // Show the actual error for debugging
-            console.error('API Error:', error);
-            const errorMessage = error.response?.data?.error || error.message || 'Failed to submit complaint';
-            toast.error(`Error: ${errorMessage}`);
-            
-            // If API fails, create mock complaint number as fallback
-            const mockComplaintNumber = `CMP-2024-${String(Math.floor(Math.random() * 10000)).padStart(5, '0')}`;
-            toast.error(`API failed. Using mock ID: ${mockComplaintNumber}`);
-            setTimeout(() => {
-                router.push(`/citizen/track?id=${mockComplaintNumber}`);
-            }, 2000);
+            console.error('Submission Error:', error);
+            const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to submit complaint. Please check your details and try again.';
+            toast.error(errorMessage, { duration: 5000 });
         } finally {
             setSubmitting(false);
         }
