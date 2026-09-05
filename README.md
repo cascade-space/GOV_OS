@@ -1,6 +1,5 @@
 # GovOS — Multi-Tenant Civic Governance Operating System
 
-> **Prajna Labs × Cascade Technologies Solutions**
 > A browser-based Web OS for unified, real-time civic governance across municipalities, panchayats, and urban local bodies.
 
 ---

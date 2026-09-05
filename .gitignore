@@ -77,6 +77,7 @@ govos-web/dist/
 govos-web/.env.local
 govos-web/coverage/
 govos-web/playwright-report/
+*.tsbuildinfo
 
 # ====================================================================
 # public-landing-page (React / Vite)
@@ -89,6 +90,8 @@ public-landing-page/coverage/
 # ====================================================================
 # Docker & Infrastructure
 # ====================================================================
+infra/docker/.env
+infra/docker/credentials/
 infra/docker/postgres/data/
 infra/docker/redis/data/
 infra/docker/minio/data/

@@ -1,5 +1,4 @@
 # GovOS Architecture — Living Document
-# Prajna Labs × Cascade Technologies Solutions
 
 ---
 
