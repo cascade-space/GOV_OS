@@ -65,6 +65,13 @@ public class JpaComplaintRepositoryImpl implements ComplaintRepository {
     }
 
     @Override
+    public List<Complaint> findByStatusIn(List<ComplaintStatus> statuses) {
+        return springDataRepo.findByStatusIn(statuses).stream()
+                .map(this::toDomainEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public String generateNextComplaintNumber(UUID tenantId) {
         long seq = springDataRepo.getNextSequenceForTenant(tenantId);
         String yyyyMM = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
@@ -130,6 +137,10 @@ public class JpaComplaintRepositoryImpl implements ComplaintRepository {
         jpa.setWorkStartedAt(domain.getWorkStartedAt());
         jpa.setWorkCompletedAt(domain.getWorkCompletedAt());
         jpa.setResolvedAt(domain.getResolvedAt());
+        jpa.setSlaDeadline(domain.getSlaDeadline());
+        jpa.setSlaBreached(domain.isSlaBreached());
+        jpa.setSlaWarningSent(domain.isSlaWarningSent());
+        jpa.setEscalationLevel(domain.getEscalationLevel());
         jpa.setCreatedAt(domain.getCreatedAt());
         jpa.setUpdatedAt(domain.getUpdatedAt());
         jpa.setDeleted(domain.isDeleted());
@@ -163,6 +174,10 @@ public class JpaComplaintRepositoryImpl implements ComplaintRepository {
         domain.setWorkStartedAt(jpa.getWorkStartedAt());
         domain.setWorkCompletedAt(jpa.getWorkCompletedAt());
         domain.setResolvedAt(jpa.getResolvedAt());
+        domain.setSlaDeadline(jpa.getSlaDeadline());
+        domain.setSlaBreached(jpa.isSlaBreached());
+        domain.setSlaWarningSent(jpa.isSlaWarningSent());
+        domain.setEscalationLevel(jpa.getEscalationLevel());
         domain.setCreatedAt(jpa.getCreatedAt());
         domain.setUpdatedAt(jpa.getUpdatedAt());
         domain.setDeleted(jpa.isDeleted());

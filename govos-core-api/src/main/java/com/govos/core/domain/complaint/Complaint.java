@@ -39,6 +39,12 @@ public class Complaint {
     private Instant workStartedAt;
     private Instant workCompletedAt;
     private Instant resolvedAt;
+
+    // SLA & Escalation fields
+    private Instant slaDeadline;
+    private boolean slaBreached;
+    private boolean slaWarningSent;
+    private int escalationLevel;
     
     private Instant createdAt;
     private Instant updatedAt;
@@ -62,6 +68,11 @@ public class Complaint {
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
         this.isDeleted = false;
+
+        this.slaBreached = false;
+        this.slaWarningSent = false;
+        this.escalationLevel = 0;
+        this.computeAndSetSlaDeadline();
     }
 
     // Required for ORM mappers
@@ -74,6 +85,40 @@ public class Complaint {
             this.wardId = suggestedWard;
         }
         this.aiAssessedAt = Instant.now();
+        this.computeAndSetSlaDeadline();
+        this.updatedAt = Instant.now();
+    }
+
+    public void computeAndSetSlaDeadline() {
+        if (this.priority == null) {
+            this.priority = Priority.MEDIUM;
+        }
+        long hours = switch (this.priority) {
+            case CRITICAL -> 12L;
+            case HIGH -> 24L;
+            case MEDIUM -> 48L;
+            case LOW -> 72L;
+        };
+        Instant baseTime = this.createdAt != null ? this.createdAt : Instant.now();
+        this.slaDeadline = baseTime.plus(java.time.Duration.ofHours(hours));
+    }
+
+    public void markSlaWarning() {
+        this.slaWarningSent = true;
+        this.updatedAt = Instant.now();
+    }
+
+    public void markSlaBreached() {
+        this.slaBreached = true;
+        this.escalationLevel = Math.max(this.escalationLevel + 1, 1);
+        // Upgrade priority if breached
+        if (this.priority == Priority.LOW) {
+            this.priority = Priority.MEDIUM;
+        } else if (this.priority == Priority.MEDIUM) {
+            this.priority = Priority.HIGH;
+        } else if (this.priority == Priority.HIGH) {
+            this.priority = Priority.CRITICAL;
+        }
         this.updatedAt = Instant.now();
     }
     
@@ -153,6 +198,10 @@ public class Complaint {
     public Instant getWorkStartedAt() { return workStartedAt; }
     public Instant getWorkCompletedAt() { return workCompletedAt; }
     public Instant getResolvedAt() { return resolvedAt; }
+    public Instant getSlaDeadline() { return slaDeadline; }
+    public boolean isSlaBreached() { return slaBreached; }
+    public boolean isSlaWarningSent() { return slaWarningSent; }
+    public int getEscalationLevel() { return escalationLevel; }
 
     // Setters for mappers
     public void setId(UUID id) { this.id = id; }
@@ -178,6 +227,10 @@ public class Complaint {
     public void setWorkStartedAt(Instant workStartedAt) { this.workStartedAt = workStartedAt; }
     public void setWorkCompletedAt(Instant workCompletedAt) { this.workCompletedAt = workCompletedAt; }
     public void setResolvedAt(Instant resolvedAt) { this.resolvedAt = resolvedAt; }
+    public void setSlaDeadline(Instant slaDeadline) { this.slaDeadline = slaDeadline; }
+    public void setSlaBreached(boolean slaBreached) { this.slaBreached = slaBreached; }
+    public void setSlaWarningSent(boolean slaWarningSent) { this.slaWarningSent = slaWarningSent; }
+    public void setEscalationLevel(int escalationLevel) { this.escalationLevel = escalationLevel; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     public void setDeleted(boolean deleted) { isDeleted = deleted; }

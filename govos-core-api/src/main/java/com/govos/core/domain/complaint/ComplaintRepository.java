@@ -19,4 +19,5 @@ public interface ComplaintRepository {
     List<Complaint> findByReporterMobile(String reporterMobile);
     List<Complaint> findByAssignedToId(UUID assignedToId);
     List<Complaint> findByTenantIdAndAssignedToId(UUID tenantId, UUID assignedToId);
+    List<Complaint> findByStatusIn(List<ComplaintStatus> statuses);
 }

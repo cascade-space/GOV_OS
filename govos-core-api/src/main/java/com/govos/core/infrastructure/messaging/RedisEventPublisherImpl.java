@@ -43,6 +43,16 @@ public class RedisEventPublisherImpl implements EventPublisher {
         publish("document:routed", document.getTenantId(), document);
     }
 
+    @Override
+    public void publishSlaWarning(Complaint complaint) {
+        publish("sla:warning", complaint.getTenantId(), complaint);
+    }
+
+    @Override
+    public void publishSlaBreach(Complaint complaint) {
+        publish("sla:breach", complaint.getTenantId(), complaint);
+    }
+
     private void publish(String type, java.util.UUID tenantId, Object data) {
         try {
             Map<String, Object> payload = new HashMap<>();

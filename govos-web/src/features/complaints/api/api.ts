@@ -41,4 +41,20 @@ export const complaintsApi = {
     const response = await api.get('/complaints/assigned/me');
     return response.data;
   },
+
+  issueDirective: async (data: {
+    complaintId: string;
+    mlaName: string;
+    constituency: string;
+    directiveType: string;
+    instructionNotes: string;
+  }): Promise<any> => {
+    const response = await api.post('/mla/directives', data);
+    return response.data;
+  },
+
+  getDirectivesForComplaint: async (complaintId: string): Promise<any[]> => {
+    const response = await api.get(`/mla/directives/complaint/${complaintId}`);
+    return response.data;
+  },
 };

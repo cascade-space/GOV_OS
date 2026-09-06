@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { complaintsApi } from '../api/api';
 import {
   useUpdateComplaintStatus,
@@ -27,11 +27,14 @@ import {
   ExternalLink,
   Phone,
   Briefcase,
-  AlertCircle,
+  AlertTriangle,
+  Zap,
+  Landmark,
+  FileCheck,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CreateComplaintModal from './CreateComplaintModal';
-import { ComplaintStatus, Complaint } from '../types';
+import { ComplaintStatus, Complaint, MlaDirective } from '../types';
 
 const STATUS_FLOW: ComplaintStatus[] = [
   'NEW',
@@ -60,6 +63,198 @@ const PRIORITY_COLORS: Record<string, string> = {
   MEDIUM: 'text-amber-500',
   LOW: 'text-slate-400',
 };
+
+/* ─── SLA Countdown Chip ─── */
+function SlaBadge({ complaint }: { complaint: Complaint }) {
+  if (['RESOLVED', 'CLOSED'].includes(complaint.status)) {
+    return (
+      <span className="text-[10px] text-green-400 font-medium flex items-center gap-1">
+        <CheckCircle2 size={10} /> SLA Met
+      </span>
+    );
+  }
+
+  if (!complaint.slaDeadline) {
+    return <span className="text-[10px] text-muted-foreground">SLA Pending</span>;
+  }
+
+  const deadline = new Date(complaint.slaDeadline).getTime();
+  const now = Date.now();
+  const diffMs = deadline - now;
+  const isBreached = complaint.slaBreached || diffMs <= 0;
+
+  if (isBreached) {
+    return (
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse">
+        <AlertTriangle size={10} /> BREACHED
+      </span>
+    );
+  }
+
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  const isUrgent = hours <= 4;
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${
+        isUrgent
+          ? 'bg-amber-500/15 text-amber-400 border-amber-500/40'
+          : 'bg-secondary text-muted-foreground border-border'
+      }`}
+    >
+      <Clock size={10} /> {hours}h {mins}m left
+    </span>
+  );
+}
+
+/* ─── Issue MLA Directive Modal ─── */
+function IssueMlaDirectiveModal({
+  complaint,
+  isOpen,
+  onClose,
+}: {
+  complaint: Complaint | null;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const [mlaName, setMlaName] = useState('Hon. Suresh Angadi');
+  const [constituency, setConstituency] = useState('Central Bengaluru');
+  const [directiveType, setDirectiveType] = useState('URGENT_INQUIRY');
+  const [notes, setNotes] = useState('');
+  const queryClient = useQueryClient();
+
+  const issueMutation = useMutation({
+    mutationFn: (data: any) => complaintsApi.issueDirective(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['complaints'] });
+      setNotes('');
+      onClose();
+    },
+  });
+
+  if (!isOpen || !complaint) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!notes.trim()) return;
+    issueMutation.mutate({
+      complaintId: complaint.id,
+      mlaName: mlaName.trim(),
+      constituency: constituency.trim(),
+      directiveType,
+      instructionNotes: notes.trim(),
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-card border border-amber-500/30 rounded-3xl p-6 md:p-8 w-full max-w-lg shadow-2xl space-y-4">
+        <div className="flex items-center justify-between border-b border-border pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-amber-500/10 text-amber-400 rounded-xl">
+              <Landmark size={20} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-foreground">
+                Issue MLA Legislative Directive
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                High-priority oversight order for {complaint.complaintNumber}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1 text-muted-foreground hover:text-foreground rounded-lg"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                MLA / Representative Name *
+              </label>
+              <input
+                type="text"
+                required
+                value={mlaName}
+                onChange={(e) => setMlaName(e.target.value)}
+                className="w-full px-3 py-2 bg-secondary rounded-xl text-xs border border-border focus:border-amber-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                Constituency *
+              </label>
+              <input
+                type="text"
+                required
+                value={constituency}
+                onChange={(e) => setConstituency(e.target.value)}
+                className="w-full px-3 py-2 bg-secondary rounded-xl text-xs border border-border focus:border-amber-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">
+              Directive Type *
+            </label>
+            <select
+              value={directiveType}
+              onChange={(e) => setDirectiveType(e.target.value)}
+              className="w-full px-3 py-2 bg-secondary rounded-xl text-xs border border-border focus:border-amber-500 focus:outline-none"
+            >
+              <option value="URGENT_INQUIRY">Urgent Legislative Inquiry</option>
+              <option value="EXPEDITE_RESOLUTION">Expedite Resolution Order</option>
+              <option value="CITIZEN_REPRESENTATION">Citizen Grievance Representation</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">
+              Instruction / Legislative Directive Notes *
+            </label>
+            <textarea
+              required
+              rows={3}
+              placeholder="e.g. MLA Office received direct complaint. Municipal engineers must inspect site and report resolution progress within 4 hours."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full px-3 py-2 bg-secondary rounded-xl text-xs border border-border focus:border-amber-500 focus:outline-none resize-none"
+            />
+          </div>
+
+          <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[11px] text-amber-300">
+            <strong>Impact:</strong> Submitting will automatically escalate this complaint to{' '}
+            <span className="font-bold text-red-400">CRITICAL</span> priority and tier-3 legislative tracking.
+          </div>
+
+          <div className="flex justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-xs font-medium bg-secondary hover:bg-secondary/80 rounded-xl"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!notes.trim() || issueMutation.isPending}
+              className="px-4 py-2 text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white rounded-xl disabled:opacity-50 transition-colors shadow-sm"
+            >
+              {issueMutation.isPending ? 'Issuing Directive...' : 'Confirm Legislative Directive'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 /* ─── Assign Officer Modal ─── */
 function AssignModal({
@@ -287,13 +482,20 @@ function ComplaintDetailModal({
 }) {
   if (!isOpen || !complaint) return null;
 
+  // Fetch directives for this complaint
+  const { data: directives } = useQuery({
+    queryKey: ['directives', complaint.id],
+    queryFn: () => complaintsApi.getDirectivesForComplaint(complaint.id),
+    enabled: isOpen && !!complaint.id,
+  });
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className="bg-card border border-border rounded-3xl p-6 md:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between border-b border-border pb-4">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="font-mono text-sm font-bold text-govos-blue">
                 {complaint.complaintNumber}
               </span>
@@ -311,6 +513,13 @@ function ComplaintDetailModal({
               >
                 {complaint.priority}
               </span>
+              <SlaBadge complaint={complaint} />
+              {(complaint.escalationLevel ?? 0) >= 3 && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/40">
+                  <Zap size={11} className="text-amber-400 fill-amber-400" />
+                  MLA DIRECTIVE
+                </span>
+              )}
             </div>
             <h2 className="text-xl font-bold mt-1.5">{complaint.title}</h2>
           </div>
@@ -371,6 +580,32 @@ function ComplaintDetailModal({
             {complaint.description}
           </p>
         </div>
+
+        {/* MLA Directives (Legislative Oversight) Section */}
+        {directives && directives.length > 0 && (
+          <div className="p-5 bg-amber-500/5 border border-amber-500/30 rounded-2xl space-y-3">
+            <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
+              <Landmark size={18} />
+              Legislative Oversight / MLA Directives ({directives.length})
+            </div>
+            <div className="space-y-3 pl-6">
+              {directives.map((d: any) => (
+                <div key={d.id} className="p-3 bg-secondary/60 rounded-xl border border-amber-500/20 text-xs space-y-1">
+                  <div className="flex items-center justify-between font-semibold text-amber-300">
+                    <span>{d.mlaName} ({d.constituency})</span>
+                    <span className="text-[10px] bg-amber-500/20 px-2 py-0.5 rounded uppercase tracking-wider">
+                      {d.directiveType.replace('_', ' ')}
+                    </span>
+                  </div>
+                  <p className="text-foreground/90 whitespace-pre-line">{d.instructionNotes}</p>
+                  <div className="text-[10px] text-muted-foreground pt-1">
+                    Issued on: {new Date(d.createdAt).toLocaleString('en-IN')}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Field Resolution & Evidence section */}
         {(complaint.resolutionNotes || complaint.resolutionEvidenceUrl) && (
@@ -495,6 +730,7 @@ export default function ComplaintsModule() {
   const [assignTarget, setAssignTarget] = useState<Complaint | null>(null);
   const [completeTarget, setCompleteTarget] = useState<Complaint | null>(null);
   const [inspectTarget, setInspectTarget] = useState<Complaint | null>(null);
+  const [mlaTarget, setMlaTarget] = useState<Complaint | null>(null);
 
   const user = useAuthStore((s) => s.user);
 
@@ -545,12 +781,11 @@ export default function ComplaintsModule() {
             Civic Issue Management
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Dispatch field tasks, record resolution evidence, and verify
-            civic closures.
+            SLA deadlines, field officer tasks, and legislative oversight orders.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {/* My Tasks Toggle for Officers/Admins */}
+          {/* My Tasks Toggle */}
           {(isOfficer || isAdmin) && (
             <button
               onClick={() => setMyTasksOnly(!myTasksOnly)}
@@ -661,10 +896,10 @@ export default function ComplaintsModule() {
                 <th className="px-5 py-3.5">Complaint #</th>
                 <th className="px-5 py-3.5">Title & Citizen</th>
                 <th className="px-5 py-3.5">Status</th>
-                <th className="px-5 py-3.5">Priority</th>
+                <th className="px-5 py-3.5">Priority & SLA</th>
                 <th className="px-5 py-3.5">Assigned Officer</th>
                 <th className="px-5 py-3.5">Resolution Actions</th>
-                <th className="px-5 py-3.5">Inspect</th>
+                <th className="px-5 py-3.5">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -703,12 +938,22 @@ export default function ComplaintsModule() {
                     transition={{ delay: index * 0.02 }}
                     className="hover:bg-secondary/30 transition-colors group"
                   >
-                    {/* Complaint Number */}
+                    {/* Complaint Number & Tag */}
                     <td className="px-5 py-4">
-                      <span className="font-mono text-xs font-semibold text-govos-blue">
-                        {complaint.complaintNumber ||
-                          complaint.id.slice(0, 8).toUpperCase()}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono text-xs font-semibold text-govos-blue">
+                          {complaint.complaintNumber ||
+                            complaint.id.slice(0, 8).toUpperCase()}
+                        </span>
+                        {(complaint.escalationLevel ?? 0) >= 3 && (
+                          <span
+                            title="Under Active MLA Directive"
+                            className="p-0.5 rounded bg-amber-500/20 text-amber-300"
+                          >
+                            <Zap size={12} className="fill-amber-400 text-amber-400" />
+                          </span>
+                        )}
+                      </div>
                       <div className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
                         <Clock size={10} />
                         {new Date(complaint.createdAt).toLocaleDateString(
@@ -744,16 +989,19 @@ export default function ComplaintsModule() {
                       <StatusDropdown complaint={complaint} />
                     </td>
 
-                    {/* Priority */}
+                    {/* Priority & SLA */}
                     <td className="px-5 py-4">
-                      <span
-                        className={`text-xs font-semibold ${
-                          PRIORITY_COLORS[complaint.priority] ??
-                          'text-muted-foreground'
-                        }`}
-                      >
-                        {complaint.priority || 'MEDIUM'}
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span
+                          className={`text-xs font-semibold ${
+                            PRIORITY_COLORS[complaint.priority] ??
+                            'text-muted-foreground'
+                          }`}
+                        >
+                          {complaint.priority || 'MEDIUM'}
+                        </span>
+                        <SlaBadge complaint={complaint} />
+                      </div>
                     </td>
 
                     {/* Assigned Officer */}
@@ -855,15 +1103,26 @@ export default function ComplaintsModule() {
                       </div>
                     </td>
 
-                    {/* Inspect Button */}
+                    {/* Actions & Inspection */}
                     <td className="px-5 py-4">
-                      <button
-                        onClick={() => setInspectTarget(complaint)}
-                        className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
-                        title="View Full Details"
-                      >
-                        <Eye size={15} />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        {isAdmin && (
+                          <button
+                            onClick={() => setMlaTarget(complaint)}
+                            className="p-1.5 text-muted-foreground hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors"
+                            title="Issue MLA Directive"
+                          >
+                            <Landmark size={14} />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setInspectTarget(complaint)}
+                          className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
+                          title="View Full Details"
+                        >
+                          <Eye size={15} />
+                        </button>
+                      </div>
                     </td>
                   </motion.tr>
                 ))
@@ -895,6 +1154,12 @@ export default function ComplaintsModule() {
         complaint={inspectTarget}
         isOpen={!!inspectTarget}
         onClose={() => setInspectTarget(null)}
+      />
+
+      <IssueMlaDirectiveModal
+        complaint={mlaTarget}
+        isOpen={!!mlaTarget}
+        onClose={() => setMlaTarget(null)}
       />
     </div>
   );

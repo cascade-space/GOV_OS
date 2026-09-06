@@ -8,4 +8,6 @@ public interface EventPublisher {
     void publishComplaintStatusChanged(Complaint complaint);
     void publishAssetMaintenanceDue(CivicAsset asset);
     void publishDocumentRouted(com.govos.core.domain.document.GovDocument document);
+    void publishSlaWarning(Complaint complaint);
+    void publishSlaBreach(Complaint complaint);
 }

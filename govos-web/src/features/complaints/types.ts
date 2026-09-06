@@ -28,6 +28,22 @@ export interface Complaint extends BaseEntity {
   workStartedAt?: string;
   workCompletedAt?: string;
   resolvedAt?: string;
+  slaDeadline?: string;
+  slaBreached?: boolean;
+  slaWarningSent?: boolean;
+  escalationLevel?: number;
+}
+
+export interface MlaDirective {
+  id: string;
+  tenantId: string;
+  complaintId: string;
+  mlaName: string;
+  constituency: string;
+  directiveType: string;
+  instructionNotes: string;
+  status: string;
+  createdAt: string;
 }
 
 export const CreateComplaintSchema = z.object({

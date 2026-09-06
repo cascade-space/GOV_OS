@@ -84,4 +84,17 @@ public class JpaComplaint extends BaseEntity {
 
     @Column(name = "resolved_at")
     private Instant resolvedAt;
+
+    // SLA & Escalation fields
+    @Column(name = "sla_deadline")
+    private Instant slaDeadline;
+
+    @Column(name = "sla_breached", nullable = false)
+    private boolean slaBreached = false;
+
+    @Column(name = "sla_warning_sent", nullable = false)
+    private boolean slaWarningSent = false;
+
+    @Column(name = "escalation_level", nullable = false)
+    private int escalationLevel = 0;
 }
