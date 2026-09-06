@@ -65,7 +65,9 @@ public class PublicComplaintController {
             String assignedDepartment,
             String locationAddress,
             String createdAt,
-            String updatedAt
+            String updatedAt,
+            String title,
+            String description
     ) {}
 
     // ── Endpoints ─────────────────────────────────────────────────────────────
@@ -114,18 +116,34 @@ public class PublicComplaintController {
         com.govos.core.domain.auth.User user = userRepository.findById(java.util.UUID.fromString(userId))
                 .orElseThrow(() -> new org.springframework.security.authentication.BadCredentialsException("User not found"));
                 
-        java.util.List<Complaint> myComplaints = complaintService.listByReporterMobile(user.getPhone());
+        String phone = user.getPhone();
+        java.util.List<Complaint> myComplaints = complaintService.listByReporterMobile(phone);
+        
+        if (phone != null) {
+            String cleanDigits = phone.replaceAll("[^0-9]", "");
+            if (cleanDigits.length() >= 10) {
+                String last10 = cleanDigits.substring(cleanDigits.length() - 10);
+                if (myComplaints.isEmpty()) {
+                    myComplaints = complaintService.listByReporterMobile(last10);
+                }
+                if (myComplaints.isEmpty()) {
+                    myComplaints = complaintService.listByReporterMobile("+91" + last10);
+                }
+            }
+        }
         
         java.util.List<PublicTrackResponse> response = myComplaints.stream()
                 .map(c -> new PublicTrackResponse(
                         c.getComplaintNumber(),
-                        c.getStatus().name(),
+                        c.getStatus() != null ? c.getStatus().name() : "NEW",
                         c.getCategory(),
-                        c.getPriority().name(),
-                        "Pending", // Simplify for now
-                        "Location", // Simplify for now
+                        c.getPriority() != null ? c.getPriority().name() : "MEDIUM",
+                        c.getAssignedToId() != null ? "Assigned" : "Pending Assignment",
+                        c.getLocationAddress() != null ? c.getLocationAddress() : "Reported Location",
                         c.getCreatedAt() != null ? c.getCreatedAt().toString() : "",
-                        c.getUpdatedAt() != null ? c.getUpdatedAt().toString() : ""
+                        c.getUpdatedAt() != null ? c.getUpdatedAt().toString() : "",
+                        c.getTitle(),
+                        c.getDescription()
                 ))
                 .toList();
                 
@@ -145,9 +163,11 @@ public class PublicComplaintController {
                         c.getCategory(),
                         c.getPriority() != null ? c.getPriority().name() : "MEDIUM",
                         c.getAssignedToId() != null ? "Assigned" : "Pending Assignment",
-                        c.getLocationAddress(),
+                        c.getLocationAddress() != null ? c.getLocationAddress() : "Reported Location",
                         c.getCreatedAt() != null ? c.getCreatedAt().toString() : null,
-                        c.getUpdatedAt() != null ? c.getUpdatedAt().toString() : null
+                        c.getUpdatedAt() != null ? c.getUpdatedAt().toString() : null,
+                        c.getTitle(),
+                        c.getDescription()
                 )))
                 .orElse(ResponseEntity.notFound().build());
     }

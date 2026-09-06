@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +15,7 @@ import { MapPin, Upload, X, Loader2, CheckCircle2, Camera, ArrowLeft } from "luc
 import { useDropzone } from "react-dropzone";
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useLogin } from "@/contexts/LoginContext";
 import { PublicNavbar } from "@/components/layout/PublicNavbar";
 import { PublicFooter } from "@/components/layout/PublicFooter";
 
@@ -39,6 +40,7 @@ type ReportFormData = z.infer<typeof reportSchema>;
 export default function ReportPage() {
     const router = useRouter();
     const { t } = useLanguage();
+    const { user } = useLogin();
     const [step, setStep] = useState(1);
     const [submitting, setSubmitting] = useState(false);
     const [files, setFiles] = useState<File[]>([]);
@@ -58,6 +60,28 @@ export default function ReportPage() {
             priority: "medium",
         }
     });
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const params = new URLSearchParams(window.location.search);
+            const mobileParam = params.get("mobile");
+            const nameParam = params.get("name");
+
+            if (mobileParam) {
+                const clean = mobileParam.replace(/[^0-9]/g, "");
+                setValue("citizenMobile", clean.slice(-10));
+            } else if (user?.phone) {
+                const clean = user.phone.replace(/[^0-9]/g, "");
+                setValue("citizenMobile", clean.slice(-10));
+            }
+
+            if (nameParam) {
+                setValue("citizenName", nameParam);
+            } else if (user?.fullName && user.fullName !== "Citizen") {
+                setValue("citizenName", user.fullName);
+            }
+        }
+    }, [user, setValue]);
 
     const category = watch("category");
     const latitude = watch("latitude");

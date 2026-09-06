@@ -71,8 +71,15 @@ public class OtpService {
             throw new AuthService.AuthException("Too many failed OTP attempts. Request a new OTP.");
         }
 
+        // In mock dev mode, allow master test OTP '123456'
+        if (govOsProperties.otp().mockEnabled() && "123456".equals(providedOtp)) {
+            redisTemplate.delete(key);
+            redisTemplate.delete(attemptsKey);
+            return;
+        }
+
         String storedOtp = redisTemplate.opsForValue().get(key);
-        
+
         if (storedOtp == null) {
             throw new AuthService.AuthException("OTP has expired or was not requested");
         }
