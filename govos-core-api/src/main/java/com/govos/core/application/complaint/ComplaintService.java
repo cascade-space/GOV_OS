@@ -74,6 +74,93 @@ public class ComplaintService {
         return saved;
     }
 
+    public Complaint assignComplaint(UUID complaintId, UUID officerId, UUID assignedByUserId) {
+        Complaint complaint = complaintRepository.findById(complaintId)
+                .orElseThrow(() -> new IllegalArgumentException("Complaint not found with id: " + complaintId));
+
+        complaint.assignTo(officerId);
+        Complaint saved = complaintRepository.save(complaint);
+
+        eventPublisher.publishComplaintStatusChanged(saved);
+
+        auditService.record(saved.getTenantId(), assignedByUserId, "ADMIN",
+                "COMPLAINT_ASSIGNED", "COMPLAINT", saved.getId().toString(),
+                saved.getComplaintNumber(),
+                String.format("{\"assignedToId\":\"%s\"}", officerId));
+
+        log.info("Complaint {} assigned to officer {}", saved.getComplaintNumber(), officerId);
+        return saved;
+    }
+
+    public Complaint startWork(UUID complaintId, UUID officerId) {
+        Complaint complaint = complaintRepository.findById(complaintId)
+                .orElseThrow(() -> new IllegalArgumentException("Complaint not found with id: " + complaintId));
+
+        if (complaint.getAssignedToId() == null && officerId != null) {
+            complaint.setAssignedToId(officerId);
+        }
+
+        complaint.startWork();
+        Complaint saved = complaintRepository.save(complaint);
+
+        eventPublisher.publishComplaintStatusChanged(saved);
+
+        auditService.record(saved.getTenantId(), officerId, "OFFICER",
+                "COMPLAINT_WORK_STARTED", "COMPLAINT", saved.getId().toString(),
+                saved.getComplaintNumber(),
+                String.format("{\"workStartedAt\":\"%s\"}", saved.getWorkStartedAt()));
+
+        log.info("Work started on complaint {} by officer {}", saved.getComplaintNumber(), officerId);
+        return saved;
+    }
+
+    public Complaint completeWork(UUID complaintId, UUID officerId, String resolutionNotes, String resolutionEvidenceUrl) {
+        Complaint complaint = complaintRepository.findById(complaintId)
+                .orElseThrow(() -> new IllegalArgumentException("Complaint not found with id: " + complaintId));
+
+        complaint.completeWork(resolutionNotes, resolutionEvidenceUrl);
+        Complaint saved = complaintRepository.save(complaint);
+
+        eventPublisher.publishComplaintStatusChanged(saved);
+
+        auditService.record(saved.getTenantId(), officerId, "OFFICER",
+                "COMPLAINT_WORK_COMPLETED", "COMPLAINT", saved.getId().toString(),
+                saved.getComplaintNumber(),
+                String.format("{\"notes\":\"%s\",\"evidenceUrl\":\"%s\"}",
+                        resolutionNotes != null ? resolutionNotes.replace("\"", "\\\"") : "",
+                        resolutionEvidenceUrl != null ? resolutionEvidenceUrl : ""));
+
+        log.info("Work completed on complaint {} by officer {}. Evidence: {}", saved.getComplaintNumber(), officerId, resolutionEvidenceUrl);
+        return saved;
+    }
+
+    public Complaint verifyAndClose(UUID complaintId, UUID verifiedByUserId, String notes) {
+        Complaint complaint = complaintRepository.findById(complaintId)
+                .orElseThrow(() -> new IllegalArgumentException("Complaint not found with id: " + complaintId));
+
+        complaint.verifyAndClose(notes);
+        Complaint saved = complaintRepository.save(complaint);
+
+        eventPublisher.publishComplaintStatusChanged(saved);
+
+        auditService.record(saved.getTenantId(), verifiedByUserId, "ADMIN",
+                "COMPLAINT_VERIFIED_CLOSED", "COMPLAINT", saved.getId().toString(),
+                saved.getComplaintNumber(),
+                String.format("{\"verificationNotes\":\"%s\",\"resolvedAt\":\"%s\"}",
+                        notes != null ? notes.replace("\"", "\\\"") : "",
+                        saved.getResolvedAt()));
+
+        log.info("Complaint {} verified and closed by user {}", saved.getComplaintNumber(), verifiedByUserId);
+        return saved;
+    }
+
+    public List<Complaint> listAssignedToOfficer(UUID tenantId, UUID officerId) {
+        if (tenantId != null) {
+            return complaintRepository.findByTenantIdAndAssignedToId(tenantId, officerId);
+        }
+        return complaintRepository.findByAssignedToId(officerId);
+    }
+
     public List<Complaint> listByTenant(UUID tenantId) {
         return complaintRepository.findByTenantId(tenantId);
     }

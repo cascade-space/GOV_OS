@@ -51,6 +51,20 @@ public class JpaComplaintRepositoryImpl implements ComplaintRepository {
     }
 
     @Override
+    public List<Complaint> findByAssignedToId(UUID assignedToId) {
+        return springDataRepo.findByAssignedToIdOrderByCreatedAtDesc(assignedToId).stream()
+                .map(this::toDomainEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Complaint> findByTenantIdAndAssignedToId(UUID tenantId, UUID assignedToId) {
+        return springDataRepo.findByTenantIdAndAssignedToIdOrderByCreatedAtDesc(tenantId, assignedToId).stream()
+                .map(this::toDomainEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public String generateNextComplaintNumber(UUID tenantId) {
         long seq = springDataRepo.getNextSequenceForTenant(tenantId);
         String yyyyMM = YearMonth.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
@@ -111,6 +125,11 @@ public class JpaComplaintRepositoryImpl implements ComplaintRepository {
         jpa.setSource(domain.getSource() != null ? domain.getSource() : "INTERNAL");
         jpa.setSubCategory(domain.getSubCategory());
         jpa.setLocationAddress(domain.getLocationAddress());
+        jpa.setResolutionNotes(domain.getResolutionNotes());
+        jpa.setResolutionEvidenceUrl(domain.getResolutionEvidenceUrl());
+        jpa.setWorkStartedAt(domain.getWorkStartedAt());
+        jpa.setWorkCompletedAt(domain.getWorkCompletedAt());
+        jpa.setResolvedAt(domain.getResolvedAt());
         jpa.setCreatedAt(domain.getCreatedAt());
         jpa.setUpdatedAt(domain.getUpdatedAt());
         jpa.setDeleted(domain.isDeleted());
@@ -139,6 +158,11 @@ public class JpaComplaintRepositoryImpl implements ComplaintRepository {
         domain.setSource(jpa.getSource());
         domain.setSubCategory(jpa.getSubCategory());
         domain.setLocationAddress(jpa.getLocationAddress());
+        domain.setResolutionNotes(jpa.getResolutionNotes());
+        domain.setResolutionEvidenceUrl(jpa.getResolutionEvidenceUrl());
+        domain.setWorkStartedAt(jpa.getWorkStartedAt());
+        domain.setWorkCompletedAt(jpa.getWorkCompletedAt());
+        domain.setResolvedAt(jpa.getResolvedAt());
         domain.setCreatedAt(jpa.getCreatedAt());
         domain.setUpdatedAt(jpa.getUpdatedAt());
         domain.setDeleted(jpa.isDeleted());

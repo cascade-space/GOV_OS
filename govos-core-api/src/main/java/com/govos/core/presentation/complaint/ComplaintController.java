@@ -64,4 +64,63 @@ public class ComplaintController {
         Complaint updated = complaintService.updateStatus(id, newStatus);
         return ResponseEntity.ok(updated);
     }
+
+    @PatchMapping("/{id}/assign")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN')")
+    public ResponseEntity<Complaint> assignComplaint(
+            @PathVariable UUID id,
+            @Valid @RequestBody ComplaintDtos.AssignComplaintRequest request,
+            Authentication auth
+    ) {
+        UUID adminId = UUID.fromString(auth.getPrincipal().toString());
+        Complaint updated = complaintService.assignComplaint(id, request.officerId(), adminId);
+        return ResponseEntity.ok(updated);
+    }
+
+    @PatchMapping("/{id}/start-work")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN', 'ROLE_OFFICER')")
+    public ResponseEntity<Complaint> startWork(
+            @PathVariable UUID id,
+            Authentication auth
+    ) {
+        UUID officerId = UUID.fromString(auth.getPrincipal().toString());
+        Complaint updated = complaintService.startWork(id, officerId);
+        return ResponseEntity.ok(updated);
+    }
+
+    @PostMapping("/{id}/complete-work")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN', 'ROLE_OFFICER')")
+    public ResponseEntity<Complaint> completeWork(
+            @PathVariable UUID id,
+            @Valid @RequestBody ComplaintDtos.CompleteWorkRequest request,
+            Authentication auth
+    ) {
+        UUID officerId = UUID.fromString(auth.getPrincipal().toString());
+        Complaint updated = complaintService.completeWork(id, officerId, request.resolutionNotes(), request.resolutionEvidenceUrl());
+        return ResponseEntity.ok(updated);
+    }
+
+    @PatchMapping("/{id}/verify-close")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN')")
+    public ResponseEntity<Complaint> verifyAndClose(
+            @PathVariable UUID id,
+            @RequestBody(required = false) ComplaintDtos.VerifyCloseRequest request,
+            Authentication auth
+    ) {
+        UUID adminId = UUID.fromString(auth.getPrincipal().toString());
+        String notes = request != null ? request.notes() : null;
+        Complaint updated = complaintService.verifyAndClose(id, adminId, notes);
+        return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/assigned/me")
+    @PreAuthorize("hasAnyAuthority('ROLE_OFFICER', 'ROLE_TENANT_ADMIN', 'ROLE_SUPER_ADMIN')")
+    public ResponseEntity<List<Complaint>> listMyAssignedComplaints(Authentication auth) {
+        var details = (JwtAuthFilter.GovOsUserDetails) auth.getDetails();
+        UUID tenantId = details.tenantId();
+        UUID officerId = UUID.fromString(auth.getPrincipal().toString());
+
+        List<Complaint> complaints = complaintService.listAssignedToOfficer(tenantId, officerId);
+        return ResponseEntity.ok(complaints);
+    }
 }

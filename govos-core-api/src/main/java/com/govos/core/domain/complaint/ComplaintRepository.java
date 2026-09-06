@@ -17,4 +17,6 @@ public interface ComplaintRepository {
     String generateNextComplaintNumber(UUID tenantId);
     Optional<Complaint> findByComplaintNumber(String complaintNumber);
     List<Complaint> findByReporterMobile(String reporterMobile);
+    List<Complaint> findByAssignedToId(UUID assignedToId);
+    List<Complaint> findByTenantIdAndAssignedToId(UUID tenantId, UUID assignedToId);
 }

@@ -11,6 +11,8 @@ public interface SpringDataComplaintRepository extends JpaRepository<JpaComplain
     List<JpaComplaint> findByTenantId(UUID tenantId);
     java.util.Optional<JpaComplaint> findByComplaintNumber(String complaintNumber);
     List<JpaComplaint> findByReporterMobileOrderByCreatedAtDesc(String reporterMobile);
+    List<JpaComplaint> findByAssignedToIdOrderByCreatedAtDesc(UUID assignedToId);
+    List<JpaComplaint> findByTenantIdAndAssignedToIdOrderByCreatedAtDesc(UUID tenantId, UUID assignedToId);
 
     long countByTenantId(UUID tenantId);
 

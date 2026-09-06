@@ -1,19 +1,53 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { complaintsApi } from '../api/api';
-import { useUpdateComplaintStatus } from '../hooks/useComplaints';
+import {
+  useUpdateComplaintStatus,
+  useAssignComplaint,
+  useStartWork,
+  useCompleteWork,
+  useVerifyClose,
+} from '../hooks/useComplaints';
+import { officersApi } from '../../officers/api/api';
 import { useAuthStore } from '../../../store/auth.store';
-import { FileText, Search, Plus, ChevronDown, User, Clock, MapPin } from 'lucide-react';
-import { motion } from 'framer-motion';
+import {
+  FileText,
+  Search,
+  Plus,
+  ChevronDown,
+  User,
+  Clock,
+  MapPin,
+  CheckCircle2,
+  Play,
+  ShieldCheck,
+  Eye,
+  Camera,
+  X,
+  ExternalLink,
+  Phone,
+  Briefcase,
+  AlertCircle,
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import CreateComplaintModal from './CreateComplaintModal';
 import { ComplaintStatus, Complaint } from '../types';
 
-const STATUS_FLOW: ComplaintStatus[] = ['NEW', 'ASSIGNED', 'IN_PROGRESS', 'RESOLVED', 'CLOSED', 'REOPENED'];
+const STATUS_FLOW: ComplaintStatus[] = [
+  'NEW',
+  'ASSIGNED',
+  'IN_PROGRESS',
+  'WORK_COMPLETED',
+  'RESOLVED',
+  'CLOSED',
+  'REOPENED',
+];
 
 const STATUS_COLORS: Record<ComplaintStatus, string> = {
   NEW: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
   ASSIGNED: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
   IN_PROGRESS: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
+  WORK_COMPLETED: 'bg-teal-500/15 text-teal-400 border-teal-500/40 font-semibold',
   RESOLVED: 'bg-green-500/10 text-green-400 border-green-500/30',
   CLOSED: 'bg-slate-500/10 text-slate-400 border-slate-500/30',
   REOPENED: 'bg-red-500/10 text-red-400 border-red-500/30',
@@ -27,6 +61,386 @@ const PRIORITY_COLORS: Record<string, string> = {
   LOW: 'text-slate-400',
 };
 
+/* ─── Assign Officer Modal ─── */
+function AssignModal({
+  complaint,
+  isOpen,
+  onClose,
+}: {
+  complaint: Complaint | null;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const [selectedOfficerId, setSelectedOfficerId] = useState('');
+  const assignMutation = useAssignComplaint();
+
+  const { data: officers, isLoading } = useQuery({
+    queryKey: ['officers'],
+    queryFn: officersApi.list,
+    enabled: isOpen,
+  });
+
+  if (!isOpen || !complaint) return null;
+
+  const handleAssign = () => {
+    if (!selectedOfficerId) return;
+    assignMutation.mutate(
+      { id: complaint.id, officerId: selectedOfficerId },
+      { onSuccess: () => onClose() }
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
+        <div className="flex items-center justify-between border-b border-border pb-3">
+          <div>
+            <h3 className="text-lg font-bold">Dispatch Field Officer</h3>
+            <p className="text-xs text-muted-foreground">
+              Assign task for {complaint.complaintNumber}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1 text-muted-foreground hover:text-foreground rounded-lg"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          <label className="text-xs font-semibold text-muted-foreground">
+            Select Officer
+          </label>
+          {isLoading ? (
+            <div className="py-4 text-center text-xs text-muted-foreground animate-pulse">
+              Loading field officers...
+            </div>
+          ) : (
+            <select
+              value={selectedOfficerId}
+              onChange={(e) => setSelectedOfficerId(e.target.value)}
+              className="w-full px-3 py-2.5 bg-secondary rounded-xl text-sm border border-border focus:border-govos-blue focus:outline-none"
+            >
+              <option value="">-- Choose Field Officer --</option>
+              {officers?.map((off: any) => (
+                <option key={off.id} value={off.id}>
+                  {off.fullName || off.displayName || off.email} (
+                  {off.designation || 'Field Officer'})
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-2 pt-2">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-xs font-medium bg-secondary hover:bg-secondary/80 rounded-xl"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleAssign}
+            disabled={!selectedOfficerId || assignMutation.isPending}
+            className="px-4 py-2 text-xs font-semibold bg-govos-blue hover:bg-govos-blue/90 text-white rounded-xl disabled:opacity-50 transition-colors shadow-sm"
+          >
+            {assignMutation.isPending ? 'Assigning...' : 'Confirm Assignment'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Complete Work & Evidence Modal ─── */
+function CompleteWorkModal({
+  complaint,
+  isOpen,
+  onClose,
+}: {
+  complaint: Complaint | null;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const [notes, setNotes] = useState('');
+  const [evidenceUrl, setEvidenceUrl] = useState('');
+  const completeMutation = useCompleteWork();
+
+  if (!isOpen || !complaint) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!notes.trim()) return;
+
+    completeMutation.mutate(
+      {
+        id: complaint.id,
+        notes: notes.trim(),
+        evidenceUrl: evidenceUrl.trim() || undefined,
+      },
+      {
+        onSuccess: () => {
+          setNotes('');
+          setEvidenceUrl('');
+          onClose();
+        },
+      }
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-lg shadow-2xl space-y-4">
+        <div className="flex items-center justify-between border-b border-border pb-3">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-teal-500/10 text-teal-400 rounded-xl">
+              <CheckCircle2 size={20} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold">Submit Work Completion</h3>
+              <p className="text-xs text-muted-foreground">
+                Provide field resolution details & evidence for{' '}
+                {complaint.complaintNumber}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1 text-muted-foreground hover:text-foreground rounded-lg"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+              Resolution Summary & Action Taken *
+            </label>
+            <textarea
+              required
+              rows={3}
+              placeholder="e.g. Cleared clogged storm drain, replaced broken manhole grate, and tested flow."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full px-3 py-2 bg-secondary rounded-xl text-sm border border-border focus:border-teal-500 focus:outline-none resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+              Resolution Evidence / Photo URL
+            </label>
+            <div className="relative">
+              <input
+                type="url"
+                placeholder="http://localhost:9000/govos-complaints/evidence-..."
+                value={evidenceUrl}
+                onChange={(e) => setEvidenceUrl(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-secondary rounded-xl text-xs border border-border focus:border-teal-500 focus:outline-none font-mono"
+              />
+              <Camera
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Provide direct image link or MinIO storage URL showing the
+              resolved issue.
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-xs font-medium bg-secondary hover:bg-secondary/80 rounded-xl"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!notes.trim() || completeMutation.isPending}
+              className="px-4 py-2 text-xs font-semibold bg-teal-600 hover:bg-teal-700 text-white rounded-xl disabled:opacity-50 transition-colors shadow-sm"
+            >
+              {completeMutation.isPending
+                ? 'Submitting Proof...'
+                : 'Mark Work Completed'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Complaint Inspection Detail Modal ─── */
+function ComplaintDetailModal({
+  complaint,
+  isOpen,
+  onClose,
+}: {
+  complaint: Complaint | null;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  if (!isOpen || !complaint) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-card border border-border rounded-3xl p-6 md:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl space-y-6">
+        {/* Header */}
+        <div className="flex items-start justify-between border-b border-border pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-sm font-bold text-govos-blue">
+                {complaint.complaintNumber}
+              </span>
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                  STATUS_COLORS[complaint.status]
+                }`}
+              >
+                {complaint.status.replace('_', ' ')}
+              </span>
+              <span
+                className={`text-xs uppercase font-bold ${
+                  PRIORITY_COLORS[complaint.priority]
+                }`}
+              >
+                {complaint.priority}
+              </span>
+            </div>
+            <h2 className="text-xl font-bold mt-1.5">{complaint.title}</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 text-muted-foreground hover:text-foreground rounded-xl bg-secondary"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Description & Citizen Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 bg-secondary/40 rounded-2xl border border-border space-y-2">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Citizen / Reporter
+            </h4>
+            <div className="text-sm font-medium">
+              {complaint.reporterName || 'Anonymous Citizen'}
+            </div>
+            {complaint.reporterMobile && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Phone size={12} />
+                <span>{complaint.reporterMobile}</span>
+              </div>
+            )}
+            <div className="text-xs text-muted-foreground pt-1">
+              Source:{' '}
+              <span className="font-semibold text-foreground">
+                {complaint.source || 'PUBLIC'}
+              </span>
+            </div>
+          </div>
+
+          <div className="p-4 bg-secondary/40 rounded-2xl border border-border space-y-2">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Jurisdiction & Location
+            </h4>
+            <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+              <MapPin size={14} className="text-govos-blue mt-0.5 shrink-0" />
+              <span>{complaint.locationAddress || 'Address not logged'}</span>
+            </div>
+            {complaint.latitude && complaint.longitude && (
+              <div className="text-[11px] font-mono text-muted-foreground/80 pl-5">
+                GPS: {complaint.latitude.toFixed(4)},{' '}
+                {complaint.longitude.toFixed(4)}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Issue Details */}
+        <div className="space-y-2">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Complaint Description
+          </h4>
+          <p className="text-sm text-foreground bg-secondary/20 p-4 rounded-2xl border border-border whitespace-pre-line leading-relaxed">
+            {complaint.description}
+          </p>
+        </div>
+
+        {/* Field Resolution & Evidence section */}
+        {(complaint.resolutionNotes || complaint.resolutionEvidenceUrl) && (
+          <div className="p-5 bg-teal-500/5 border border-teal-500/20 rounded-2xl space-y-3">
+            <div className="flex items-center gap-2 text-teal-400 font-bold text-sm">
+              <CheckCircle2 size={18} />
+              Field Officer Resolution Report
+            </div>
+            {complaint.resolutionNotes && (
+              <div className="text-sm text-foreground/90 pl-6">
+                {complaint.resolutionNotes}
+              </div>
+            )}
+            {complaint.resolutionEvidenceUrl && (
+              <div className="pl-6 pt-2">
+                <p className="text-xs text-muted-foreground mb-2 font-medium">
+                  Resolution Photo / Verification Evidence:
+                </p>
+                <a
+                  href={complaint.resolutionEvidenceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-secondary text-xs rounded-xl hover:bg-secondary/80 transition-colors font-mono text-govos-blue"
+                >
+                  <Camera size={13} />
+                  View Resolution Proof
+                  <ExternalLink size={11} />
+                </a>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Lifecycle Timestamps */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px] text-muted-foreground border-t border-border pt-4">
+          <div>
+            <span className="block font-semibold text-foreground">Filed:</span>
+            {new Date(complaint.createdAt).toLocaleString('en-IN')}
+          </div>
+          {complaint.workStartedAt && (
+            <div>
+              <span className="block font-semibold text-foreground">
+                Work Started:
+              </span>
+              {new Date(complaint.workStartedAt).toLocaleString('en-IN')}
+            </div>
+          )}
+          {complaint.workCompletedAt && (
+            <div>
+              <span className="block font-semibold text-foreground">
+                Work Completed:
+              </span>
+              {new Date(complaint.workCompletedAt).toLocaleString('en-IN')}
+            </div>
+          )}
+          {complaint.resolvedAt && (
+            <div>
+              <span className="block font-semibold text-foreground">
+                Verified & Closed:
+              </span>
+              {new Date(complaint.resolvedAt).toLocaleString('en-IN')}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Status Dropdown ─── */
 function StatusDropdown({ complaint }: { complaint: Complaint }) {
   const updateStatus = useUpdateComplaintStatus();
 
@@ -43,43 +457,83 @@ function StatusDropdown({ complaint }: { complaint: Complaint }) {
         value={complaint.status}
         onChange={handleChange}
         disabled={updateStatus.isPending}
-        className={`appearance-none flex items-center gap-1.5 px-3 py-1.5 pr-8 rounded-full text-xs font-semibold border outline-none cursor-pointer transition-all ${STATUS_COLORS[complaint.status]}`}
+        className={`appearance-none flex items-center gap-1.5 px-3 py-1.5 pr-8 rounded-full text-xs font-semibold border outline-none cursor-pointer transition-all ${
+          STATUS_COLORS[complaint.status]
+        }`}
       >
-        {STATUS_FLOW.map(s => (
-          <option key={s} value={s} className="bg-card text-foreground font-medium">
+        {STATUS_FLOW.map((s) => (
+          <option
+            key={s}
+            value={s}
+            className="bg-card text-foreground font-medium"
+          >
             {s.replace('_', ' ')}
           </option>
         ))}
       </select>
-      <ChevronDown size={12} className={`absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none ${STATUS_COLORS[complaint.status].split(' ')[1]}`} />
+      <ChevronDown
+        size={12}
+        className={`absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none ${
+          STATUS_COLORS[complaint.status].split(' ')[1]
+        }`}
+      />
     </div>
   );
 }
 
+/* ─── Main Complaints Module ─── */
 export default function ComplaintsModule() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ComplaintStatus | 'ALL'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<ComplaintStatus | 'ALL'>(
+    'ALL'
+  );
   const [priorityFilter, setPriorityFilter] = useState<string>('ALL');
-  const user = useAuthStore(s => s.user);
+  const [myTasksOnly, setMyTasksOnly] = useState(false);
 
-  const { data: complaints, isLoading, isError } = useQuery({
+  // Modals state
+  const [assignTarget, setAssignTarget] = useState<Complaint | null>(null);
+  const [completeTarget, setCompleteTarget] = useState<Complaint | null>(null);
+  const [inspectTarget, setInspectTarget] = useState<Complaint | null>(null);
+
+  const user = useAuthStore((s) => s.user);
+
+  // Action mutations
+  const startWorkMutation = useStartWork();
+  const verifyCloseMutation = useVerifyClose();
+
+  const {
+    data: complaints,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ['complaints'],
     queryFn: complaintsApi.list,
   });
 
-  const filtered = complaints?.filter(c => {
+  const isOfficer = user?.primaryRole === 'OFFICER';
+  const isAdmin = ['SUPER_ADMIN', 'TENANT_ADMIN'].includes(
+    user?.primaryRole ?? ''
+  );
+
+  const filtered = complaints?.filter((c) => {
     const matchSearch =
       !searchTerm ||
       c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (c.complaintNumber ?? '').toLowerCase().includes(searchTerm.toLowerCase());
+      (c.complaintNumber ?? '')
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (c.reporterName ?? '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchStatus = statusFilter === 'ALL' || c.status === statusFilter;
-    const matchPriority = priorityFilter === 'ALL' || c.priority === priorityFilter;
-    const matchOfficer = user?.primaryRole === 'OFFICER' ? c.assignedToId === user.id : true;
-    return matchSearch && matchStatus && matchPriority && matchOfficer;
+    const matchPriority =
+      priorityFilter === 'ALL' || c.priority === priorityFilter;
+    const matchMyTasks = myTasksOnly ? c.assignedToId === user?.id : true;
+    return matchSearch && matchStatus && matchPriority && matchMyTasks;
   });
 
-  const canCreate = ['SUPER_ADMIN', 'TENANT_ADMIN', 'OFFICER', 'CITIZEN'].includes(user?.primaryRole ?? '');
+  const canCreate = ['SUPER_ADMIN', 'TENANT_ADMIN', 'OFFICER', 'CITIZEN'].includes(
+    user?.primaryRole ?? ''
+  );
 
   return (
     <div className="p-6 md:p-8 space-y-6 h-full flex flex-col">
@@ -88,65 +542,107 @@ export default function ComplaintsModule() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <FileText className="text-govos-blue" />
-            Complaints
+            Civic Issue Management
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Manage and track all citizen issues in your jurisdiction.
+            Dispatch field tasks, record resolution evidence, and verify
+            civic closures.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {/* My Tasks Toggle for Officers/Admins */}
+          {(isOfficer || isAdmin) && (
+            <button
+              onClick={() => setMyTasksOnly(!myTasksOnly)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${
+                myTasksOnly
+                  ? 'bg-govos-blue text-white border-govos-blue shadow-md shadow-govos-blue/20'
+                  : 'bg-secondary text-muted-foreground hover:text-foreground border-border'
+              }`}
+            >
+              <Briefcase size={13} />
+              My Assigned Tasks
+            </button>
+          )}
+
           {/* Search */}
           <div className="relative">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
             <input
               type="text"
-              placeholder="Search ID, Title..."
+              placeholder="Search ID, Title, Citizen..."
               value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-secondary rounded-md text-sm border-transparent focus:border-govos-blue focus:ring-1 focus:ring-govos-blue w-52 transition-all"
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 pr-4 py-2 bg-secondary rounded-xl text-xs border border-transparent focus:border-govos-blue focus:outline-none w-56 transition-all"
             />
           </div>
+
           {/* Status filter */}
           <select
             value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value as ComplaintStatus | 'ALL')}
-            className="px-3 py-2 bg-secondary rounded-md text-sm border-transparent focus:border-govos-blue transition-all"
+            onChange={(e) =>
+              setStatusFilter(e.target.value as ComplaintStatus | 'ALL')
+            }
+            className="px-3 py-2 bg-secondary rounded-xl text-xs border border-transparent focus:border-govos-blue focus:outline-none transition-all"
           >
             <option value="ALL">All Statuses</option>
-            {STATUS_FLOW.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
+            {STATUS_FLOW.map((s) => (
+              <option key={s} value={s}>
+                {s.replace('_', ' ')}
+              </option>
+            ))}
           </select>
+
           {/* Priority filter */}
           <select
             value={priorityFilter}
-            onChange={e => setPriorityFilter(e.target.value)}
-            className="px-3 py-2 bg-secondary rounded-md text-sm border-transparent focus:border-govos-blue transition-all"
+            onChange={(e) => setPriorityFilter(e.target.value)}
+            className="px-3 py-2 bg-secondary rounded-xl text-xs border border-transparent focus:border-govos-blue focus:outline-none transition-all"
           >
             <option value="ALL">All Priorities</option>
-            {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(p => <option key={p} value={p}>{p}</option>)}
+            {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
           </select>
+
           {canCreate && (
             <button
               onClick={() => setIsCreateOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-govos-blue hover:bg-govos-blue/90 text-white rounded-md text-sm font-medium transition-colors shadow-sm"
+              className="flex items-center gap-1.5 px-4 py-2 bg-govos-blue hover:bg-govos-blue/90 text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
             >
-              <Plus size={15} />
+              <Plus size={14} />
               New Complaint
             </button>
           )}
         </div>
       </div>
 
-      {/* Stats bar */}
+      {/* KPI stats bar */}
       {!isLoading && complaints && (
-        <div className="flex flex-wrap gap-3">
-          {(['NEW', 'ASSIGNED', 'IN_PROGRESS', 'RESOLVED'] as ComplaintStatus[]).map(s => {
-            const count = complaints.filter(c => c.status === s).length;
+        <div className="flex flex-wrap gap-2.5">
+          {(
+            [
+              'NEW',
+              'ASSIGNED',
+              'IN_PROGRESS',
+              'WORK_COMPLETED',
+              'RESOLVED',
+            ] as ComplaintStatus[]
+          ).map((s) => {
+            const count = complaints.filter((c) => c.status === s).length;
             return (
               <button
                 key={s}
                 onClick={() => setStatusFilter(statusFilter === s ? 'ALL' : s)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                  statusFilter === s ? STATUS_COLORS[s] + ' ring-1 ring-offset-1 ring-current' : STATUS_COLORS[s] + ' opacity-60 hover:opacity-100'
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                  statusFilter === s
+                    ? STATUS_COLORS[s] + ' ring-1 ring-offset-1 ring-current'
+                    : STATUS_COLORS[s] + ' opacity-70 hover:opacity-100'
                 }`}
               >
                 {s.replace('_', ' ')} · {count}
@@ -156,19 +652,19 @@ export default function ComplaintsModule() {
         </div>
       )}
 
-      {/* Table */}
-      <div className="flex-1 bg-card border border-border rounded-xl shadow-sm overflow-hidden flex flex-col">
+      {/* Complaints Table */}
+      <div className="flex-1 bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex flex-col">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="bg-secondary/50 text-muted-foreground uppercase text-xs font-semibold sticky top-0">
+            <thead className="bg-secondary/60 text-muted-foreground uppercase text-[11px] font-semibold sticky top-0">
               <tr>
-                <th className="px-5 py-4">Complaint #</th>
-                <th className="px-5 py-4">Title</th>
-                <th className="px-5 py-4">Status</th>
-                <th className="px-5 py-4">Priority</th>
-                <th className="px-5 py-4">Assigned To</th>
-                <th className="px-5 py-4">Filed</th>
-                <th className="px-5 py-4">Location</th>
+                <th className="px-5 py-3.5">Complaint #</th>
+                <th className="px-5 py-3.5">Title & Citizen</th>
+                <th className="px-5 py-3.5">Status</th>
+                <th className="px-5 py-3.5">Priority</th>
+                <th className="px-5 py-3.5">Assigned Officer</th>
+                <th className="px-5 py-3.5">Resolution Actions</th>
+                <th className="px-5 py-3.5">Inspect</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -177,7 +673,7 @@ export default function ComplaintsModule() {
                   <tr key={i}>
                     {Array.from({ length: 7 }).map((_, j) => (
                       <td key={j} className="px-5 py-4">
-                        <div className="h-4 bg-secondary/70 rounded animate-pulse" />
+                        <div className="h-4 bg-secondary/70 rounded-lg animate-pulse" />
                       </td>
                     ))}
                   </tr>
@@ -185,71 +681,189 @@ export default function ComplaintsModule() {
               ) : isError ? (
                 <tr>
                   <td colSpan={7} className="px-5 py-10 text-center text-red-500">
-                    Failed to load complaints. Ensure the backend is running.
+                    Failed to load complaints. Ensure backend is running.
                   </td>
                 </tr>
               ) : (filtered ?? []).length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-16 text-center text-muted-foreground">
-                    <FileText size={40} className="mx-auto mb-4 opacity-20" />
-                    No complaints found.
+                  <td
+                    colSpan={7}
+                    className="px-5 py-16 text-center text-muted-foreground"
+                  >
+                    <FileText size={36} className="mx-auto mb-3 opacity-25" />
+                    No complaints found matching current filters.
                   </td>
                 </tr>
               ) : (
                 (filtered ?? []).map((complaint, index) => (
                   <motion.tr
                     key={complaint.id}
-                    initial={{ opacity: 0, y: 8 }}
+                    initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.03 }}
+                    transition={{ delay: index * 0.02 }}
                     className="hover:bg-secondary/30 transition-colors group"
                   >
+                    {/* Complaint Number */}
                     <td className="px-5 py-4">
                       <span className="font-mono text-xs font-semibold text-govos-blue">
-                        {complaint.complaintNumber || complaint.id.slice(0, 8).toUpperCase()}
+                        {complaint.complaintNumber ||
+                          complaint.id.slice(0, 8).toUpperCase()}
                       </span>
+                      <div className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <Clock size={10} />
+                        {new Date(complaint.createdAt).toLocaleDateString(
+                          'en-IN'
+                        )}
+                      </div>
                     </td>
+
+                    {/* Title & Citizen Info */}
                     <td className="px-5 py-4">
-                      <div className="font-medium max-w-[220px] truncate" title={complaint.title}>
+                      <div
+                        className="font-medium max-w-[220px] truncate"
+                        title={complaint.title}
+                      >
                         {complaint.title}
                       </div>
-                      {complaint.category && (
-                        <div className="text-xs text-muted-foreground mt-0.5">{complaint.category}</div>
-                      )}
+                      <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                        {complaint.category && (
+                          <span className="text-[11px] bg-secondary px-1.5 py-0.5 rounded">
+                            {complaint.category}
+                          </span>
+                        )}
+                        {complaint.reporterName && (
+                          <span className="truncate max-w-[120px]">
+                            {complaint.reporterName}
+                          </span>
+                        )}
+                      </div>
                     </td>
+
+                    {/* Status with dropdown */}
                     <td className="px-5 py-4">
                       <StatusDropdown complaint={complaint} />
                     </td>
+
+                    {/* Priority */}
                     <td className="px-5 py-4">
-                      <span className={`text-xs ${PRIORITY_COLORS[complaint.priority] ?? 'text-muted-foreground'}`}>
+                      <span
+                        className={`text-xs font-semibold ${
+                          PRIORITY_COLORS[complaint.priority] ??
+                          'text-muted-foreground'
+                        }`}
+                      >
                         {complaint.priority || 'MEDIUM'}
                       </span>
                     </td>
+
+                    {/* Assigned Officer */}
                     <td className="px-5 py-4">
                       {complaint.assignedToId ? (
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <User size={12} />
-                          <span className="font-mono">{complaint.assignedToId.slice(0, 8)}…</span>
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <User size={12} className="text-govos-blue" />
+                          <span className="font-mono text-muted-foreground">
+                            {complaint.assignedToId.slice(0, 8)}…
+                          </span>
+                          {isAdmin && (
+                            <button
+                              onClick={() => setAssignTarget(complaint)}
+                              className="text-[10px] text-govos-blue hover:underline ml-1"
+                            >
+                              Reassign
+                            </button>
+                          )}
                         </div>
                       ) : (
-                        <span className="text-xs text-muted-foreground italic">Unassigned</span>
+                        <div>
+                          {isAdmin ? (
+                            <button
+                              onClick={() => setAssignTarget(complaint)}
+                              className="px-2.5 py-1 text-xs bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 rounded-lg border border-amber-500/30 transition-colors font-medium flex items-center gap-1"
+                            >
+                              <User size={11} />
+                              Assign Officer
+                            </button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground italic">
+                              Unassigned
+                            </span>
+                          )}
+                        </div>
                       )}
                     </td>
+
+                    {/* Resolution Action Triggers */}
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock size={11} />
-                        {new Date(complaint.createdAt).toLocaleDateString('en-IN')}
+                      <div className="flex items-center gap-1.5">
+                        {/* If ASSIGNED: Start Work */}
+                        {complaint.status === 'ASSIGNED' && (
+                          <button
+                            onClick={() =>
+                              startWorkMutation.mutate(complaint.id)
+                            }
+                            disabled={startWorkMutation.isPending}
+                            className="px-2.5 py-1 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all"
+                          >
+                            <Play size={11} />
+                            Start Work
+                          </button>
+                        )}
+
+                        {/* If IN_PROGRESS: Submit Resolution Evidence */}
+                        {complaint.status === 'IN_PROGRESS' && (
+                          <button
+                            onClick={() => setCompleteTarget(complaint)}
+                            className="px-2.5 py-1 bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 border border-teal-500/30 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all"
+                          >
+                            <CheckCircle2 size={11} />
+                            Complete Work
+                          </button>
+                        )}
+
+                        {/* If WORK_COMPLETED: Verify & Close (Admin) */}
+                        {complaint.status === 'WORK_COMPLETED' && (
+                          <>
+                            {isAdmin ? (
+                              <button
+                                onClick={() =>
+                                  verifyCloseMutation.mutate({
+                                    id: complaint.id,
+                                    notes: 'Verified by Admin',
+                                  })
+                                }
+                                disabled={verifyCloseMutation.isPending}
+                                className="px-2.5 py-1 bg-green-500/15 hover:bg-green-500/25 text-green-400 border border-green-500/40 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all"
+                              >
+                                <ShieldCheck size={11} />
+                                Verify & Close
+                              </button>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded text-[11px] bg-teal-500/10 text-teal-400 border border-teal-500/20 font-medium">
+                                Evidence Submitted
+                              </span>
+                            )}
+                          </>
+                        )}
+
+                        {/* If RESOLVED / CLOSED */}
+                        {['RESOLVED', 'CLOSED'].includes(complaint.status) && (
+                          <span className="text-xs text-green-400/80 flex items-center gap-1">
+                            <CheckCircle2 size={12} />
+                            Closed
+                          </span>
+                        )}
                       </div>
                     </td>
+
+                    {/* Inspect Button */}
                     <td className="px-5 py-4">
-                      {complaint.latitude && complaint.longitude ? (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground font-mono">
-                          <MapPin size={11} className="text-govos-blue/60" />
-                          {complaint.latitude.toFixed(3)}, {complaint.longitude.toFixed(3)}
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground italic">—</span>
-                      )}
+                      <button
+                        onClick={() => setInspectTarget(complaint)}
+                        className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
+                        title="View Full Details"
+                      >
+                        <Eye size={15} />
+                      </button>
                     </td>
                   </motion.tr>
                 ))
@@ -259,7 +873,29 @@ export default function ComplaintsModule() {
         </div>
       </div>
 
-      <CreateComplaintModal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
+      {/* Modals */}
+      <CreateComplaintModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+      />
+
+      <AssignModal
+        complaint={assignTarget}
+        isOpen={!!assignTarget}
+        onClose={() => setAssignTarget(null)}
+      />
+
+      <CompleteWorkModal
+        complaint={completeTarget}
+        isOpen={!!completeTarget}
+        onClose={() => setCompleteTarget(null)}
+      />
+
+      <ComplaintDetailModal
+        complaint={inspectTarget}
+        isOpen={!!inspectTarget}
+        onClose={() => setInspectTarget(null)}
+      />
     </div>
   );
 }

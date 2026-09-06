@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { BaseEntity } from '../../types';
 
-export type ComplaintStatus = 'NEW' | 'ASSIGNED' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED' | 'REOPENED' | 'DUPLICATE';
+export type ComplaintStatus = 'NEW' | 'ASSIGNED' | 'IN_PROGRESS' | 'WORK_COMPLETED' | 'RESOLVED' | 'CLOSED' | 'REOPENED' | 'DUPLICATE';
 export type Priority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
 export interface Complaint extends BaseEntity {
@@ -18,6 +18,16 @@ export interface Complaint extends BaseEntity {
   wardId?: string;
   assignedToId?: string;
   aiAssessedAt?: string;
+  reporterName?: string;
+  reporterMobile?: string;
+  source?: string;
+  subCategory?: string;
+  locationAddress?: string;
+  resolutionNotes?: string;
+  resolutionEvidenceUrl?: string;
+  workStartedAt?: string;
+  workCompletedAt?: string;
+  resolvedAt?: string;
 }
 
 export const CreateComplaintSchema = z.object({

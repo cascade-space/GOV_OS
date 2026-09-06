@@ -68,4 +68,20 @@ public class JpaComplaint extends BaseEntity {
 
     @Column(name = "location_address", columnDefinition = "TEXT")
     private String locationAddress;
+
+    // Officer task execution & resolution fields
+    @Column(name = "resolution_notes", columnDefinition = "TEXT")
+    private String resolutionNotes;
+
+    @Column(name = "resolution_evidence_url", columnDefinition = "TEXT")
+    private String resolutionEvidenceUrl;
+
+    @Column(name = "work_started_at")
+    private Instant workStartedAt;
+
+    @Column(name = "work_completed_at")
+    private Instant workCompletedAt;
+
+    @Column(name = "resolved_at")
+    private Instant resolvedAt;
 }

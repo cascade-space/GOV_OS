@@ -33,6 +33,13 @@ public class Complaint {
     private String subCategory;
     private String locationAddress;
     
+    // Officer task execution & resolution fields
+    private String resolutionNotes;
+    private String resolutionEvidenceUrl;
+    private Instant workStartedAt;
+    private Instant workCompletedAt;
+    private Instant resolvedAt;
+    
     private Instant createdAt;
     private Instant updatedAt;
     private boolean isDeleted;
@@ -75,9 +82,41 @@ public class Complaint {
         this.status = ComplaintStatus.ASSIGNED;
         this.updatedAt = Instant.now();
     }
+
+    public void startWork() {
+        this.status = ComplaintStatus.IN_PROGRESS;
+        if (this.workStartedAt == null) {
+            this.workStartedAt = Instant.now();
+        }
+        this.updatedAt = Instant.now();
+    }
+
+    public void completeWork(String notes, String evidenceUrl) {
+        this.status = ComplaintStatus.WORK_COMPLETED;
+        this.resolutionNotes = notes;
+        this.resolutionEvidenceUrl = evidenceUrl;
+        this.workCompletedAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+
+    public void verifyAndClose(String notes) {
+        this.status = ComplaintStatus.RESOLVED;
+        if (notes != null && !notes.isBlank()) {
+            this.resolutionNotes = (this.resolutionNotes != null ? this.resolutionNotes + " | Verification: " : "") + notes;
+        }
+        this.resolvedAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
     
     public void updateStatus(ComplaintStatus newStatus) {
         this.status = newStatus;
+        if (newStatus == ComplaintStatus.IN_PROGRESS && this.workStartedAt == null) {
+            this.workStartedAt = Instant.now();
+        } else if (newStatus == ComplaintStatus.WORK_COMPLETED && this.workCompletedAt == null) {
+            this.workCompletedAt = Instant.now();
+        } else if ((newStatus == ComplaintStatus.RESOLVED || newStatus == ComplaintStatus.CLOSED) && this.resolvedAt == null) {
+            this.resolvedAt = Instant.now();
+        }
         this.updatedAt = Instant.now();
     }
 
@@ -109,6 +148,12 @@ public class Complaint {
     public Instant getUpdatedAt() { return updatedAt; }
     public boolean isDeleted() { return isDeleted; }
 
+    public String getResolutionNotes() { return resolutionNotes; }
+    public String getResolutionEvidenceUrl() { return resolutionEvidenceUrl; }
+    public Instant getWorkStartedAt() { return workStartedAt; }
+    public Instant getWorkCompletedAt() { return workCompletedAt; }
+    public Instant getResolvedAt() { return resolvedAt; }
+
     // Setters for mappers
     public void setId(UUID id) { this.id = id; }
     public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
@@ -128,6 +173,11 @@ public class Complaint {
     public void setSource(String source) { this.source = source; }
     public void setSubCategory(String subCategory) { this.subCategory = subCategory; }
     public void setLocationAddress(String locationAddress) { this.locationAddress = locationAddress; }
+    public void setResolutionNotes(String resolutionNotes) { this.resolutionNotes = resolutionNotes; }
+    public void setResolutionEvidenceUrl(String resolutionEvidenceUrl) { this.resolutionEvidenceUrl = resolutionEvidenceUrl; }
+    public void setWorkStartedAt(Instant workStartedAt) { this.workStartedAt = workStartedAt; }
+    public void setWorkCompletedAt(Instant workCompletedAt) { this.workCompletedAt = workCompletedAt; }
+    public void setResolvedAt(Instant resolvedAt) { this.resolvedAt = resolvedAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     public void setDeleted(boolean deleted) { isDeleted = deleted; }

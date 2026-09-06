@@ -16,4 +16,17 @@ public class ComplaintDtos {
     public record UpdateStatusRequest(
             @NotBlank String status
     ) {}
+
+    public record AssignComplaintRequest(
+            @NotNull UUID officerId
+    ) {}
+
+    public record CompleteWorkRequest(
+            @NotBlank String resolutionNotes,
+            String resolutionEvidenceUrl
+    ) {}
+
+    public record VerifyCloseRequest(
+            String notes
+    ) {}
 }
