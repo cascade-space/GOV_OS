@@ -78,6 +78,19 @@ public class ComplaintService {
         return complaintRepository.findByTenantId(tenantId);
     }
 
+    public long countTotalByTenant(UUID tenantId) {
+        return complaintRepository.countByTenantId(tenantId);
+    }
+
+    public long countResolvedByTenant(UUID tenantId) {
+        return complaintRepository.countResolvedByTenantId(tenantId);
+    }
+
+    public long countInProgressByTenant(UUID tenantId) {
+        return complaintRepository.countByTenantIdAndStatus(tenantId, ComplaintStatus.IN_PROGRESS) +
+               complaintRepository.countByTenantIdAndStatus(tenantId, ComplaintStatus.ASSIGNED);
+    }
+
     public List<Complaint> listByReporterMobile(String mobile) {
         return complaintRepository.findByReporterMobile(mobile);
     }

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
     Activity,
@@ -17,6 +17,7 @@ import {
     Sparkles,
     ChevronRight,
     Filter,
+    Radio,
 } from "lucide-react";
 import {
     ResponsiveContainer,
@@ -33,12 +34,24 @@ import {
     CartesianGrid,
     Legend,
 } from "recharts";
+import { io } from "socket.io-client";
+import api from "@/lib/api-client";
 import { PublicNavbar } from "@/components/layout/PublicNavbar";
 import { PublicFooter } from "@/components/layout/PublicFooter";
 import { StatCard } from "@/components/ui/StatCard";
 
 export default function PublicDashboardPage() {
     const [timeRange, setTimeRange] = useState<"30d" | "90d" | "1y">("30d");
+    const [isLiveConnected, setIsLiveConnected] = useState(false);
+    const [liveEventCount, setLiveEventCount] = useState(0);
+
+    const [stats, setStats] = useState({
+        totalRequests: 2484,
+        issuesResolved: 2391,
+        workInProgress: 72,
+        resolutionRate: 96.3,
+        averageResolutionHours: 38.5,
+    });
 
     // Monthly Improvement Trends
     const monthlyTrend = [
@@ -70,40 +83,104 @@ export default function PublicDashboardPage() {
     ];
 
     // Anonymized Public Activity Feed (Zero PII)
-    const anonymizedFeed = [
+    const [anonymizedFeed, setAnonymizedFeed] = useState<any[]>([
         {
-            id: "CP-2026-8941",
-            category: "Roads & Public Works",
+            id: "CMP-GV-202609-0004",
+            category: "INFRASTRUCTURE",
             action: "Pothole repair verified and quality approved",
-            ward: "Ward 1 • Saptapur",
+            ward: "Sirur Park, Hubli",
             time: "15 mins ago",
             status: "Verified Completed",
         },
         {
-            id: "CP-2026-8938",
-            category: "Water Supply",
-            action: "Pipeline leakage plugged & pressure restored",
-            ward: "Ward 3 • Line Bazaar",
+            id: "CMP-GV-202609-0003",
+            category: "INFRASTRUCTURE",
+            action: "Broken Streetlight at Toll Naka Road",
+            ward: "Toll Naka Junction, Dharwad",
             time: "42 mins ago",
-            status: "Verified Completed",
+            status: "Under Review",
         },
         {
-            id: "CP-2026-8935",
-            category: "Street Lighting",
-            action: "4 LED fixtures replaced along pedestrian pathway",
-            ward: "Ward 8 • Sadhankeri",
+            id: "CMP-GV-202609-0002",
+            category: "INFRASTRUCTURE",
+            action: "Streetlight broken near Gandhi Circle",
+            ward: "Gandhi Circle, Dharwad",
             time: "1 hour ago",
-            status: "Verified Completed",
+            status: "Under Review",
         },
         {
-            id: "CP-2026-8930",
-            category: "Solid Waste Management",
-            action: "Community bin cleared and sanitized",
-            ward: "Ward 6 • Hosayellapur",
+            id: "CMP-GV-202609-0001",
+            category: "INFRASTRUCTURE",
+            action: "Road surface restoration completed",
+            ward: "Sirur Park, Hubli",
             time: "2 hours ago",
-            status: "Verified Completed",
+            status: "Under Review",
         },
-    ];
+    ]);
+
+    // ── Fetch Live Stats & Establish Realtime Socket.IO Stream ────────────
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadStats = async () => {
+            try {
+                const res: any = await api.get("/public/dashboard/stats");
+                if (isMounted && res?.totalRequests) {
+                    setStats({
+                        totalRequests: res.totalRequests,
+                        issuesResolved: res.issuesResolved,
+                        workInProgress: res.workInProgress,
+                        resolutionRate: res.resolutionRate,
+                        averageResolutionHours: res.averageResolutionHours || 38.5,
+                    });
+                    if (Array.isArray(res.recentActivity) && res.recentActivity.length > 0) {
+                        setAnonymizedFeed(res.recentActivity);
+                    }
+                }
+            } catch (err) {
+                console.warn("Using baseline dashboard metrics:", err);
+            }
+        };
+
+        loadStats();
+
+        // Connect to NestJS Realtime WebSocket Bus
+        const socket = io("http://localhost:3001", {
+            transports: ["websocket", "polling"],
+            reconnectionAttempts: 5,
+            timeout: 5000,
+        });
+
+        socket.on("connect", () => {
+            if (isMounted) {
+                setIsLiveConnected(true);
+                socket.emit("join:public");
+            }
+        });
+
+        socket.on("disconnect", () => {
+            if (isMounted) {
+                setIsLiveConnected(false);
+            }
+        });
+
+        socket.on("public:activity", (newActivity: any) => {
+            if (isMounted && newActivity) {
+                setAnonymizedFeed((prev) => [newActivity, ...prev.slice(0, 11)]);
+                setStats((prev) => ({
+                    ...prev,
+                    totalRequests: prev.totalRequests + 1,
+                    workInProgress: prev.workInProgress + 1,
+                }));
+                setLiveEventCount((c) => c + 1);
+            }
+        });
+
+        return () => {
+            isMounted = false;
+            socket.disconnect();
+        };
+    }, []);
 
     return (
         <div className="min-h-screen bg-slate-50/60 flex flex-col font-sans w-full max-w-full overflow-x-hidden">
@@ -153,30 +230,30 @@ export default function PublicDashboardPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
                     <StatCard
                         title="Total Service Requests"
-                        value="3,710"
-                        subtitle="Received this quarter"
+                        value={stats.totalRequests.toLocaleString()}
+                        subtitle="Received this cycle"
                         icon={Activity}
                         color="green"
                         trend={{ value: "+12%", positive: true, label: "civic engagement" }}
                     />
                     <StatCard
                         title="Citizens Resolved"
-                        value="3,648"
-                        subtitle="98.3% resolution rate"
+                        value={stats.issuesResolved.toLocaleString()}
+                        subtitle={`${stats.resolutionRate}% resolution rate`}
                         icon={CheckCircle2}
                         color="green"
-                        trend={{ value: "+4.2%", positive: true, label: "vs last quarter" }}
+                        trend={{ value: "+4.2%", positive: true, label: "verified on-ground" }}
                     />
                     <StatCard
                         title="Under Active Work"
-                        value="62"
+                        value={stats.workInProgress.toLocaleString()}
                         subtitle="Currently assigned teams"
                         icon={Clock}
                         color="orange"
                     />
                     <StatCard
                         title="Average Resolution Time"
-                        value="1.8 Days"
+                        value={`${(stats.averageResolutionHours / 24).toFixed(1)} Days`}
                         subtitle="Across all municipal depts"
                         icon={TrendingUp}
                         color="green"
@@ -352,9 +429,25 @@ export default function PublicDashboardPage() {
                             <h3 className="font-extrabold text-gray-950 text-base sm:text-lg">Live Anonymized Civic Action Feed</h3>
                             <p className="text-xs sm:text-sm text-gray-500">Strictly privacy-protected public progress logs</p>
                         </div>
-                        <div className="self-start sm:self-auto flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200 whitespace-nowrap">
-                            <Shield className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>Zero Personal Data Exposed</span>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200">
+                                <span className="relative flex h-2 w-2">
+                                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isLiveConnected ? 'bg-emerald-400 opacity-75' : 'bg-gray-400 opacity-0'}`}></span>
+                                    <span className={`relative inline-flex rounded-full h-2 w-2 ${isLiveConnected ? 'bg-emerald-500' : 'bg-gray-400'}`}></span>
+                                </span>
+                                <span className="text-[11px] font-bold text-emerald-800 tracking-wide">
+                                    {isLiveConnected ? "LIVE WEBSOCKET STREAM" : "REAL-TIME FEED"}
+                                </span>
+                                {liveEventCount > 0 && (
+                                    <span className="ml-1 bg-emerald-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold animate-pulse">
+                                        +{liveEventCount} new
+                                    </span>
+                                )}
+                            </div>
+                            <div className="self-start sm:self-auto flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200 whitespace-nowrap">
+                                <Shield className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>Zero Personal Data Exposed</span>
+                            </div>
                         </div>
                     </div>
 

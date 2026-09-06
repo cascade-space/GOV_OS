@@ -66,4 +66,15 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     return { status: 'success', room: roomName };
   }
+
+  @SubscribeMessage('join:public')
+  handleJoinPublic(
+    @ConnectedSocket() client: Socket,
+  ): { status: string; room: string } {
+    const roomName = 'public:dashboard';
+    client.join(roomName);
+    this.logger.log(`Public client ${client.id} joined ${roomName}`);
+    return { status: 'success', room: roomName };
+  }
 }
+

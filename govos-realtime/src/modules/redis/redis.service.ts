@@ -60,9 +60,23 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       
       // Broadcast to the specific room
       this.gateway.server.to(roomName).emit(type, data);
-      
       this.logger.debug(`Broadcasted event ${type} to room ${roomName}`);
-      
+
+      // If it's a complaint event, sanitize and broadcast to public:dashboard as well
+      if (type === 'complaint:created' || type === 'complaint:status_changed') {
+        const publicActivity = {
+          id: data?.complaintNumber || data?.id || ('CP-' + Date.now()),
+          category: data?.category || 'Civic Issue',
+          action: type === 'complaint:created' 
+            ? (data?.title ? `New issue reported: "${data.title}"` : 'New civic grievance submitted')
+            : `Issue status changed to ${data?.status || 'Active'}`,
+          ward: data?.locationAddress || 'Ward Area',
+          time: 'Just now',
+          status: data?.status === 'RESOLVED' ? 'Verified Completed' : (data?.status === 'IN_PROGRESS' ? 'In Progress' : 'Under Review'),
+        };
+        this.gateway.server.to('public:dashboard').emit('public:activity', publicActivity);
+        this.logger.debug(`Broadcasted public activity for ${publicActivity.id} to public:dashboard`);
+      }
     } catch (e) {
       this.logger.error('Failed to parse Redis message', e);
     }
