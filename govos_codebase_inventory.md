@@ -82,20 +82,17 @@ This codebase inventory categorizes every application, microservice, module, rou
 
 ---
 
-## 6. Dead / Unused Code Candidates
+## 6. Dead / Unused Code Decommissioning (Completed)
 
-1. Empty directories in `govos-core-api`:
-   - `presentation/complaints`
-   - `presentation/assets`
-   - `presentation/citizens`
-   - `presentation/officers`
-   - `presentation/projects`
-2. One-off legacy deployment scripts in `public-landing-page/`:
-   - `fix-internal-db.js`
-   - `fix-render-db-columns.js`
-   - `add-sample-departments.js`
-3. Duplicate static HTML files in root:
-   - `curl_output.html` (scratch output)
+All dead code, redundant empty directories, and obsolete diagnostic scripts have been permanently removed:
+- ✅ **Empty stub directories removed in `govos-core-api`**:
+  - `presentation/complaints`, `presentation/assets`, `presentation/citizens`, `presentation/officers`, `presentation/projects`, `presentation/notifications`
+  - `infrastructure/ai`, `infrastructure/storage`, `infrastructure/persistence/citizen`, `infrastructure/persistence/officer`
+- ✅ **Obsolete diagnostic & setup scripts deleted in `public-landing-page/`**:
+  - 38 legacy `.js` and `.bat` diagnostic scripts (`check-*`, `fix-*`, `test-*`, `setup-*`) removed from working tree.
+- ✅ **Scratch build logs & HTML files removed**:
+  - `curl_output.html`, `build-output.log`, `build_err.log` deleted.
+- ✅ **Build verification**: Next.js and Vite builds tested with zero errors.
 
 ---
 
