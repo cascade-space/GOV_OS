@@ -15,8 +15,6 @@ const nextConfig = {
         ignoreBuildErrors: true,
     },
     serverExternalPackages: ['pg'],
-    // Vercel optimizations
-    output: 'standalone',
     poweredByHeader: false,
     compress: true,
 };

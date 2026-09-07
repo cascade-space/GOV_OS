@@ -1,8 +1,12 @@
 [build]
   base = "public-landing-page"
-  publish = "public-landing-page/.next"
   command = "npm run build"
+  publish = "public-landing-page/.next"
 
 [build.environment]
   NPM_FLAGS = "--legacy-peer-deps"
   NODE_VERSION = "20"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
