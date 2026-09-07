@@ -20,11 +20,13 @@ import {
 import { LanguageSwitcher } from "../LanguageSwitcher";
 import { useLogin } from "@/contexts/LoginContext";
 import { CitizenLoginModal } from "./CitizenLoginModal";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function PublicNavbar() {
     const pathname = usePathname();
     const router = useRouter();
     const { user, logout } = useLogin();
+    const { t } = useLanguage();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [portalsOpen, setPortalsOpen] = useState(false);
     const [citizenModalOpen, setCitizenModalOpen] = useState(false);
@@ -32,19 +34,19 @@ export function PublicNavbar() {
     const isCitizen = user?.role === "CITIZEN" || !!user?.phone;
 
     const navItems = [
-        { label: "Home", href: "/" },
-        { label: "Report Issue", href: "/citizen/report" },
-        { label: "Track Issue", href: "/citizen/track" },
-        { label: "Public Dashboard", href: "/public/dashboard" },
-        { label: "Constituency View", href: "/constituency" },
+        { label: t('nav.home'), href: "/" },
+        { label: t('nav.reportIssue'), href: "/citizen/report" },
+        { label: t('nav.trackIssue'), href: "/citizen/track" },
+        { label: t('nav.publicDashboard'), href: "/public/dashboard" },
+        { label: t('nav.constituencyView'), href: "/constituency" },
     ];
 
     const portals = [
-        { name: "Citizen Portal", href: isCitizen ? "/citizen/dashboard" : "/citizen/login", icon: UserCheck, desc: "Submit and track personal reports" },
-        { name: "Field Officer Portal", href: "/officer/dashboard", icon: Briefcase, desc: "On-ground task resolution & evidence" },
-        { name: "MLA Oversight Desk", href: "/mla/dashboard", icon: Crown, desc: "Constituency KPIs & executive directives" },
-        { name: "Tenant Admin Console", href: "/admin/dashboard", icon: Building2, desc: "Department workflows & SLA management" },
-        { name: "GovOS SuperAdmin", href: "/superadmin/dashboard", icon: Shield, desc: "Multi-tenant master administration" },
+        { name: t('nav.citizenPortal'), href: isCitizen ? "/citizen/dashboard" : "/citizen/login", icon: UserCheck, desc: t('nav.citizenPortalDesc') },
+        { name: t('nav.officerPortal'), href: "/officer/dashboard", icon: Briefcase, desc: t('nav.officerPortalDesc') },
+        { name: t('nav.mlaDesk'), href: "/mla/dashboard", icon: Crown, desc: t('nav.mlaDeskDesc') },
+        { name: t('nav.adminConsole'), href: "/admin/dashboard", icon: Building2, desc: t('nav.adminConsoleDesc') },
+        { name: t('nav.superAdmin'), href: "/superadmin/dashboard", icon: Shield, desc: t('nav.superAdminDesc') },
     ];
 
     const handleLogout = () => {
@@ -113,7 +115,7 @@ export function PublicNavbar() {
                             {portalsOpen && (
                                 <div className="absolute right-0 mt-2 w-72 rounded-2xl bg-white border border-gray-200 shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                                     <div className="px-3 py-1.5 border-b border-gray-100">
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Government Stakeholder Views</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{t('nav.govStakeholderViews')}</p>
                                     </div>
                                     {portals.map((p) => {
                                         const Icon = p.icon;
@@ -139,7 +141,7 @@ export function PublicNavbar() {
                                             className="flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-green-600 text-white text-xs font-bold hover:bg-green-700 transition shadow-xs"
                                         >
                                             <Shield className="w-3.5 h-3.5 text-white" />
-                                            <span>Unified Stakeholder Login →</span>
+                                            <span>{t('nav.unifiedLogin')}</span>
                                         </Link>
                                     </div>
                                 </div>
@@ -158,12 +160,12 @@ export function PublicNavbar() {
                                     }`}
                                 >
                                     <LayoutDashboard className="w-3.5 h-3.5" />
-                                    <span>My Dashboard</span>
+                                    <span>{t('nav.myDashboard')}</span>
                                 </Link>
                                 <button
                                     onClick={handleLogout}
                                     className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 border border-gray-200 transition cursor-pointer"
-                                    title="Sign Out"
+                                    title={t('nav.signOut')}
                                 >
                                     <LogOut className="w-4 h-4" />
                                 </button>
@@ -175,7 +177,7 @@ export function PublicNavbar() {
                                 className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
                             >
                                 <UserCircle className="w-4 h-4" />
-                                <span>Citizen Login</span>
+                                <span>{t('nav.citizenLogin')}</span>
                             </button>
                         )}
                     </div>
@@ -195,7 +197,7 @@ export function PublicNavbar() {
 
                 {/* Mobile Menu Dropdown */}
                 {mobileOpen && (
-                    <div className="lg:hidden border-t border-gray-200 py-3 space-y-2 bg-white animate-in fade-in slide-in-from-top-2">
+                    <div className="lg:hidden border-t border-gray-200 py-3 space-y-2 bg-white animate-in fade-in slide-in-from-top-2 max-h-[80vh] overflow-y-auto">
                         <div className="space-y-1">
                             {navItems.map((item) => {
                                 const active = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
@@ -226,14 +228,14 @@ export function PublicNavbar() {
                                         className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-600 text-white text-xs font-bold shadow-xs hover:bg-green-700 transition"
                                     >
                                         <LayoutDashboard className="w-4 h-4" />
-                                        <span>My Citizen Dashboard</span>
+                                        <span>{t('nav.myCitizenDashboard')}</span>
                                     </Link>
                                     <button
                                         onClick={() => { handleLogout(); setMobileOpen(false); }}
                                         className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-gray-100 text-red-600 text-xs font-semibold hover:bg-red-50 transition cursor-pointer"
                                     >
                                         <LogOut className="w-4 h-4" />
-                                        <span>Sign Out</span>
+                                        <span>{t('nav.signOut')}</span>
                                     </button>
                                 </div>
                             ) : (
@@ -242,13 +244,13 @@ export function PublicNavbar() {
                                     className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-600 text-white text-xs font-bold shadow-xs hover:bg-green-700 transition cursor-pointer"
                                 >
                                     <UserCircle className="w-4 h-4" />
-                                    <span>Citizen Login (OTP)</span>
+                                    <span>{t('nav.citizenLoginOtp')}</span>
                                 </button>
                             )}
                         </div>
 
                         <div className="pt-2 border-t border-gray-100 space-y-1">
-                            <p className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Stakeholder Portals</p>
+                            <p className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('nav.stakeholderPortals')}</p>
                             {portals.map((p) => (
                                 <Link
                                     key={p.name}

@@ -39,11 +39,13 @@ import api from "@/lib/api-client";
 import { PublicNavbar } from "@/components/layout/PublicNavbar";
 import { PublicFooter } from "@/components/layout/PublicFooter";
 import { StatCard } from "@/components/ui/StatCard";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function PublicDashboardPage() {
     const [timeRange, setTimeRange] = useState<"30d" | "90d" | "1y">("30d");
     const [isLiveConnected, setIsLiveConnected] = useState(false);
     const [liveEventCount, setLiveEventCount] = useState(0);
+    const { t } = useLanguage();
 
     const [stats, setStats] = useState({
         totalRequests: 2484,
@@ -193,10 +195,10 @@ export default function PublicDashboardPage() {
                         <div className="space-y-2 sm:space-y-2.5">
                             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/80 text-emerald-800 text-xs font-bold uppercase tracking-wider border border-emerald-200/60">
                                 <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                                <span>Public Transparency Portal</span>
+                                <span>{t('dashboard.publicTransparency')}</span>
                             </div>
                             <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-gray-950">
-                                Community Progress Dashboard
+                                {t('dashboard.pageTitle')}
                             </h1>
                             <p className="text-xs sm:text-base text-gray-600 max-w-2xl leading-relaxed">
                                 Real-time aggregated governance metrics, resolution velocity, and municipal service performance across Dharwad.
@@ -216,7 +218,7 @@ export default function PublicDashboardPage() {
                                             : "text-gray-600 hover:text-gray-950 hover:bg-gray-100"
                                     }`}
                                 >
-                                    {r === "30d" ? "Last 30 Days" : r === "90d" ? "Last Quarter" : "Past Year"}
+                                    {r === "30d" ? t('dashboard.timeRange30') : r === "90d" ? t('dashboard.timeRange90') : t('dashboard.timeRange1y')}
                                 </button>
                             ))}
                         </div>
@@ -229,7 +231,7 @@ export default function PublicDashboardPage() {
                 {/* ── 1. Top Aggregated KPIs ────────────────────────────────── */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
                     <StatCard
-                        title="Total Service Requests"
+                        title={t('dashboard.totalRequests')}
                         value={stats.totalRequests.toLocaleString()}
                         subtitle="Received this cycle"
                         icon={Activity}
@@ -237,22 +239,22 @@ export default function PublicDashboardPage() {
                         trend={{ value: "+12%", positive: true, label: "civic engagement" }}
                     />
                     <StatCard
-                        title="Citizens Resolved"
+                        title={t('dashboard.issuesResolved')}
                         value={stats.issuesResolved.toLocaleString()}
-                        subtitle={`${stats.resolutionRate}% resolution rate`}
+                        subtitle={`${stats.resolutionRate}% ${t('dashboard.resolutionRate').toLowerCase()}`}
                         icon={CheckCircle2}
                         color="green"
                         trend={{ value: "+4.2%", positive: true, label: "verified on-ground" }}
                     />
                     <StatCard
-                        title="Under Active Work"
+                        title={t('dashboard.workInProgress')}
                         value={stats.workInProgress.toLocaleString()}
                         subtitle="Currently assigned teams"
                         icon={Clock}
                         color="orange"
                     />
                     <StatCard
-                        title="Average Resolution Time"
+                        title={t('dashboard.avgResolutionTime')}
                         value={`${(stats.averageResolutionHours / 24).toFixed(1)} Days`}
                         subtitle="Across all municipal depts"
                         icon={TrendingUp}
@@ -267,7 +269,7 @@ export default function PublicDashboardPage() {
                     <div className="lg:col-span-2 bg-white rounded-3xl p-5 sm:p-8 border border-gray-200/80 shadow-sm space-y-4 min-w-0">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                             <div>
-                                <h3 className="font-extrabold text-gray-950 text-base sm:text-lg">Monthly Community Resolution Trend</h3>
+                                <h3 className="font-extrabold text-gray-950 text-base sm:text-lg">{t('dashboard.monthlyTrend')}</h3>
                                 <p className="text-xs sm:text-sm text-gray-500">Grievances reported vs verified completions</p>
                             </div>
                             <span className="self-start sm:self-auto text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
@@ -292,11 +294,11 @@ export default function PublicDashboardPage() {
                         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-2 text-xs font-bold text-gray-600">
                             <div className="flex items-center gap-2">
                                 <span className="w-3 h-3 rounded-full bg-emerald-200 shrink-0" />
-                                <span>Reported Complaints</span>
+                                <span>{t('dashboard.reported')}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="w-3 h-3 rounded-full bg-emerald-600 shrink-0" />
-                                <span>Resolved & Verified</span>
+                                <span>{t('dashboard.resolved')} &amp; Verified</span>
                             </div>
                         </div>
                     </div>
@@ -304,7 +306,7 @@ export default function PublicDashboardPage() {
                     {/* Category Distribution (1 Col) */}
                     <div className="bg-white rounded-3xl p-5 sm:p-8 border border-gray-200/80 shadow-sm space-y-4 flex flex-col justify-between min-w-0">
                         <div>
-                            <h3 className="font-extrabold text-gray-950 text-base sm:text-lg">Issue Category Breakdown</h3>
+                            <h3 className="font-extrabold text-gray-950 text-base sm:text-lg">{t('dashboard.categoryBreakdown')}</h3>
                             <p className="text-xs sm:text-sm text-gray-500">Distribution by municipal sector</p>
                         </div>
 
@@ -345,7 +347,7 @@ export default function PublicDashboardPage() {
                 <div className="bg-white rounded-3xl border border-gray-200/80 shadow-sm overflow-hidden min-w-0">
                     <div className="p-5 sm:p-8 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                         <div>
-                            <h3 className="font-extrabold text-gray-950 text-base sm:text-lg">Department Resolution Performance</h3>
+                            <h3 className="font-extrabold text-gray-950 text-base sm:text-lg">{t('dashboard.departmentPerformance')}</h3>
                             <p className="text-xs sm:text-sm text-gray-500">Audited service delivery metrics by department</p>
                         </div>
                         <span className="self-start sm:self-auto text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 whitespace-nowrap">
@@ -391,11 +393,11 @@ export default function PublicDashboardPage() {
                         <table className="w-full min-w-[620px] text-left text-xs sm:text-sm">
                             <thead className="bg-slate-50/80 text-gray-600 font-bold uppercase text-[11px] tracking-wider border-b border-gray-200">
                                 <tr>
-                                    <th className="py-3.5 px-6">Department</th>
-                                    <th className="py-3.5 px-6">Total Requests</th>
-                                    <th className="py-3.5 px-6">Resolved</th>
-                                    <th className="py-3.5 px-6">SLA Compliance</th>
-                                    <th className="py-3.5 px-6">Average MTTR</th>
+                                    <th className="py-3.5 px-6">{t('dashboard.department')}</th>
+                                    <th className="py-3.5 px-6">{t('dashboard.total')}</th>
+                                    <th className="py-3.5 px-6">{t('dashboard.resolvedLabel')}</th>
+                                    <th className="py-3.5 px-6">{t('dashboard.slaScore')}</th>
+                                    <th className="py-3.5 px-6">{t('dashboard.avgTime')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
@@ -426,7 +428,7 @@ export default function PublicDashboardPage() {
                 <div className="bg-white rounded-3xl p-5 sm:p-8 border border-gray-200/80 shadow-sm space-y-5 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                         <div>
-                            <h3 className="font-extrabold text-gray-950 text-base sm:text-lg">Live Anonymized Civic Action Feed</h3>
+                            <h3 className="font-extrabold text-gray-950 text-base sm:text-lg">{t('dashboard.liveActivityFeed')}</h3>
                             <p className="text-xs sm:text-sm text-gray-500">Strictly privacy-protected public progress logs</p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">

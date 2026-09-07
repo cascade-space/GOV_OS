@@ -9,6 +9,7 @@ import { MOCK_COMPLAINTS } from "@/lib/mockData";
 import { formatDateTime, getSLAStatus, truncate, cn } from "@/lib/utils";
 import { Search, MapPin, Clock, User, Building2, AlertTriangle, CheckCircle2, Phone } from "lucide-react";
 import toast from "react-hot-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const HISTORY_MOCK = [
     { status: "Submitted", note: "Complaint received", time: "3 days ago", by: "System" },
@@ -27,6 +28,7 @@ function TrackContent() {
     const [searched, setSearched] = useState(false);
     const [complaint, setComplaint] = useState<any>(null);
     const [loading, setLoading] = useState(false);
+    const { t } = useLanguage();
 
     const handleSearch = async () => {
         if (!searchInput.trim()) { toast.error("Enter a Complaint ID or mobile number"); return; }
@@ -110,9 +112,9 @@ function TrackContent() {
                     <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-100/80 text-emerald-800 text-xs font-bold uppercase tracking-wider border border-emerald-200/60">
                         <span>Real-Time Grievance Tracker</span>
                     </div>
-                    <h1 className="text-3xl sm:text-4xl font-black text-gray-950 tracking-tight">Track Your Complaint</h1>
+                    <h1 className="text-3xl sm:text-4xl font-black text-gray-950 tracking-tight">{t('track.title')}</h1>
                     <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
-                        Enter your Complaint ID or registered 10-digit mobile number for instant SLA status and live action logs.
+                        {t('track.subtitle')}
                     </p>
                 </div>
 
@@ -135,7 +137,7 @@ function TrackContent() {
                             leftIcon={<Search className="w-4 h-4 stroke-[2.5]" />}
                             className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3.5 rounded-2xl shadow-lg shadow-emerald-600/20 active:scale-95 transition"
                         >
-                            Track
+                            {t('track.searchButton')}
                         </Button>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 pt-3 text-xs text-gray-500 border-t border-gray-100">
@@ -194,24 +196,24 @@ function TrackContent() {
 
                             <div className="grid grid-cols-2 gap-3.5 mb-5">
                                 <div className="bg-slate-50 border border-slate-150 rounded-2xl p-3.5">
-                                    <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Priority</p>
+                                    <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">{t('track.priority')}</p>
                                     <div className="mt-1.5"><PriorityBadge priority={complaint.priority} /></div>
                                 </div>
                                 <div className="bg-slate-50 border border-slate-150 rounded-2xl p-3.5">
-                                    <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">SLA Status</p>
+                                    <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">{t('track.slaDeadline')}</p>
                                     <p className={cn("text-sm font-extrabold mt-1.5", sla?.color)}>{sla?.label}</p>
                                 </div>
                                 <div className="bg-slate-50 border border-slate-150 rounded-2xl p-3.5">
                                     <div className="flex items-center gap-1.5 mb-1">
                                         <Building2 className="w-3.5 h-3.5 text-emerald-600" />
-                                        <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Department</p>
+                                        <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">{t('track.department')}</p>
                                     </div>
                                     <p className="text-sm font-bold text-gray-900">{complaint.assignedDept || "Pending Assignment"}</p>
                                 </div>
                                 <div className="bg-slate-50 border border-slate-150 rounded-2xl p-3.5">
                                     <div className="flex items-center gap-1.5 mb-1">
                                         <User className="w-3.5 h-3.5 text-emerald-600" />
-                                        <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Field Officer</p>
+                                        <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">{t('track.assignedOfficer')}</p>
                                     </div>
                                     <p className="text-sm font-bold text-gray-900">{complaint.assignedOfficer || "Not Assigned"}</p>
                                 </div>
@@ -241,7 +243,7 @@ function TrackContent() {
                                     toast.success("Opening Google Maps...");
                                 }}
                             >
-                                Get Directions to Location
+                                {t('citizen.getDirections')}
                             </Button>
                             
                             <div className="flex items-center gap-2 text-xs text-gray-400 mt-3 font-medium">
@@ -263,13 +265,13 @@ function TrackContent() {
 
                         {/* Lifecycle Stepper */}
                         <div className="bg-white rounded-3xl border border-gray-200/80 shadow-sm p-6 sm:p-8">
-                            <h3 className="font-extrabold text-gray-950 text-base mb-6">Complaint Progress</h3>
+                            <h3 className="font-extrabold text-gray-950 text-base mb-6">{t('track.timeline')}</h3>
                             <ComplaintStepper currentStatus={complaint.status} />
                         </div>
 
                         {/* Status History */}
                         <div className="bg-white rounded-3xl border border-gray-200/80 shadow-sm p-6 sm:p-8">
-                            <h3 className="font-extrabold text-gray-950 text-base mb-5">Update Timeline</h3>
+                            <h3 className="font-extrabold text-gray-950 text-base mb-5">{t('track.timeline')}</h3>
                             {complaint.id && complaint.id.startsWith("temp-") ? (
                                 <div className="space-y-3">
                                     <div className="flex gap-3">
@@ -317,8 +319,8 @@ function TrackContent() {
                                 <Phone className="w-5 h-5" />
                             </div>
                             <div>
-                                <p className="text-sm font-extrabold text-emerald-950">Need Assistance?</p>
-                                <p className="text-xs text-gray-600 mt-0.5">Call our civic helpline: <strong className="text-emerald-800 font-bold">1800-425-CIVIC</strong> (Toll Free, 24/7 Citizen Support)</p>
+                                <p className="text-sm font-extrabold text-emerald-950">{t('track.contactSupport')}</p>
+                                <p className="text-xs text-gray-600 mt-0.5">{t('track.supportHint')}: <strong className="text-emerald-800 font-bold">1800-425-CIVIC</strong></p>
                             </div>
                         </div>
                     </div>

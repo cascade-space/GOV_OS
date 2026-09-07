@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { PublicNavbar } from "@/components/layout/PublicNavbar";
 import { PublicFooter } from "@/components/layout/PublicFooter";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 /* ─────────────────────────────────────────────
    HERO
@@ -33,6 +34,8 @@ import { PublicFooter } from "@/components/layout/PublicFooter";
 function HeroSection() {
     const [trackId, setTrackId] = useState("");
     const router = useRouter();
+    const { t } = useLanguage();
+
     const handleTrack = () => {
         if (trackId.trim()) {
             router.push(`/citizen/track?id=${encodeURIComponent(trackId.trim())}`);
@@ -59,11 +62,11 @@ function HeroSection() {
                         {/* Headline */}
                         <div>
                             <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-[68px] 2xl:text-[74px] font-extrabold text-gray-900 leading-[1.05] tracking-tight">
-                                Together, We Build<br />
-                                <span className="text-[#16a34a]">Better Communities</span>
+                                {t('home.hero.title')}<br />
+                                <span className="text-[#16a34a]">{t('home.hero.titleHighlight')}</span>
                             </h1>
                             <p className="mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg xl:text-xl text-gray-700 leading-relaxed font-medium max-w-2xl">
-                                Report. Track. Resolve. Your voice<br className="hidden sm:inline" /> drives real change in your city.
+                                {t('home.hero.subtitle')}
                             </p>
                         </div>
 
@@ -75,7 +78,7 @@ function HeroSection() {
                                 </div>
                                 <div className="pr-0.5">
                                     <div className="text-xs sm:text-sm xl:text-base font-black text-gray-900 leading-tight">12,400+</div>
-                                    <div className="text-[9px] sm:text-[11px] text-gray-500 font-medium leading-none mt-0.5 whitespace-nowrap">Citizens Connected</div>
+                                    <div className="text-[9px] sm:text-[11px] text-gray-500 font-medium leading-none mt-0.5 whitespace-nowrap">{t('home.hero.citizensConnected')}</div>
                                 </div>
                             </div>
 
@@ -85,7 +88,7 @@ function HeroSection() {
                                 </div>
                                 <div className="pr-0.5">
                                     <div className="text-xs sm:text-sm xl:text-base font-black text-gray-900 leading-tight">2,450+</div>
-                                    <div className="text-[9px] sm:text-[11px] text-gray-500 font-medium leading-none mt-0.5 whitespace-nowrap">Issues Resolved</div>
+                                    <div className="text-[9px] sm:text-[11px] text-gray-500 font-medium leading-none mt-0.5 whitespace-nowrap">{t('home.hero.issuesResolved')}</div>
                                 </div>
                             </div>
 
@@ -95,7 +98,7 @@ function HeroSection() {
                                 </div>
                                 <div className="pr-0.5">
                                     <div className="text-xs sm:text-sm xl:text-base font-black text-gray-900 leading-tight">94%</div>
-                                    <div className="text-[9px] sm:text-[11px] text-gray-500 font-medium leading-none mt-0.5 whitespace-nowrap">Satisfaction Rate</div>
+                                    <div className="text-[9px] sm:text-[11px] text-gray-500 font-medium leading-none mt-0.5 whitespace-nowrap">{t('home.hero.satisfactionRate')}</div>
                                 </div>
                             </div>
 
@@ -105,7 +108,7 @@ function HeroSection() {
                                 </div>
                                 <div className="pr-0.5">
                                     <div className="text-xs sm:text-sm xl:text-base font-black text-gray-900 leading-tight">6</div>
-                                    <div className="text-[9px] sm:text-[11px] text-gray-500 font-medium leading-none mt-0.5 whitespace-nowrap">Departments</div>
+                                    <div className="text-[9px] sm:text-[11px] text-gray-500 font-medium leading-none mt-0.5 whitespace-nowrap">{t('home.hero.departments')}</div>
                                 </div>
                             </div>
                         </div>
@@ -115,8 +118,8 @@ function HeroSection() {
                     <div className="w-full lg:w-[420px] xl:w-[460px] 2xl:w-[490px] shrink-0">
                         <div className="bg-white/98 rounded-3xl shadow-2xl border border-gray-100 p-6 sm:p-7 xl:p-8 space-y-4 sm:space-y-5">
                             <div className="text-center space-y-1">
-                                <h3 className="text-lg sm:text-xl xl:text-2xl font-extrabold text-gray-900 tracking-tight">Track Your Complaint</h3>
-                                <p className="text-xs sm:text-sm text-gray-500">Enter your Complaint ID or registered mobile number</p>
+                                <h3 className="text-lg sm:text-xl xl:text-2xl font-extrabold text-gray-900 tracking-tight">{t('home.hero.trackComplaint')}</h3>
+                                <p className="text-xs sm:text-sm text-gray-500">{t('home.hero.trackPlaceholder')}</p>
                             </div>
                             <div className="flex gap-2.5">
                                 <div className="flex-1 flex items-center gap-2.5 border-2 border-gray-200 rounded-xl px-3.5 py-2.5 sm:py-3 bg-gray-50/80 focus-within:border-emerald-500 focus-within:bg-white transition">
@@ -135,13 +138,13 @@ function HeroSection() {
                                     className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-[#16a34a] hover:bg-[#15803d] text-white text-xs sm:text-sm font-bold transition flex items-center gap-2 shrink-0 shadow-md shadow-emerald-600/20 active:scale-95"
                                 >
                                     <Search className="w-4 h-4" />
-                                    <span>Track</span>
+                                    <span>{t('common.track')}</span>
                                 </button>
                             </div>
                             <p className="text-xs sm:text-sm text-gray-500 text-center pt-0.5">
-                                Demo: Try{" "}
+                                {t('home.hero.trackHint')}{" "}
                                 <button onClick={() => setTrackId("CMP-2024-00341")} className="text-emerald-600 font-bold hover:underline">CMP-2024-00341</button>
-                                {" "}or{" "}
+                                {" "}{t('common.or')}{" "}
                                 <button onClick={() => setTrackId("CMP-2024-00342")} className="text-emerald-600 font-bold hover:underline">CMP-2024-00342</button>
                             </p>
                         </div>
@@ -156,8 +159,8 @@ function HeroSection() {
                         <div className="flex items-center gap-3 px-2">
                             <TrendingUp className="w-6 h-6 text-emerald-600 shrink-0" />
                             <div>
-                                <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">3.2 days</div>
-                                <div className="text-xs sm:text-sm text-gray-500 font-medium">Avg. Resolution Time</div>
+                                <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">3.2 {t('dashboard.hours') === 'hrs' ? 'days' : t('dashboard.hours')}</div>
+                                <div className="text-xs sm:text-sm text-gray-500 font-medium">{t('home.hero.avgResolutionTime')}</div>
                             </div>
                         </div>
 
@@ -165,7 +168,7 @@ function HeroSection() {
                             <Users className="w-6 h-6 text-emerald-600 shrink-0" />
                             <div>
                                 <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">12,400+</div>
-                                <div className="text-xs sm:text-sm text-gray-500 font-medium">Citizens Served</div>
+                                <div className="text-xs sm:text-sm text-gray-500 font-medium">{t('home.hero.citizensServed')}</div>
                             </div>
                         </div>
 
@@ -173,7 +176,7 @@ function HeroSection() {
                             <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
                             <div>
                                 <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">1,832</div>
-                                <div className="text-xs sm:text-sm text-gray-500 font-medium">Issues Resolved</div>
+                                <div className="text-xs sm:text-sm text-gray-500 font-medium">{t('home.hero.issuesResolved')}</div>
                             </div>
                         </div>
 
@@ -181,7 +184,7 @@ function HeroSection() {
                             <Clock className="w-6 h-6 text-amber-500 shrink-0" />
                             <div>
                                 <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">315</div>
-                                <div className="text-xs sm:text-sm text-gray-500 font-medium">Active Issues</div>
+                                <div className="text-xs sm:text-sm text-gray-500 font-medium">{t('home.hero.activeIssues')}</div>
                             </div>
                         </div>
 
@@ -189,7 +192,7 @@ function HeroSection() {
                             <Star className="w-6 h-6 text-amber-400 fill-amber-400 shrink-0" />
                             <div>
                                 <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">94%</div>
-                                <div className="text-xs sm:text-sm text-gray-500 font-medium">Satisfaction Rate</div>
+                                <div className="text-xs sm:text-sm text-gray-500 font-medium">{t('home.hero.satisfactionRate')}</div>
                             </div>
                         </div>
                     </div>
@@ -205,12 +208,13 @@ function HeroSection() {
    HOW IT WORKS
 ───────────────────────────────────────────── */
 function HowItWorks() {
+    const { t } = useLanguage();
     const steps = [
         {
             num: "01",
             icon: FileText,
-            title: "Report Your Issue",
-            desc: "Share details, photos, and location in just a few taps.",
+            title: t('home.howItWorks.step1Title'),
+            desc: t('home.howItWorks.step1Desc'),
             color: "bg-green-100 text-green-700",
             numColor: "text-green-600",
             iconBg: "bg-green-600",
@@ -218,8 +222,8 @@ function HowItWorks() {
         {
             num: "02",
             icon: Shield,
-            title: "AI Validation",
-            desc: "Our AI verifies and routes your issue to the right department.",
+            title: t('home.howItWorks.step2Title'),
+            desc: t('home.howItWorks.step2Desc'),
             color: "bg-blue-100 text-blue-700",
             numColor: "text-blue-600",
             iconBg: "bg-blue-600",
@@ -227,8 +231,8 @@ function HowItWorks() {
         {
             num: "03",
             icon: UserCircle,
-            title: "Expert Assignment",
-            desc: "The responsible officer is assigned with a clear SLA deadline.",
+            title: t('home.howItWorks.step3Title'),
+            desc: t('home.howItWorks.step3Desc'),
             color: "bg-purple-100 text-purple-700",
             numColor: "text-purple-600",
             iconBg: "bg-purple-600",
@@ -236,8 +240,8 @@ function HowItWorks() {
         {
             num: "04",
             icon: Timer,
-            title: "Resolution & Updates",
-            desc: "Get real-time updates until the issue is resolved and verified.",
+            title: t('home.howItWorks.step4Title'),
+            desc: t('home.howItWorks.step4Desc'),
             color: "bg-amber-100 text-amber-700",
             numColor: "text-amber-600",
             iconBg: "bg-amber-500",
@@ -250,10 +254,10 @@ function HowItWorks() {
                 <div className="text-center space-y-2 mb-10">
                     <div className="flex items-center justify-center gap-2">
                         <span className="text-green-600 text-lg">🌿</span>
-                        <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">How It Works</h2>
+                        <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">{t('home.howItWorks.title')}</h2>
                         <span className="text-green-600 text-lg">🌿</span>
                     </div>
-                    <p className="text-sm text-gray-500">Simple steps to a better, cleaner, and stronger community</p>
+                    <p className="text-sm text-gray-500">{t('home.howItWorks.subtitle')}</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
@@ -289,6 +293,7 @@ function HowItWorks() {
    CTA BANNER
 ───────────────────────────────────────────── */
 function CTABanner() {
+    const { t } = useLanguage();
     return (
         <section className="relative mx-4 sm:mx-8 lg:mx-16 my-8 rounded-3xl overflow-hidden border border-emerald-200/80 shadow-sm bg-emerald-50/20">
             {/* Background Panorama Illustration */}
@@ -300,10 +305,10 @@ function CTABanner() {
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between pl-6 sm:pl-32 md:pl-44 lg:pl-52 pr-6 sm:pr-16 md:pr-24 lg:pr-32 py-7 md:py-9 gap-6">
                 <div className="flex-1 space-y-1.5 text-center md:text-left">
                     <h3 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
-                        See something that needs attention?
+                        {t('home.cta.title')}
                     </h3>
                     <p className="text-sm sm:text-base font-medium text-gray-600">
-                        Report it today and help make your city better for everyone.
+                        {t('home.cta.description')}
                     </p>
                 </div>
 
@@ -313,13 +318,13 @@ function CTABanner() {
                         className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition-all shadow-md shadow-emerald-600/20 hover:shadow-emerald-600/30 hover:-translate-y-0.5 active:translate-y-0"
                     >
                         <Plus className="w-4 h-4 stroke-[2.5]" />
-                        Report Issue
+                        {t('home.cta.reportButton')}
                     </Link>
                     <Link
                         href="/citizen/track"
                         className="flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-emerald-600 text-emerald-700 bg-white/80 hover:bg-white backdrop-blur-sm font-bold text-sm transition-all hover:border-emerald-700 hover:-translate-y-0.5 active:translate-y-0 shadow-sm"
                     >
-                        Track Status
+                        {t('home.cta.trackButton')}
                         <ArrowRight className="w-4 h-4 stroke-[2.5]" />
                     </Link>
                 </div>
@@ -332,34 +337,35 @@ function CTABanner() {
    RECENTLY RESOLVED
 ───────────────────────────────────────────── */
 function RecentlyResolved() {
+    const { t } = useLanguage();
     const items = [
         {
-            title: "Pothole repaired on Nehru Street",
-            category: "Roads",
+            title: t('home.recentResolutions.issue1'),
+            category: t('home.recentResolutions.cat1'),
             ward: "Ward 12",
             time: "2h ago",
             color: "text-green-600",
             bg: "bg-green-50",
         },
         {
-            title: "Water supply restored in Block C",
-            category: "Water",
+            title: t('home.recentResolutions.issue2'),
+            category: t('home.recentResolutions.cat2'),
             ward: "Ward 7",
             time: "1d ago",
             color: "text-blue-600",
             bg: "bg-blue-50",
         },
         {
-            title: "Street lights replaced on MG Road",
-            category: "Lighting",
+            title: t('home.recentResolutions.issue3'),
+            category: t('home.recentResolutions.cat3'),
             ward: "Ward 5",
             time: "2d ago",
             color: "text-amber-600",
             bg: "bg-amber-50",
         },
         {
-            title: "Garbage bins cleared at Market Road",
-            category: "Sanitation",
+            title: t('home.recentResolutions.issue4'),
+            category: t('home.recentResolutions.cat4'),
             ward: "Ward 3",
             time: "3d ago",
             color: "text-teal-600",
@@ -373,10 +379,10 @@ function RecentlyResolved() {
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-2">
                         <CheckCircle2 className="w-5 h-5 text-green-600" />
-                        <h2 className="text-lg font-extrabold text-gray-900">Recently Resolved</h2>
+                        <h2 className="text-lg font-extrabold text-gray-900">{t('home.recentResolutions.title')}</h2>
                     </div>
                     <Link href="/public/dashboard" className="text-sm text-green-600 font-semibold flex items-center gap-1 hover:underline">
-                        View All <ArrowRight className="w-4 h-4" />
+                        {t('home.recentResolutions.viewAll')} <ArrowRight className="w-4 h-4" />
                     </Link>
                 </div>
 

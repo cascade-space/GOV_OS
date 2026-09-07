@@ -23,22 +23,23 @@ import { PublicNavbar } from "@/components/layout/PublicNavbar";
 import { PublicFooter } from "@/components/layout/PublicFooter";
 import { StatCard, ProgressCard } from "@/components/ui/StatCard";
 import { DHARWAD_WARDS } from "@/lib/constants";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ConstituencyPage() {
     const [selectedWard, setSelectedWard] = useState<string>("all");
-    const [selectedSector, setSelectedSector] = useState<string>("all");
+    const { t } = useLanguage();
 
-    // 6 Key Sectors
+    // 6 Key Sectors — names driven by t()
     const sectors = [
-        { id: "roads", name: "Roads & Transit", icon: Wrench, resolved: 840, inProgress: 14, budget: "₹1.4 Cr" },
-        { id: "water", name: "Water & Sewage", icon: Droplets, resolved: 620, inProgress: 8, budget: "₹95 L" },
-        { id: "electricity", name: "Electricity & Power", icon: Zap, resolved: 410, inProgress: 6, budget: "₹45 L" },
-        { id: "sanitation", name: "Sanitation & Cleanliness", icon: Trash2, resolved: 980, inProgress: 12, budget: "₹60 L" },
-        { id: "infrastructure", name: "Civic Infrastructure", icon: Building2, resolved: 310, inProgress: 9, budget: "₹2.1 Cr" },
-        { id: "environment", name: "Parks & Greenery", icon: Trees, resolved: 220, inProgress: 5, budget: "₹35 L" },
+        { id: "roads",          name: t('constituency.sectorRoads'),          icon: Wrench,    resolved: 840, inProgress: 14, budget: "₹1.4 Cr" },
+        { id: "water",          name: t('constituency.sectorWater'),          icon: Droplets,  resolved: 620, inProgress: 8,  budget: "₹95 L"   },
+        { id: "electricity",    name: t('constituency.sectorElectricity'),    icon: Zap,       resolved: 410, inProgress: 6,  budget: "₹45 L"   },
+        { id: "sanitation",     name: t('constituency.sectorSanitation'),     icon: Trash2,    resolved: 980, inProgress: 12, budget: "₹60 L"   },
+        { id: "infrastructure", name: t('constituency.sectorInfrastructure'), icon: Building2, resolved: 310, inProgress: 9,  budget: "₹2.1 Cr" },
+        { id: "environment",    name: t('constituency.sectorEnvironment'),    icon: Trees,     resolved: 220, inProgress: 5,  budget: "₹35 L"   },
     ];
 
-    // Major Ongoing Works in Progress
+    // Major Ongoing Works in Progress — titles kept in English (proper nouns / project names)
     const ongoingWorks = [
         {
             title: "Saptapur University Main Road Four-Laning & Asphalting",
@@ -118,24 +119,24 @@ export default function ConstituencyPage() {
                         <div className="space-y-2.5 max-w-2xl">
                             <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-100/80 text-emerald-800 text-xs font-bold uppercase tracking-wider border border-emerald-200/60">
                                 <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                                <span>Karnataka Legislative Assembly • Constituency #71</span>
+                                <span>{t('constituency.badge')}</span>
                             </div>
                             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-950">
-                                Dharwad Constituency
+                                {t('constituency.title')}
                             </h1>
                             <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                                Community Progress, Public Infrastructure Improvements & Municipal Service Transparency Portal for the citizens of Dharwad.
+                                {t('constituency.subtitle')}
                             </p>
                         </div>
 
                         {/* Constituency Quick Badges */}
                         <div className="grid grid-cols-2 gap-3 self-start md:self-auto text-xs">
                             <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm text-center">
-                                <p className="text-gray-500 font-bold uppercase tracking-wider text-[10px]">Covered Wards</p>
-                                <p className="text-xl font-extrabold text-gray-950 mt-0.5">8 Wards</p>
+                                <p className="text-gray-500 font-bold uppercase tracking-wider text-[10px]">{t('constituency.coveredWards')}</p>
+                                <p className="text-xl font-extrabold text-gray-950 mt-0.5">{t('constituency.wardsValue')}</p>
                             </div>
                             <div className="bg-white p-4 rounded-2xl border border-emerald-200 shadow-sm text-center">
-                                <p className="text-emerald-700 font-bold uppercase tracking-wider text-[10px]">Population Impact</p>
+                                <p className="text-emerald-700 font-bold uppercase tracking-wider text-[10px]">{t('constituency.populationImpact')}</p>
                                 <p className="text-xl font-extrabold text-emerald-600 mt-0.5">280,000+</p>
                             </div>
                         </div>
@@ -148,32 +149,32 @@ export default function ConstituencyPage() {
                 {/* ── 2. Top Community Progress KPIs ────────────────────────── */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                     <StatCard
-                        title="Issues Resolved"
+                        title={t('constituency.issuesResolved')}
                         value="3,380"
-                        subtitle="98.2% completion rate"
+                        subtitle={t('constituency.issuesResolvedSubtitle')}
                         icon={CheckCircle2}
                         color="green"
-                        trend={{ value: "+8%", positive: true, label: "this quarter" }}
+                        trend={{ value: "+8%", positive: true, label: t('constituency.thisQuarter') }}
                     />
                     <StatCard
-                        title="Active Public Works"
-                        value="18 Projects"
-                        subtitle="₹6.8 Cr ongoing capital works"
+                        title={t('constituency.activePublicWorks')}
+                        value={t('constituency.activePublicWorksValue')}
+                        subtitle={t('constituency.activePublicWorksSubtitle')}
                         icon={Wrench}
                         color="green"
                     />
                     <StatCard
-                        title="Average Response Time"
-                        value="1.4 Days"
-                        subtitle="Standard SLA: 3.0 Days"
+                        title={t('constituency.avgResponseTime')}
+                        value={t('constituency.avgResponseTimeValue')}
+                        subtitle={t('constituency.avgResponseTimeSubtitle')}
                         icon={Clock}
                         color="green"
-                        trend={{ value: "-45%", positive: true, label: "faster resolution" }}
+                        trend={{ value: "-45%", positive: true, label: t('constituency.fasterResolution') }}
                     />
                     <StatCard
-                        title="Civic Trust Index"
+                        title={t('constituency.civicTrustIndex')}
                         value="96.4%"
-                        subtitle="Audited citizen satisfaction"
+                        subtitle={t('constituency.civicTrustSubtitle')}
                         icon={Shield}
                         color="purple"
                     />
@@ -183,12 +184,12 @@ export default function ConstituencyPage() {
                 <div className="space-y-6">
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
                         <div>
-                            <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Sectoral Transformation</span>
+                            <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('constituency.sectoralTransformation')}</span>
                             <h2 className="text-2xl sm:text-3xl font-black text-gray-950 tracking-tight">
-                                Improvements Across Dharwad
+                                {t('constituency.improvementsTitle')}
                             </h2>
                         </div>
-                        <p className="text-xs sm:text-sm text-gray-500">Aggregated infrastructure and civic health across key public domains</p>
+                        <p className="text-xs sm:text-sm text-gray-500">{t('constituency.improvementsSubtitle')}</p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -204,7 +205,7 @@ export default function ConstituencyPage() {
                                             <Icon className="w-5 h-5" />
                                         </div>
                                         <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-800">
-                                            {sector.budget} Allocated
+                                            {sector.budget} {t('constituency.allocated')}
                                         </span>
                                     </div>
 
@@ -212,12 +213,12 @@ export default function ConstituencyPage() {
                                         <h3 className="font-extrabold text-gray-950 text-base">{sector.name}</h3>
                                         <div className="mt-3 grid grid-cols-2 gap-2 text-xs pt-3 border-t border-gray-100">
                                             <div>
-                                                <span className="text-gray-400 font-semibold">Resolved</span>
-                                                <p className="text-sm font-black text-emerald-600">{sector.resolved} items</p>
+                                                <span className="text-gray-400 font-semibold">{t('constituency.resolved')}</span>
+                                                <p className="text-sm font-black text-emerald-600">{sector.resolved} {t('constituency.items')}</p>
                                             </div>
                                             <div>
-                                                <span className="text-gray-400 font-semibold">In Progress</span>
-                                                <p className="text-sm font-bold text-amber-600">{sector.inProgress} active</p>
+                                                <span className="text-gray-400 font-semibold">{t('constituency.inProgress')}</span>
+                                                <p className="text-sm font-bold text-amber-600">{sector.inProgress} {t('constituency.active')}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -231,9 +232,9 @@ export default function ConstituencyPage() {
                 <div className="bg-white rounded-3xl border border-gray-200/80 shadow-sm p-6 sm:p-8 space-y-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Ward-Level Accountability</span>
-                            <h2 className="text-xl sm:text-2xl font-black text-gray-950">Ward Performance Matrix</h2>
-                            <p className="text-xs sm:text-sm text-gray-500">Public aggregated completion and grievance closure rate across 8 wards</p>
+                            <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('constituency.wardAccountability')}</span>
+                            <h2 className="text-xl sm:text-2xl font-black text-gray-950">{t('constituency.wardPerformanceMatrix')}</h2>
+                            <p className="text-xs sm:text-sm text-gray-500">{t('constituency.wardPerformanceSubtitle')}</p>
                         </div>
                     </div>
 
@@ -247,9 +248,9 @@ export default function ConstituencyPage() {
                                 >
                                     <div className="flex items-center justify-between">
                                         <span className="px-2.5 py-0.5 rounded-full bg-emerald-700 text-white text-[11px] font-bold">
-                                            Ward {w.number}
+                                            {t('constituency.ward')} {w.number}
                                         </span>
-                                        <span className="text-xs font-extrabold text-emerald-700">{rate}% Resolved</span>
+                                        <span className="text-xs font-extrabold text-emerald-700">{rate}% {t('constituency.resolvedPct')}</span>
                                     </div>
 
                                     <h4 className="text-xs font-bold text-gray-900 leading-snug line-clamp-1">{w.name}</h4>
@@ -262,8 +263,8 @@ export default function ConstituencyPage() {
                                             />
                                         </div>
                                         <div className="flex justify-between text-[11px] text-gray-500 pt-0.5 font-medium">
-                                            <span>Total: <strong className="text-gray-800">{w.totalIssues}</strong></span>
-                                            <span>Closed: <strong className="text-emerald-700 font-bold">{w.resolved}</strong></span>
+                                            <span>{t('constituency.total')}: <strong className="text-gray-800">{w.totalIssues}</strong></span>
+                                            <span>{t('constituency.closed')}: <strong className="text-emerald-700 font-bold">{w.resolved}</strong></span>
                                         </div>
                                     </div>
                                 </div>
@@ -276,11 +277,11 @@ export default function ConstituencyPage() {
                 <div className="space-y-6">
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                         <div>
-                            <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Live Municipal Execution</span>
+                            <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('constituency.liveMunicipal')}</span>
                             <h2 className="text-2xl sm:text-3xl font-black text-gray-950 tracking-tight">
-                                Government Works in Progress
+                                {t('constituency.govWorksTitle')}
                             </h2>
-                            <p className="text-xs sm:text-sm text-gray-500">Major infrastructure and public projects scheduled across Dharwad</p>
+                            <p className="text-xs sm:text-sm text-gray-500">{t('constituency.govWorksSubtitle')}</p>
                         </div>
 
                         {/* Ward Filter */}
@@ -291,10 +292,10 @@ export default function ConstituencyPage() {
                                 onChange={(e) => setSelectedWard(e.target.value)}
                                 className="bg-white border border-gray-200 text-gray-800 text-xs font-bold rounded-2xl px-4 py-2.5 shadow-sm focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500"
                             >
-                                <option value="all">All Wards (Dharwad)</option>
+                                <option value="all">{t('constituency.allWards')}</option>
                                 {DHARWAD_WARDS.map((w) => (
                                     <option key={w.id} value={`Ward ${w.number}`}>
-                                        Ward {w.number} - {w.name}
+                                        {t('constituency.ward')} {w.number} - {w.name}
                                     </option>
                                 ))}
                             </select>
