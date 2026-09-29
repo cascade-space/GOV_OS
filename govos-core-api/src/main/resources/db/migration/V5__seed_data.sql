@@ -3,6 +3,13 @@
 -- GovOS MTAS — Super Admin tenant + demo tenant
 -- ============================================================
 
+-- Temporarily bypass FORCE RLS for bootstrap data seeding
+ALTER TABLE constituencies NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE wards NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE departments NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE users NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE user_roles NO FORCE ROW LEVEL SECURITY;
+
 -- ============================================================
 -- SUPER ADMIN TENANT (Prajna Labs / Cascade platform operators)
 -- ============================================================
@@ -146,3 +153,10 @@ FROM roles r WHERE r.code = 'OFFICER';
 UPDATE departments 
 SET head_officer_id = '00000000-0000-0000-0004-000000000002'
 WHERE id = '00000000-0000-0000-0003-000000000001';
+
+-- Re-enable FORCE RLS for runtime multi-tenant isolation
+ALTER TABLE constituencies FORCE ROW LEVEL SECURITY;
+ALTER TABLE wards FORCE ROW LEVEL SECURITY;
+ALTER TABLE departments FORCE ROW LEVEL SECURITY;
+ALTER TABLE users FORCE ROW LEVEL SECURITY;
+ALTER TABLE user_roles FORCE ROW LEVEL SECURITY;

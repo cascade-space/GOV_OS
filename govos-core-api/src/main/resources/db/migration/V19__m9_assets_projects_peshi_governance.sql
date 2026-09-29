@@ -92,6 +92,11 @@ CREATE INDEX IF NOT EXISTS idx_doc_movements_tenant ON document_movements(tenant
 -- ============================================================
 -- Tenant: 00000000-0000-0000-0000-000000000002
 
+ALTER TABLE civic_assets NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE civic_projects NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE documents NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE document_movements NO FORCE ROW LEVEL SECURITY;
+
 -- A. Civic Assets
 INSERT INTO civic_assets (
     id, tenant_id, asset_id, name, category, status, latitude, longitude,
@@ -315,3 +320,8 @@ INSERT INTO document_movements (
     FALSE
 )
 ON CONFLICT (id) DO NOTHING;
+
+ALTER TABLE civic_assets FORCE ROW LEVEL SECURITY;
+ALTER TABLE civic_projects FORCE ROW LEVEL SECURITY;
+ALTER TABLE documents FORCE ROW LEVEL SECURITY;
+ALTER TABLE document_movements FORCE ROW LEVEL SECURITY;

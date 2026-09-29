@@ -3,6 +3,10 @@
 -- Connects Spring Boot MTAS with CivicPath Public Frontend
 -- ============================================================
 
+ALTER TABLE constituencies NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE wards NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE departments NO FORCE ROW LEVEL SECURITY;
+
 -- 1. Update Default Dev Tenant to Hubballi-Dharwad Municipal Corporation
 UPDATE tenants
 SET name = 'Hubballi-Dharwad Municipal Corporation (HDMC)',
@@ -44,3 +48,7 @@ INSERT INTO departments (id, tenant_id, name, code, description) VALUES
 ('00000000-0000-0000-0003-000000000004', '00000000-0000-0000-0000-000000000002', 'Electricity Distribution (HESCOM)', 'HES', 'Street lighting and power distribution'),
 ('00000000-0000-0000-0003-000000000005', '00000000-0000-0000-0000-000000000002', 'Public Health & Environment', 'PHE', 'Public health, fogging and urban greenery')
 ON CONFLICT (tenant_id, code) DO NOTHING;
+
+ALTER TABLE constituencies FORCE ROW LEVEL SECURITY;
+ALTER TABLE wards FORCE ROW LEVEL SECURITY;
+ALTER TABLE departments FORCE ROW LEVEL SECURITY;
