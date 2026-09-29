@@ -1,8 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    output: 'export',
-    distDir: 'out',
-    trailingSlash: true,
+    // Static export is only needed for GitHub Pages CI deployment.
+    // In local dev (next dev) we never want static export mode because it breaks
+    // dynamic [id] routes that are populated at runtime from Spring Boot.
+    // GitHub Actions automatically sets CI=true, so this is safe.
+    ...(process.env.CI === 'true' ? {
+        output: 'export',
+        distDir: 'out',
+        trailingSlash: true,
+    } : {}),
     images: {
         remotePatterns: [
             {
