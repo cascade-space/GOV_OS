@@ -158,16 +158,17 @@ export default function OfficerDashboardPage() {
         let isMounted = true;
         const initAndLoad = async () => {
             const current = authService.getCurrentUser();
-            // This is the officer-specific dashboard — always ensure we're logged in as OFFICER.
-            // TENANT_ADMIN / SUPER_ADMIN have different task queues; if they land here we must
-            // switch to the demo officer account so that /complaints/assigned/me returns the
-            // correct officer's task list.
-            if (!current || current.role !== 'OFFICER') {
-                try {
-                    const logged = await authService.loginWithOtp('officer@demo.govos.in', '123456', 'Rajesh Sharma');
-                    if (isMounted) setUser(logged);
-                } catch (e) {
-                    console.warn("Officer init login error:", e);
+            // This is the officer-specific dashboard.
+            // Since this is a demo environment and the database is frequently reset,
+            // stale JWTs in localStorage may contain outdated UUIDs, leading to empty task lists.
+            // We force a fresh login on mount to ensure the token always matches the current DB.
+            try {
+                const logged = await authService.loginWithOtp('officer@demo.govos.in', '123456', 'Rajesh Sharma');
+                if (isMounted) setUser(logged);
+            } catch (e) {
+                console.warn("Officer init login error:", e);
+                if (isMounted && current && current.role === 'OFFICER') {
+                    setUser(current); // Fallback to cached user if auth API fails
                 }
             }
             if (isMounted) {
