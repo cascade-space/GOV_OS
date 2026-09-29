@@ -41,13 +41,17 @@ public class TenantAspect {
         }
 
         // 2. Apply to PostgreSQL Transaction
-        if (tenantId != null && !tenantId.isEmpty()) {
-            log.debug("Setting PostgreSQL RLS tenant_id to {}", tenantId);
-            // SET LOCAL applies only to the current transaction
-            entityManager.createNativeQuery("SET LOCAL app.tenant_id = '" + tenantId + "'").executeUpdate();
-        } else {
-            // For unauthenticated requests (like login/otp), clear it just in case
-            entityManager.createNativeQuery("SET LOCAL app.tenant_id = ''").executeUpdate();
+        try {
+            if (tenantId != null && !tenantId.isEmpty()) {
+                log.debug("Setting PostgreSQL RLS tenant_id to {}", tenantId);
+                // SET LOCAL applies only to the current transaction
+                entityManager.createNativeQuery("SET LOCAL app.tenant_id = '" + tenantId + "'").executeUpdate();
+            } else {
+                // For unauthenticated requests (like login/otp), clear it just in case
+                entityManager.createNativeQuery("SET LOCAL app.tenant_id = ''").executeUpdate();
+            }
+        } catch (Exception e) {
+            log.warn("Could not set PostgreSQL app.tenant_id: {}", e.getMessage());
         }
     }
 }

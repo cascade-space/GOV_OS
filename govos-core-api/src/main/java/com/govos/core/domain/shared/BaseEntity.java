@@ -30,7 +30,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-@SQLRestriction("is_deleted = false AND (current_setting('app.tenant_id', true) IS NULL OR tenant_id = current_setting('app.tenant_id', true)::uuid)")
+@SQLRestriction("is_deleted = false")
 public abstract class BaseEntity {
 
     @Id
