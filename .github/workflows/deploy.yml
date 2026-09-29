@@ -39,7 +39,6 @@ jobs:
         env:
           NODE_ENV: production
           NEXT_PUBLIC_API_URL: http://localhost:8080
-          NEXT_OUTPUT: export
 
       - name: Add .nojekyll file
         run: touch ./public-landing-page/out/.nojekyll

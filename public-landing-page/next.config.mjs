@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
-const isStaticExport = process.env.NEXT_OUTPUT === 'export';
-
 const nextConfig = {
+    output: 'export',
+    distDir: 'out',
+    trailingSlash: true,
     images: {
         remotePatterns: [
             {
@@ -19,14 +20,8 @@ const nextConfig = {
     eslint: {
         ignoreDuringBuilds: true,
     },
-    serverExternalPackages: ['pg'],
     poweredByHeader: false,
     compress: true,
-    ...(isStaticExport ? {
-        output: 'export',
-        distDir: 'out',
-        trailingSlash: true,
-    } : {}),
 };
 
 export default nextConfig;
