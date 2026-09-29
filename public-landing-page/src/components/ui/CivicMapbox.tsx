@@ -66,7 +66,7 @@ export default function CivicMapbox({
     });
     
     const [selectedLocation, setSelectedLocation] = useState<{ lng: number; lat: number } | null>(
-        interactive ? { lng: center[0], lat: center[1] } : null
+        interactive ? { lng: actualCenter[0], lat: actualCenter[1] } : null
     );
     
     const [currentStyle, setCurrentStyle] = useState(style);

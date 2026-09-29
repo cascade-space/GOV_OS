@@ -3,18 +3,18 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
-    Shield, LayoutDashboard, FileText, Users, UserCheck,
-    BarChart2, LogOut, Menu, X, ChevronRight, MapPin
+    Shield, LayoutDashboard, Landmark, MapPin, Eye,
+    Activity, LogOut, Menu, X, ChevronRight
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useAppStore } from "@/lib/store";
 
 const NAV = [
     { href: "/superadmin/dashboard", label: "Overview", icon: LayoutDashboard },
-    { href: "/superadmin/complaints", label: "All Complaints", icon: FileText },
-    { href: "/superadmin/constituencies", label: "Constituencies", icon: MapPin },
-    { href: "/superadmin/officers", label: "Officers", icon: UserCheck },
-    { href: "/superadmin/users", label: "Users", icon: Users },
-    { href: "/superadmin/analytics", label: "Analytics", icon: BarChart2 },
+    { href: "/superadmin/tenants", label: "Municipalities", icon: Landmark },
+    { href: "/superadmin/constituencies", label: "Constituencies & MLAs", icon: MapPin },
+    { href: "/superadmin/inspector", label: "City Inspector", icon: Eye },
+    { href: "/superadmin/telemetry", label: "Audit & Health", icon: Activity },
 ];
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
@@ -24,15 +24,55 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
     const [userEmail, setUserEmail] = useState("");
 
     useEffect(() => {
-        const stored = localStorage.getItem("civicpath_superadmin");
-        if (!stored) { router.push("/superadmin/login"); return; }
-        setUserEmail(JSON.parse(stored).email);
+        let stored = localStorage.getItem("civicpath_superadmin");
+        if (!stored) {
+            const userStored = localStorage.getItem("civicpath_user");
+            if (userStored) {
+                try {
+                    const parsed = JSON.parse(userStored);
+                    if (parsed.role === "SUPER_ADMIN") {
+                        localStorage.setItem("civicpath_superadmin", userStored);
+                        stored = userStored;
+                    }
+                } catch {}
+            }
+        }
+
+        if (!stored) {
+            const storeUser = useAppStore.getState().user;
+            if (storeUser && storeUser.role === "SUPER_ADMIN") {
+                const superAdminObj = {
+                    id: storeUser.id,
+                    email: storeUser.email,
+                    name: storeUser.name,
+                    role: storeUser.role,
+                    loginTime: new Date().toISOString(),
+                };
+                const serialized = JSON.stringify(superAdminObj);
+                localStorage.setItem("civicpath_superadmin", serialized);
+                setUserEmail(storeUser.email || "admin@govos.in");
+                return;
+            }
+            router.push("/login");
+            return;
+        }
+
+        try {
+            setUserEmail(JSON.parse(stored).email || "admin@govos.in");
+        } catch {
+            setUserEmail("admin@govos.in");
+        }
     }, []);
 
     const handleLogout = () => {
         localStorage.removeItem("civicpath_superadmin");
+        localStorage.removeItem("civicpath_superadmin_token");
+        localStorage.removeItem("civicpath_user");
+        localStorage.removeItem("civicpath_token");
+        localStorage.removeItem("govos_auth_token");
+        useAppStore.getState().logout();
         toast.success("Logged out");
-        router.push("/superadmin/login");
+        router.push("/login");
     };
 
     return (

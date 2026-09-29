@@ -44,4 +44,25 @@ public class CivicProject extends BaseEntity {
     @Builder.Default
     @Column(name = "completion_percentage", nullable = false)
     private int completionPercentage = 0;
+
+    @Column(name = "ward_id")
+    private java.util.UUID wardId;
+
+    @Column(name = "department_id")
+    private java.util.UUID departmentId;
+
+    @Column(name = "contractor_name", length = 255)
+    private String contractorName;
+
+    @Column(name = "beneficiaries_description", length = 255)
+    private String beneficiariesDescription;
+
+    @Column(name = "target_date_formatted", length = 50)
+    private String targetDateFormatted;
+
+    @Column(name = "sector", length = 50)
+    private String sector;
+
+    @jakarta.persistence.Transient
+    private Long linkedComplaintsCount;
 }

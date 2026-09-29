@@ -108,7 +108,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-white text-sm font-medium truncate">
-                                {user?.role === 'admin' ? 'Admin User' : 'MLA User'}
+                                {(user?.role === 'TENANT_ADMIN' || user?.role === 'SUPER_ADMIN') ? 'Admin User' : user?.role === 'REP' ? 'MLA User' : (user?.role ?? 'User')}
                             </p>
                             <p className="text-blue-300 text-xs truncate">{user?.email || 'admin@civicpath.com'}</p>
                         </div>

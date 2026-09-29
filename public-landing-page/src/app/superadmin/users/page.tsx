@@ -1,38 +1,56 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import SuperAdminLayout from "@/components/superadmin/SuperAdminLayout";
 import { Search, RefreshCw, Shield, UserCheck } from "lucide-react";
 import toast from "react-hot-toast";
-
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+import { superAdminService } from "@/lib/services/superadmin.service";
 
 export default function SuperAdminUsers() {
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [roleFilter, setRoleFilter] = useState("all");
-    const [userEmail, setUserEmail] = useState("");
 
     useEffect(() => {
-        const stored = localStorage.getItem("civicpath_superadmin");
-        if (stored) { const u = JSON.parse(stored); setUserEmail(u.email); fetchUsers(u.email); }
+        fetchUsers();
     }, []);
 
-    const fetchUsers = async (email: string) => {
+    const fetchUsers = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${API}/api/v1/superadmin/users`, { headers: {"x-user-email": email} });
-            const data = await res.json();
-            if (data.success) setUsers(data.data);
-        } catch { toast.error("Failed to load users"); }
-        finally { setLoading(false); }
+            const res: any = await superAdminService.getUsers();
+            if (res?.success && Array.isArray(res.data)) {
+                setUsers(res.data);
+            }
+        } catch (err) {
+            console.error("Failed to load users:", err);
+            toast.error("Failed to load users");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const normalizeRole = (role: string = "") => {
+        const r = role.toLowerCase();
+        if (r.includes("admin")) return "admin";
+        if (r === "mla" || r === "rep") return "mla";
+        if (r === "officer") return "officer";
+        return r;
     };
 
     const filtered = users.filter(u => {
-        const matchRole = roleFilter === "all" || u.role === roleFilter;
-        const matchSearch = !search || u.email?.toLowerCase().includes(search.toLowerCase()) || u.full_name?.toLowerCase().includes(search.toLowerCase());
+        const userNormRole = normalizeRole(u.role);
+        const matchRole = roleFilter === "all" || userNormRole === roleFilter;
+        const name = u.fullName || u.full_name || "";
+        const email = u.email || "";
+        const matchSearch = !search ||
+            email.toLowerCase().includes(search.toLowerCase()) ||
+            name.toLowerCase().includes(search.toLowerCase());
         return matchRole && matchSearch;
     });
+
+    const adminCount = users.filter(u => normalizeRole(u.role) === "admin").length;
+    const mlaCount = users.filter(u => normalizeRole(u.role) === "mla").length;
 
     return (
         <SuperAdminLayout>
@@ -40,9 +58,11 @@ export default function SuperAdminUsers() {
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-xl font-black text-gray-900">Users</h1>
-                        <p className="text-gray-500 text-sm mt-0.5">{users.length} total · {users.filter(u => u.role === "admin").length} admins · {users.filter(u => u.role === "mla").length} MLAs</p>
+                        <p className="text-gray-500 text-sm mt-0.5">
+                            {users.length} total · {adminCount} admins · {mlaCount} MLAs
+                        </p>
                     </div>
-                    <button onClick={() => fetchUsers(userEmail)} className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-700">
+                    <button onClick={fetchUsers} className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-700 transition-colors">
                         <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
                         Refresh
                     </button>
@@ -60,6 +80,7 @@ export default function SuperAdminUsers() {
                         <option value="all">All Roles</option>
                         <option value="admin">Admin</option>
                         <option value="mla">MLA</option>
+                        <option value="officer">Officer</option>
                     </select>
                 </div>
 
@@ -70,35 +91,55 @@ export default function SuperAdminUsers() {
                         </div>
                     ) : filtered.length === 0 ? (
                         <div className="col-span-3 text-center py-16 text-gray-400 text-sm">No users found</div>
-                    ) : filtered.map(u => (
-                        <div key={u.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-                            <div className="flex items-start gap-3 mb-4">
-                                <div className="w-11 h-11 bg-gradient-to-br from-slate-700 to-slate-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <span className="text-white font-black">{(u.full_name || u.email).charAt(0).toUpperCase()}</span>
+                    ) : filtered.map(u => {
+                        const name = u.fullName || u.full_name || "—";
+                        const email = u.email || "";
+                        const role = u.role || "USER";
+                        const normRole = normalizeRole(role);
+                        const createdAt = u.createdAt || u.created_at;
+                        return (
+                            <div key={u.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                                <div className="flex items-start gap-3 mb-4">
+                                    <div className="w-11 h-11 bg-gradient-to-br from-slate-700 to-slate-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span className="text-white font-black">{(name !== "—" ? name : email).charAt(0).toUpperCase()}</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-bold text-gray-900 truncate">{name}</p>
+                                        <p className="text-xs text-gray-400 truncate">{email}</p>
+                                    </div>
+                                    <span className={`text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0 ${
+                                        normRole === "admin" ? "bg-slate-100 text-slate-700" :
+                                        normRole === "mla" ? "bg-teal-100 text-teal-700" :
+                                        "bg-blue-100 text-blue-700"
+                                    }`}>
+                                        <span className="flex items-center gap-1">
+                                            {normRole === "admin" ? <Shield className="w-3 h-3" /> : <UserCheck className="w-3 h-3" />}
+                                            {role}
+                                        </span>
+                                    </span>
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-gray-900 truncate">{u.full_name || "—"}</p>
-                                    <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-gray-50 rounded-xl p-3 text-center">
+                                        <p className="text-lg font-black text-gray-900">{u.assignedTasks || u.officer_count || 0}</p>
+                                        <p className="text-xs text-gray-400">Assigned</p>
+                                    </div>
+                                    <div className="bg-gray-50 rounded-xl p-3 text-center">
+                                        <p className={`text-xs font-semibold px-2 py-1 rounded-full inline-block ${
+                                            u.status === "inactive" ? "bg-red-100 text-red-600" : "bg-green-100 text-green-700"
+                                        }`}>
+                                            {u.status || "active"}
+                                        </p>
+                                        <p className="text-xs text-gray-400 mt-1">Status</p>
+                                    </div>
                                 </div>
-                                <span className={`text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0 ${u.role === "admin" ? "bg-slate-100 text-slate-700" : "bg-teal-100 text-teal-700"}`}>
-                                    {u.role === "admin" ? <span className="flex items-center gap-1"><Shield className="w-3 h-3" />{u.role}</span> : <span className="flex items-center gap-1"><UserCheck className="w-3 h-3" />{u.role}</span>}
-                                </span>
+                                {createdAt && (
+                                    <p className="text-xs text-gray-400 mt-3">
+                                        Joined {new Date(createdAt).toLocaleDateString()}
+                                    </p>
+                                )}
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-gray-50 rounded-xl p-3 text-center">
-                                    <p className="text-lg font-black text-gray-900">{u.officer_count || 0}</p>
-                                    <p className="text-xs text-gray-400">Officers</p>
-                                </div>
-                                <div className="bg-gray-50 rounded-xl p-3 text-center">
-                                    <p className={`text-xs font-semibold px-2 py-1 rounded-full inline-block ${u.status === "active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>{u.status}</p>
-                                    <p className="text-xs text-gray-400 mt-1">Status</p>
-                                </div>
-                            </div>
-                            <p className="text-xs text-gray-400 mt-3">
-                                Joined {new Date(u.created_at).toLocaleDateString()}
-                            </p>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         </SuperAdminLayout>

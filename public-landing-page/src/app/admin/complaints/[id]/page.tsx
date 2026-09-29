@@ -1,29 +1,37 @@
 // Dynamic route page for complaint details
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useCallback, use } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
 import { ComplaintStepper } from "@/components/ui/Stepper";
-import { MOCK_COMPLAINTS, MOCK_OFFICERS } from "@/lib/mockData";
 import { ComplaintStatus, COMPLAINT_STATUSES } from "@/lib/constants";
 import { complaintService } from "@/lib/services/complaint.service";
 import { formatDateTime, getSLAStatus, cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import toast from "react-hot-toast";
+import api from "@/lib/api-client";
 import {
     ArrowLeft, MapPin, Calendar, User, Phone, Building2, AlertTriangle,
-    CheckCircle2, XCircle, UserPlus, MessageSquare, Upload, Clock, Camera
+    CheckCircle2, XCircle, UserPlus, MessageSquare, Upload, Clock, Camera,
+    RefreshCw, Globe
 } from "lucide-react";
 
 const CivicMapbox = dynamic(() => import("@/components/ui/CivicMapbox"), { ssr: false });
 
-export default function ComplaintDetailPage({ params }: { params: { id: string } }) {
+export default function ComplaintDetailPage({ params }: { params?: Promise<{ id: string }> | { id: string } }) {
     const router = useRouter();
-    const [complaint, setComplaint] = useState<any>(MOCK_COMPLAINTS.find(c => c.id === params.id));
-    const [loading, setLoading] = useState(false);
+    const routeParams = useParams();
+    const resolvedParams = params ? (typeof (params as any).then === "function" ? use(params as Promise<{ id: string }>) : params) : null;
+    const rawId = routeParams?.id || resolvedParams?.id;
+    const complaintId = Array.isArray(rawId) ? rawId[0] : (rawId || "");
+
+    const [complaint, setComplaint] = useState<any>(null);
+    const [officers, setOfficers] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [syncing, setSyncing] = useState(false);
     const [showAssignModal, setShowAssignModal] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [showEscalateModal, setShowEscalateModal] = useState(false);
@@ -32,23 +40,61 @@ export default function ComplaintDetailPage({ params }: { params: { id: string }
     const [statusNote, setStatusNote] = useState("");
     const [escalationReason, setEscalationReason] = useState("");
 
+    const fetchComplaint = useCallback(async () => {
+        if (!complaintId) {
+            setLoading(false);
+            return;
+        }
+
+        try {
+            setLoading(true);
+            let data: any;
+            if (complaintId.toUpperCase().startsWith("CMP-")) {
+                data = await complaintService.getComplaintByNumber(complaintId);
+            } else {
+                data = await complaintService.getComplaintById(complaintId);
+            }
+            setComplaint(data);
+        } catch (err) {
+            console.error("Failed to load complaint:", err);
+            setComplaint(null);
+        } finally {
+            setLoading(false);
+        }
+    }, [complaintId]);
+
     useEffect(() => {
-        // Try to fetch from API, fallback to mock
-        complaintService.getComplaintById(params.id)
-            .then((data: any) => {
-                setComplaint(data);
-            })
-            .catch(() => {
-                const mock = MOCK_COMPLAINTS.find(c => c.id === params.id);
-                if (mock) setComplaint(mock);
-            });
-    }, [params.id]);
+        fetchComplaint();
+
+        // Load real officers from Core API or Node.js Backend
+        const loadOfficers = async () => {
+            try {
+                const res: any = await api.get('/officers');
+                const list = Array.isArray(res) ? res : res?.data || [];
+                setOfficers(list);
+            } catch (err) {
+                console.error("Failed to fetch officers:", err);
+            }
+        };
+        loadOfficers();
+    }, [fetchComplaint]);
+
+    if (loading) {
+        return (
+            <AdminLayout>
+                <div className="flex items-center justify-center py-24 text-gray-500 font-medium">
+                    <RefreshCw className="w-6 h-6 animate-spin mr-2 text-civic-blue" />
+                    Loading complaint details from authoritative Core API...
+                </div>
+            </AdminLayout>
+        );
+    }
 
     if (!complaint) {
         return (
             <AdminLayout>
                 <div className="text-center py-20">
-                    <p className="text-gray-500">Complaint not found</p>
+                    <p className="text-gray-500 font-medium">Complaint not found in database</p>
                     <Button onClick={() => router.back()} className="mt-4">Go Back</Button>
                 </div>
             </AdminLayout>
@@ -58,22 +104,26 @@ export default function ComplaintDetailPage({ params }: { params: { id: string }
     const sla = getSLAStatus(complaint.slaDeadline);
 
     const handleAssign = async () => {
-        if (!selectedDept) {
-            toast.error("Please select a department");
+        if (!selectedOfficer) {
+            toast.error("Please select an officer");
             return;
         }
 
         setLoading(true);
         try {
-            await complaintService.assignComplaint(complaint.id, selectedDept, selectedOfficer);
-            setComplaint({ ...complaint, assignedDept: selectedDept, assignedOfficer: selectedOfficer, status: "assigned" });
+            await complaintService.assignComplaint(complaint.id, selectedOfficer);
+            const assignedOfficerObj = officers.find((o: any) => o.id === selectedOfficer);
+            setComplaint({
+                ...complaint,
+                assignedToId: selectedOfficer,
+                assignedOfficer: assignedOfficerObj?.fullName || assignedOfficerObj?.name || selectedOfficer,
+                status: "ASSIGNED"
+            });
             toast.success("Complaint assigned successfully");
             setShowAssignModal(false);
-        } catch (error) {
-            // Mock success
-            setComplaint({ ...complaint, assignedDept: selectedDept, assignedOfficer: selectedOfficer, status: "assigned" });
-            toast.success("Complaint assigned successfully");
-            setShowAssignModal(false);
+        } catch (error: any) {
+            console.error("Assignment error:", error);
+            toast.error("Failed to assign complaint: " + (error?.response?.data?.message || error?.message || "Error"));
         } finally {
             setLoading(false);
         }
@@ -87,12 +137,46 @@ export default function ComplaintDetailPage({ params }: { params: { id: string }
             toast.success("Status updated successfully");
             setShowStatusModal(false);
             setStatusNote("");
-        } catch (error) {
-            // Mock success
-            setComplaint({ ...complaint, status: newStatus });
-            toast.success("Status updated successfully");
-            setShowStatusModal(false);
-            setStatusNote("");
+        } catch (error: any) {
+            console.error("Status update error:", error);
+            toast.error("Failed to update status: " + (error?.response?.data?.message || error?.message || "Error"));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerifyClose = async () => {
+        setLoading(true);
+        try {
+            const updated = await complaintService.verifyAndClose(complaint.id, "Verified by Municipal Admin / QC Verifier");
+            setComplaint((prev: any) => updated || (prev ? { ...prev, status: "RESOLVED" } : null));
+            toast.success("Resolution verified and closed!");
+            fetchComplaint();
+        } catch (error: any) {
+            console.error("Verify close error:", error);
+            toast.error("Failed to verify & close: " + (error?.response?.data?.message || error?.message || "Error"));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRequestRework = async () => {
+        const reason = window.prompt("Enter rework instructions for field officer:");
+        if (!reason || !reason.trim()) return;
+        setLoading(true);
+        try {
+            const updated = await complaintService.requestRework(complaint.id, reason.trim());
+            setComplaint((prev: any) => updated || (prev ? {
+                ...prev,
+                status: "IN_PROGRESS",
+                reworkReason: reason.trim(),
+                reworkCount: (prev.reworkCount || 0) + 1
+            } : null));
+            toast.success("Complaint returned to officer for rework");
+            fetchComplaint();
+        } catch (error: any) {
+            console.error("Rework error:", error);
+            toast.error("Failed to request rework: " + (error?.response?.data?.message || error?.message || "Error"));
         } finally {
             setLoading(false);
         }
@@ -111,14 +195,30 @@ export default function ComplaintDetailPage({ params }: { params: { id: string }
             toast.success("Complaint escalated successfully");
             setShowEscalateModal(false);
             setEscalationReason("");
-        } catch (error) {
-            // Mock success
-            setComplaint({ ...complaint, isEscalated: true });
-            toast.success("Complaint escalated successfully");
-            setShowEscalateModal(false);
-            setEscalationReason("");
+        } catch (error: any) {
+            console.error("Escalation error:", error);
+            toast.error("Failed to escalate complaint: " + (error?.response?.data?.message || error?.message || "Error"));
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleManualResync = async () => {
+        setSyncing(true);
+        try {
+            const res: any = await api.post(`/integrations/complaints/${complaint.id}/sync?systemName=ICCC_MUNICIPAL`);
+            toast.success(`Dispatched to ICCC Gateway! Ref: ${res.externalTicketId || 'Synced'}`);
+            setComplaint({
+                ...complaint,
+                external_system: 'ICCC_MUNICIPAL',
+                external_ticket_id: res.externalTicketId || complaint.external_ticket_id,
+                integration_status: 'SYNCED',
+                last_external_status: 'ACKNOWLEDGED'
+            });
+        } catch (e: any) {
+            toast.error(`Re-sync failed: ${e.message || 'Unknown error'}`);
+        } finally {
+            setSyncing(false);
         }
     };
 
@@ -142,6 +242,16 @@ export default function ComplaintDetailPage({ params }: { params: { id: string }
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
+                        {["WORK_COMPLETED", "VERIFICATION_PENDING"].includes(complaint.status?.toUpperCase()) && (
+                            <>
+                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleVerifyClose} leftIcon={<CheckCircle2 className="w-4 h-4" />}>
+                                    Verify & Close
+                                </Button>
+                                <Button variant="outline" size="sm" className="border-amber-400 text-amber-700 hover:bg-amber-50" onClick={handleRequestRework} leftIcon={<RefreshCw className="w-4 h-4" />}>
+                                    Request Rework
+                                </Button>
+                            </>
+                        )}
                         <Button variant="ghost" size="sm" onClick={() => setShowEscalateModal(true)} leftIcon={<AlertTriangle className="w-4 h-4" />}>
                             Escalate
                         </Button>
@@ -176,7 +286,7 @@ export default function ComplaintDetailPage({ params }: { params: { id: string }
                             <div className="mt-6 pt-6 border-t border-gray-100 grid grid-cols-2 gap-4">
                                 <div>
                                     <p className="text-xs text-gray-400 font-bold uppercase mb-1">Category</p>
-                                    <p className="text-sm font-semibold text-gray-900">{complaint.category} / {complaint.subCategory}</p>
+                                    <p className="text-sm font-semibold text-gray-900">{complaint.category} / {complaint.subCategory || "General"}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-400 font-bold uppercase mb-1">SLA Deadline</p>
@@ -184,6 +294,53 @@ export default function ComplaintDetailPage({ params }: { params: { id: string }
                                 </div>
                             </div>
                         </div>
+
+                        {/* Field Work & QC Resolution Card */}
+                        {(complaint.resolutionNotes || complaint.resolutionEvidenceUrl || complaint.reworkReason || ["WORK_COMPLETED", "RESOLVED", "VERIFICATION_PENDING"].includes(complaint.status?.toUpperCase())) && (
+                            <div className="civic-card p-6 border-emerald-300 bg-emerald-50/30">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                                        <h3 className="section-title text-emerald-950">Field Work & Resolution Report</h3>
+                                    </div>
+                                    <span className="badge badge-green text-xs">Work Submitted</span>
+                                </div>
+
+                                {complaint.resolutionNotes && (
+                                    <div className="mb-4">
+                                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Officer Notes</p>
+                                        <p className="text-sm text-gray-800 bg-white p-3.5 rounded-xl border border-emerald-100 shadow-sm">{complaint.resolutionNotes}</p>
+                                    </div>
+                                )}
+
+                                {complaint.resolutionEvidenceUrl && (
+                                    <div className="mb-4">
+                                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Resolution Evidence (After Photo)</p>
+                                        <div className="relative aspect-video max-w-sm rounded-xl overflow-hidden border border-emerald-200 shadow-sm">
+                                            <img src={complaint.resolutionEvidenceUrl} alt="Resolution Evidence" className="w-full h-full object-cover" />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {complaint.reworkReason && (
+                                    <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-200">
+                                        <p className="text-xs font-bold text-amber-800 uppercase tracking-wider mb-1">Rework Instructions (Revision #{complaint.reworkCount || 1})</p>
+                                        <p className="text-sm text-amber-900">{complaint.reworkReason}</p>
+                                    </div>
+                                )}
+
+                                {["WORK_COMPLETED", "VERIFICATION_PENDING"].includes(complaint.status?.toUpperCase()) && (
+                                    <div className="mt-4 pt-4 border-t border-emerald-200 flex items-center justify-end gap-3">
+                                        <Button variant="outline" size="sm" className="border-amber-400 text-amber-800 hover:bg-amber-50" onClick={handleRequestRework} leftIcon={<RefreshCw className="w-4 h-4" />}>
+                                            Reject & Request Rework
+                                        </Button>
+                                        <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleVerifyClose} leftIcon={<CheckCircle2 className="w-4 h-4" />}>
+                                            Approve & Verify Close
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* Status Timeline */}
                         <div className="civic-card p-6">
@@ -284,10 +441,10 @@ export default function ComplaintDetailPage({ params }: { params: { id: string }
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="section-title">Assignment</h3>
                                 <Button size="sm" variant="ghost" onClick={() => setShowAssignModal(true)} leftIcon={<UserPlus className="w-4 h-4" />}>
-                                    {complaint.assignedDept ? "Reassign" : "Assign"}
+                                    {complaint.assignedToId ? "Reassign" : "Assign"}
                                 </Button>
                             </div>
-                            {complaint.assignedDept ? (
+                            {complaint.assignedToId ? (
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-3">
                                         <Building2 className="w-4 h-4 text-gray-400" />
@@ -296,12 +453,17 @@ export default function ComplaintDetailPage({ params }: { params: { id: string }
                                             <p className="text-sm font-semibold text-gray-900">{complaint.assignedDept}</p>
                                         </div>
                                     </div>
-                                    {complaint.assignedOfficer && (
+                                    {complaint.assignedToId && (
                                         <div className="flex items-center gap-3">
                                             <User className="w-4 h-4 text-gray-400" />
                                             <div>
-                                                <p className="text-xs text-gray-400">Officer</p>
-                                                <p className="text-sm font-semibold text-gray-900">{complaint.assignedOfficer}</p>
+                                                <p className="text-xs text-gray-400">Officer ID / Details</p>
+                                                <p className="text-sm font-semibold text-gray-900">
+                                                    {(() => {
+                                                        const officer = officers.find((o: any) => o.id === complaint.assignedToId);
+                                                        return officer?.fullName || officer?.name || complaint.assignedToId;
+                                                    })()}
+                                                </p>
                                             </div>
                                         </div>
                                     )}
@@ -309,6 +471,54 @@ export default function ComplaintDetailPage({ params }: { params: { id: string }
                             ) : (
                                 <p className="text-sm text-gray-500">Not yet assigned</p>
                             )}
+                        </div>
+
+                        {/* Integration Hub & External Sync */}
+                        <div className="civic-card p-5 border-indigo-200/80 bg-gradient-to-br from-indigo-50/50 to-slate-50">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                    <Globe className="w-4 h-4 text-indigo-600" />
+                                    <h3 className="section-title text-indigo-950">Integration Hub</h3>
+                                </div>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    loading={syncing}
+                                    onClick={handleManualResync}
+                                    className="text-xs text-indigo-700 hover:text-indigo-900 hover:bg-indigo-100/50 cursor-pointer"
+                                    leftIcon={<RefreshCw className={cn("w-3.5 h-3.5", syncing && "animate-spin")} />}
+                                >
+                                    Re-sync
+                                </Button>
+                            </div>
+
+                            <div className="space-y-2.5 text-xs">
+                                <div className="flex justify-between items-center py-1 border-b border-indigo-100">
+                                    <span className="text-gray-500 font-medium">External System</span>
+                                    <span className="font-semibold text-gray-900">{complaint.external_system || complaint.externalSystem || 'ICCC_MUNICIPAL'}</span>
+                                </div>
+                                <div className="flex justify-between items-center py-1 border-b border-indigo-100">
+                                    <span className="text-gray-500 font-medium">External Case Ref</span>
+                                    <span className="font-mono font-bold text-indigo-700">{complaint.external_ticket_id || complaint.externalTicketId || '—'}</span>
+                                </div>
+                                <div className="flex justify-between items-center py-1 border-b border-indigo-100">
+                                    <span className="text-gray-500 font-medium">Federation Status</span>
+                                    <span className={cn(
+                                        "px-2 py-0.5 rounded font-bold uppercase text-[10px]",
+                                        (complaint.integration_status || complaint.integrationStatus) === 'SYNCED'
+                                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                            : "bg-amber-100 text-amber-800 border border-amber-300"
+                                    )}>
+                                        {complaint.integration_status || complaint.integrationStatus || 'PENDING'}
+                                    </span>
+                                </div>
+                                {(complaint.last_external_status || complaint.lastExternalStatus) && (
+                                    <div className="flex justify-between items-center py-1 border-b border-indigo-100">
+                                        <span className="text-gray-500 font-medium">External Status</span>
+                                        <span className="font-semibold text-gray-800">{complaint.last_external_status || complaint.lastExternalStatus}</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* AI Insights */}
@@ -351,8 +561,10 @@ export default function ComplaintDetailPage({ params }: { params: { id: string }
                                     className="input-field"
                                 >
                                     <option value="">Select officer</option>
-                                    {MOCK_OFFICERS.map(officer => (
-                                        <option key={officer.id} value={officer.name}>{officer.name}</option>
+                                    {officers.map(officer => (
+                                        <option key={officer.id} value={officer.id}>
+                                            {officer.fullName || officer.name || officer.phone} ({officer.designation || "Field Officer"})
+                                        </option>
                                     ))}
                                 </select>
                             </div>

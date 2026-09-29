@@ -7,7 +7,7 @@ import java.util.UUID;
 public class MlaDirectiveDtos {
 
     public record IssueDirectiveRequest(
-            @NotNull(message = "Complaint ID is required") UUID complaintId,
+            UUID complaintId,
             @NotBlank(message = "MLA name is required") String mlaName,
             @NotBlank(message = "Constituency is required") String constituency,
             @NotBlank(message = "Directive type is required") String directiveType,

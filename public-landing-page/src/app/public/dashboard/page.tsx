@@ -48,77 +48,18 @@ export default function PublicDashboardPage() {
     const { t } = useLanguage();
 
     const [stats, setStats] = useState({
-        totalRequests: 2484,
-        issuesResolved: 2391,
-        workInProgress: 72,
-        resolutionRate: 96.3,
-        averageResolutionHours: 38.5,
+        totalRequests: 0,
+        issuesResolved: 0,
+        workInProgress: 0,
+        resolutionRate: 0,
+        averageResolutionHours: 0,
     });
 
-    // Monthly Improvement Trends
-    const monthlyTrend = [
-        { month: "Apr", reported: 420, resolved: 410, satisfaction: 94 },
-        { month: "May", reported: 580, resolved: 565, satisfaction: 95 },
-        { month: "Jun", reported: 710, resolved: 690, satisfaction: 96 },
-        { month: "Jul", reported: 640, resolved: 630, satisfaction: 97 },
-        { month: "Aug", reported: 820, resolved: 805, satisfaction: 98 },
-        { month: "Sep", reported: 540, resolved: 532, satisfaction: 99 },
-    ];
-
-    // Category Distribution - Home Page Emerald & Nature Palette
-    const categoryData = [
-        { name: "Roads & Infra", value: 34, color: "#059669" },
-        { name: "Water Supply", value: 24, color: "#0D9488" },
-        { name: "Sanitation & Waste", value: 18, color: "#10B981" },
-        { name: "Street Lighting", value: 12, color: "#F59E0B" },
-        { name: "Drainage", value: 8, color: "#3B82F6" },
-        { name: "Public Health", value: 4, color: "#EC4899" },
-    ];
-
-    // Department Resolution Performance
-    const departmentPerformance = [
-        { department: "Roads & Public Works", total: 420, resolved: 408, slaScore: 97.1, avgTime: "3.2 days" },
-        { department: "Water Supply & Sewerage", total: 310, resolved: 304, slaScore: 98.0, avgTime: "1.4 days" },
-        { department: "Solid Waste Management", total: 240, resolved: 236, slaScore: 98.3, avgTime: "0.8 days" },
-        { department: "Street Light Operations", total: 160, resolved: 158, slaScore: 98.7, avgTime: "1.1 days" },
-        { department: "Public Health & Safety", total: 95, resolved: 93, slaScore: 97.8, avgTime: "1.8 days" },
-    ];
-
-    // Anonymized Public Activity Feed (Zero PII)
-    const [anonymizedFeed, setAnonymizedFeed] = useState<any[]>([
-        {
-            id: "CMP-GV-202609-0004",
-            category: "INFRASTRUCTURE",
-            action: "Pothole repair verified and quality approved",
-            ward: "Sirur Park, Hubli",
-            time: "15 mins ago",
-            status: "Verified Completed",
-        },
-        {
-            id: "CMP-GV-202609-0003",
-            category: "INFRASTRUCTURE",
-            action: "Broken Streetlight at Toll Naka Road",
-            ward: "Toll Naka Junction, Dharwad",
-            time: "42 mins ago",
-            status: "Under Review",
-        },
-        {
-            id: "CMP-GV-202609-0002",
-            category: "INFRASTRUCTURE",
-            action: "Streetlight broken near Gandhi Circle",
-            ward: "Gandhi Circle, Dharwad",
-            time: "1 hour ago",
-            status: "Under Review",
-        },
-        {
-            id: "CMP-GV-202609-0001",
-            category: "INFRASTRUCTURE",
-            action: "Road surface restoration completed",
-            ward: "Sirur Park, Hubli",
-            time: "2 hours ago",
-            status: "Under Review",
-        },
-    ]);
+    // Real dynamic datasets
+    const [monthlyTrend, setMonthlyTrend] = useState<any[]>([]);
+    const [categoryData, setCategoryData] = useState<any[]>([]);
+    const [departmentPerformance, setDepartmentPerformance] = useState<any[]>([]);
+    const [anonymizedFeed, setAnonymizedFeed] = useState<any[]>([]);
 
     // ── Fetch Live Stats & Establish Realtime Socket.IO Stream ────────────
     useEffect(() => {
@@ -127,27 +68,34 @@ export default function PublicDashboardPage() {
         const loadStats = async () => {
             try {
                 const res: any = await api.get("/public/dashboard/stats");
-                if (isMounted && res?.totalRequests) {
+                if (isMounted && res) {
                     setStats({
-                        totalRequests: res.totalRequests,
-                        issuesResolved: res.issuesResolved,
-                        workInProgress: res.workInProgress,
-                        resolutionRate: res.resolutionRate,
-                        averageResolutionHours: res.averageResolutionHours || 38.5,
+                        totalRequests: res.totalRequests || 0,
+                        issuesResolved: res.issuesResolved || 0,
+                        workInProgress: res.workInProgress || 0,
+                        resolutionRate: res.resolutionRate || 0,
+                        averageResolutionHours: res.averageResolutionHours || 0,
                     });
-                    if (Array.isArray(res.recentActivity) && res.recentActivity.length > 0) {
+                    if (Array.isArray(res.recentActivity)) {
                         setAnonymizedFeed(res.recentActivity);
+                    }
+                    if (Array.isArray(res.categoryDistribution)) {
+                        setCategoryData(res.categoryDistribution);
+                    }
+                    if (Array.isArray(res.departmentPerformance)) {
+                        setDepartmentPerformance(res.departmentPerformance);
                     }
                 }
             } catch (err) {
-                console.warn("Using baseline dashboard metrics:", err);
+                console.warn("Could not fetch real database metrics:", err);
             }
         };
 
         loadStats();
 
         // Connect to NestJS Realtime WebSocket Bus
-        const socket = io("http://localhost:3001", {
+        const realtimeUrl = process.env.NEXT_PUBLIC_REALTIME_URL || "http://127.0.0.1:3001";
+        const socket = io(realtimeUrl, {
             transports: ["websocket", "polling"],
             reconnectionAttempts: 5,
             timeout: 5000,
@@ -168,12 +116,31 @@ export default function PublicDashboardPage() {
 
         socket.on("public:activity", (newActivity: any) => {
             if (isMounted && newActivity) {
-                setAnonymizedFeed((prev) => [newActivity, ...prev.slice(0, 11)]);
-                setStats((prev) => ({
-                    ...prev,
-                    totalRequests: prev.totalRequests + 1,
-                    workInProgress: prev.workInProgress + 1,
-                }));
+                setAnonymizedFeed((prev) => {
+                    const activityId = newActivity.id || newActivity.complaintNumber;
+                    const existingIndex = prev.findIndex(
+                        (item) => item.id === activityId || (item.id && activityId && String(item.id).trim() === String(activityId).trim())
+                    );
+
+                    if (existingIndex !== -1) {
+                        // Update the existing complaint's stage and action in place
+                        const updated = [...prev];
+                        updated[existingIndex] = {
+                            ...updated[existingIndex],
+                            ...newActivity,
+                            status: newActivity.status || updated[existingIndex].status,
+                            action: newActivity.action || updated[existingIndex].action,
+                            time: "Just now",
+                        };
+                        return updated;
+                    } else {
+                        // Genuinely new complaint
+                        return [newActivity, ...prev.slice(0, 11)];
+                    }
+                });
+
+                // Always pull authoritative aggregated counts directly from PostgreSQL
+                loadStats();
                 setLiveEventCount((c) => c + 1);
             }
         });
@@ -278,18 +245,26 @@ export default function PublicDashboardPage() {
                         </div>
 
                         <div className="h-64 sm:h-72 w-full pt-2 sm:pt-4">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={monthlyTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                                    <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#64748B", fontWeight: 600 }} axisLine={false} tickLine={false} />
-                                    <YAxis tick={{ fontSize: 11, fill: "#64748B", fontWeight: 600 }} axisLine={false} tickLine={false} />
-                                    <Tooltip
-                                        contentStyle={{ backgroundColor: "#064E3B", color: "#ECFDF5", borderRadius: 12, border: "none", fontSize: 12, fontWeight: 600 }}
-                                    />
-                                    <Bar dataKey="reported" name="Reported" fill="#A7F3D0" radius={[6, 6, 0, 0]} />
-                                    <Bar dataKey="resolved" name="Resolved" fill="#059669" radius={[6, 6, 0, 0]} />
-                                </BarChart>
-                            </ResponsiveContainer>
+                            {monthlyTrend.length > 0 ? (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={monthlyTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                                        <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#64748B", fontWeight: 600 }} axisLine={false} tickLine={false} />
+                                        <YAxis tick={{ fontSize: 11, fill: "#64748B", fontWeight: 600 }} axisLine={false} tickLine={false} />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: "#064E3B", color: "#ECFDF5", borderRadius: 12, border: "none", fontSize: 12, fontWeight: 600 }}
+                                        />
+                                        <Bar dataKey="reported" name="Reported" fill="#A7F3D0" radius={[6, 6, 0, 0]} />
+                                        <Bar dataKey="resolved" name="Resolved" fill="#059669" radius={[6, 6, 0, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="h-full w-full flex flex-col items-center justify-center text-center p-4 bg-slate-50/50 rounded-2xl border border-dashed border-gray-200">
+                                    <BarChart3 className="w-10 h-10 mb-2 text-emerald-600/40" />
+                                    <span className="text-sm font-bold text-gray-800">No Monthly Trends in Database Yet</span>
+                                    <span className="text-xs text-gray-400 mt-0.5">Historical comparisons will generate automatically as grievances are filed.</span>
+                                </div>
+                            )}
                         </div>
                         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-2 text-xs font-bold text-gray-600">
                             <div className="flex items-center gap-2">
@@ -311,35 +286,45 @@ export default function PublicDashboardPage() {
                         </div>
 
                         <div className="h-48 sm:h-52 w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie
-                                        data={categoryData}
-                                        innerRadius={50}
-                                        outerRadius={75}
-                                        paddingAngle={4}
-                                        dataKey="value"
-                                    >
-                                        {categoryData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip
-                                        formatter={(val: any) => [`${val}%`, "Share"]}
-                                        contentStyle={{ backgroundColor: "#064E3B", color: "#ECFDF5", borderRadius: 12, border: "none", fontSize: 12, fontWeight: 600 }}
-                                    />
-                                </PieChart>
-                            </ResponsiveContainer>
+                            {categoryData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={categoryData}
+                                            innerRadius={50}
+                                            outerRadius={75}
+                                            paddingAngle={4}
+                                            dataKey="value"
+                                        >
+                                            {categoryData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip
+                                            formatter={(val: any) => [`${val}%`, "Share"]}
+                                            contentStyle={{ backgroundColor: "#064E3B", color: "#ECFDF5", borderRadius: 12, border: "none", fontSize: 12, fontWeight: 600 }}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="h-full w-full flex flex-col items-center justify-center text-center p-4 bg-slate-50/50 rounded-2xl border border-dashed border-gray-200">
+                                    <PieIcon className="w-10 h-10 mb-2 text-emerald-600/40" />
+                                    <span className="text-sm font-bold text-gray-800">No Sector Data Yet</span>
+                                    <span className="text-xs text-gray-400 mt-0.5">Categories appear when citizens file grievances.</span>
+                                </div>
+                            )}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 text-[11px] sm:text-xs pt-2 border-t border-gray-100 font-medium">
-                            {categoryData.map((c) => (
-                                <div key={c.name} className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
-                                    <span className="text-gray-600 truncate">{c.name} ({c.value}%)</span>
-                                </div>
-                            ))}
-                        </div>
+                        {categoryData.length > 0 ? (
+                            <div className="grid grid-cols-2 gap-2 text-[11px] sm:text-xs pt-2 border-t border-gray-100 font-medium">
+                                {categoryData.map((c) => (
+                                    <div key={c.name} className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
+                                        <span className="text-gray-600 truncate">{c.name} ({c.value}%)</span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : null}
                     </div>
                 </div>
 
@@ -351,77 +336,87 @@ export default function PublicDashboardPage() {
                             <p className="text-xs sm:text-sm text-gray-500">Audited service delivery metrics by department</p>
                         </div>
                         <span className="self-start sm:self-auto text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 whitespace-nowrap">
-                            Updated every 15 minutes
+                            Live SQL Metrics
                         </span>
                     </div>
 
-                    {/* Mobile Card View (< sm) */}
-                    <div className="block sm:hidden p-4 space-y-3 divide-y divide-gray-100">
-                        {departmentPerformance.map((dept, idx) => (
-                            <div key={dept.department} className={`space-y-3 ${idx > 0 ? "pt-3.5" : ""}`}>
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="flex items-center gap-2.5 min-w-0">
-                                        <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 shrink-0">
-                                            <Building2 className="w-4 h-4" />
-                                        </div>
-                                        <span className="font-bold text-gray-950 text-sm leading-tight">{dept.department}</span>
-                                    </div>
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200 shrink-0">
-                                        {dept.slaScore}% SLA
-                                    </span>
-                                </div>
-                                <div className="grid grid-cols-3 gap-2 text-center">
-                                    <div className="bg-slate-50/80 p-2 rounded-xl border border-gray-100">
-                                        <div className="text-[10px] uppercase font-bold text-gray-400">Total</div>
-                                        <div className="text-sm font-extrabold text-gray-900 mt-0.5">{dept.total}</div>
-                                    </div>
-                                    <div className="bg-slate-50/80 p-2 rounded-xl border border-gray-100">
-                                        <div className="text-[10px] uppercase font-bold text-gray-400">Resolved</div>
-                                        <div className="text-sm font-extrabold text-emerald-600 mt-0.5">{dept.resolved}</div>
-                                    </div>
-                                    <div className="bg-slate-50/80 p-2 rounded-xl border border-gray-100">
-                                        <div className="text-[10px] uppercase font-bold text-gray-400">Avg MTTR</div>
-                                        <div className="text-sm font-extrabold text-gray-700 mt-0.5">{dept.avgTime}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Tablet/Desktop Table View (>= sm) */}
-                    <div className="hidden sm:block overflow-x-auto">
-                        <table className="w-full min-w-[620px] text-left text-xs sm:text-sm">
-                            <thead className="bg-slate-50/80 text-gray-600 font-bold uppercase text-[11px] tracking-wider border-b border-gray-200">
-                                <tr>
-                                    <th className="py-3.5 px-6">{t('dashboard.department')}</th>
-                                    <th className="py-3.5 px-6">{t('dashboard.total')}</th>
-                                    <th className="py-3.5 px-6">{t('dashboard.resolvedLabel')}</th>
-                                    <th className="py-3.5 px-6">{t('dashboard.slaScore')}</th>
-                                    <th className="py-3.5 px-6">{t('dashboard.avgTime')}</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
-                                {departmentPerformance.map((dept) => (
-                                    <tr key={dept.department} className="hover:bg-emerald-50/30 transition">
-                                        <td className="py-4 px-6 font-bold text-gray-950 flex items-center gap-2.5">
-                                            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100">
-                                                <Building2 className="w-4 h-4" />
+                    {departmentPerformance.length === 0 ? (
+                        <div className="text-center py-12 px-4 bg-slate-50/50">
+                            <Building2 className="w-10 h-10 mx-auto mb-2 text-emerald-600/40" />
+                            <span className="text-sm font-bold text-gray-800">No Department Performance Data in Database</span>
+                            <p className="text-xs text-gray-400 max-w-sm mx-auto mt-0.5">Audited metrics will calculate automatically as departments resolve assigned grievances.</p>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Mobile Card View (< sm) */}
+                            <div className="block sm:hidden p-4 space-y-3 divide-y divide-gray-100">
+                                {departmentPerformance.map((dept, idx) => (
+                                    <div key={dept.department} className={`space-y-3 ${idx > 0 ? "pt-3.5" : ""}`}>
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 shrink-0">
+                                                    <Building2 className="w-4 h-4" />
+                                                </div>
+                                                <span className="font-bold text-gray-950 text-sm leading-tight">{dept.department}</span>
                                             </div>
-                                            {dept.department}
-                                        </td>
-                                        <td className="py-4 px-6 font-bold text-gray-900">{dept.total}</td>
-                                        <td className="py-4 px-6 text-emerald-600 font-extrabold">{dept.resolved}</td>
-                                        <td className="py-4 px-6">
-                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
-                                                {dept.slaScore}%
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200 shrink-0">
+                                                {dept.slaScore}% SLA
                                             </span>
-                                        </td>
-                                        <td className="py-4 px-6 text-gray-500 font-semibold">{dept.avgTime}</td>
-                                    </tr>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2 text-center">
+                                            <div className="bg-slate-50/80 p-2 rounded-xl border border-gray-100">
+                                                <div className="text-[10px] uppercase font-bold text-gray-400">Total</div>
+                                                <div className="text-sm font-extrabold text-gray-900 mt-0.5">{dept.total}</div>
+                                            </div>
+                                            <div className="bg-slate-50/80 p-2 rounded-xl border border-gray-100">
+                                                <div className="text-[10px] uppercase font-bold text-gray-400">Resolved</div>
+                                                <div className="text-sm font-extrabold text-emerald-600 mt-0.5">{dept.resolved}</div>
+                                            </div>
+                                            <div className="bg-slate-50/80 p-2 rounded-xl border border-gray-100">
+                                                <div className="text-[10px] uppercase font-bold text-gray-400">Avg MTTR</div>
+                                                <div className="text-sm font-extrabold text-gray-700 mt-0.5">{dept.avgTime}</div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 ))}
-                            </tbody>
-                        </table>
-                    </div>
+                            </div>
+
+                            {/* Tablet/Desktop Table View (>= sm) */}
+                            <div className="hidden sm:block overflow-x-auto">
+                                <table className="w-full min-w-[620px] text-left text-xs sm:text-sm">
+                                    <thead className="bg-slate-50/80 text-gray-600 font-bold uppercase text-[11px] tracking-wider border-b border-gray-200">
+                                        <tr>
+                                            <th className="py-3.5 px-6">{t('dashboard.department')}</th>
+                                            <th className="py-3.5 px-6">{t('dashboard.total')}</th>
+                                            <th className="py-3.5 px-6">{t('dashboard.resolvedLabel')}</th>
+                                            <th className="py-3.5 px-6">{t('dashboard.slaScore')}</th>
+                                            <th className="py-3.5 px-6">{t('dashboard.avgTime')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
+                                        {departmentPerformance.map((dept) => (
+                                            <tr key={dept.department} className="hover:bg-emerald-50/30 transition">
+                                                <td className="py-4 px-6 font-bold text-gray-950 flex items-center gap-2.5">
+                                                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100">
+                                                        <Building2 className="w-4 h-4" />
+                                                    </div>
+                                                    {dept.department}
+                                                </td>
+                                                <td className="py-4 px-6 font-bold text-gray-900">{dept.total}</td>
+                                                <td className="py-4 px-6 text-emerald-600 font-extrabold">{dept.resolved}</td>
+                                                <td className="py-4 px-6">
+                                                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
+                                                        {dept.slaScore}%
+                                                    </span>
+                                                </td>
+                                                <td className="py-4 px-6 text-gray-500 font-semibold">{dept.avgTime}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* ── 4. Anonymized Public Activity Feed ────────────────────── */}
@@ -453,21 +448,31 @@ export default function PublicDashboardPage() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
-                        {anonymizedFeed.map((item) => (
-                            <div key={item.id} className="p-4 rounded-2xl bg-slate-50/70 border border-gray-200/80 hover:border-emerald-200 hover:bg-emerald-50/20 transition space-y-2">
-                                <div className="flex items-center justify-between text-xs">
-                                    <span className="font-bold font-mono text-emerald-700">{item.id}</span>
-                                    <span className="text-gray-400 font-medium">{item.time}</span>
+                    {anonymizedFeed.length === 0 ? (
+                        <div className="text-center py-12 px-4 bg-slate-50/50 rounded-2xl border border-dashed border-gray-200">
+                            <CheckCircle2 className="w-10 h-10 mx-auto mb-2 text-emerald-600/40" />
+                            <span className="text-sm font-bold text-gray-800">No Activity Events in Database Yet</span>
+                            <p className="text-xs text-gray-400 max-w-sm mx-auto mt-0.5">
+                                Public updates will stream here via WebSocket in real-time as grievances are filed.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
+                            {anonymizedFeed.map((item) => (
+                                <div key={item.id} className="p-4 rounded-2xl bg-slate-50/70 border border-gray-200/80 hover:border-emerald-200 hover:bg-emerald-50/20 transition space-y-2">
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="font-bold font-mono text-emerald-700">{item.id}</span>
+                                        <span className="text-gray-400 font-medium">{item.time}</span>
+                                    </div>
+                                    <p className="text-sm font-bold text-gray-900 leading-snug">{item.action}</p>
+                                    <div className="flex items-center justify-between pt-2 border-t border-gray-200/60 text-xs text-gray-500 gap-2">
+                                        <span className="font-medium truncate">{item.ward}</span>
+                                        <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60 whitespace-nowrap shrink-0">{item.status}</span>
+                                    </div>
                                 </div>
-                                <p className="text-sm font-bold text-gray-900 leading-snug">{item.action}</p>
-                                <div className="flex items-center justify-between pt-2 border-t border-gray-200/60 text-xs text-gray-500 gap-2">
-                                    <span className="font-medium truncate">{item.ward}</span>
-                                    <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60 whitespace-nowrap shrink-0">{item.status}</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </main>
 

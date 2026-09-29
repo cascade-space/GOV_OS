@@ -178,7 +178,7 @@
   "track": {
     "title": "Track Your Complaint",
     "subtitle": "Enter your Complaint ID or registered mobile number to get real-time status updates",
-    "searchPlaceholder": "e.g. CMP-2024-00341 or 9876543210",
+    "searchPlaceholder": "e.g. CMP-GV-202609-0001 or 9876543210",
     "searchButton": "Search",
     "searching": "Searching...",
     "enterComplaintId": "Enter a Complaint ID or mobile number",

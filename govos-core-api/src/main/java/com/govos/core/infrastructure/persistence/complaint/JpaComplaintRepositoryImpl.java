@@ -33,7 +33,28 @@ public class JpaComplaintRepositoryImpl implements ComplaintRepository {
 
     @Override
     public List<Complaint> findByTenantId(UUID tenantId) {
-        return springDataRepo.findByTenantId(tenantId).stream()
+        return springDataRepo.findByTenantIdOrderByCreatedAtDesc(tenantId).stream()
+                .map(this::toDomainEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Complaint> findByTenantIdAndWardId(UUID tenantId, UUID wardId) {
+        return springDataRepo.findByTenantIdAndWardId(tenantId, wardId).stream()
+                .map(this::toDomainEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Complaint> findByTenantIdAndConstituency(UUID tenantId, String constituency) {
+        return springDataRepo.findByTenantIdAndConstituency(tenantId, constituency).stream()
+                .map(this::toDomainEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Complaint> findByReporterId(UUID reporterId) {
+        return springDataRepo.findByReporterIdOrderByCreatedAtDesc(reporterId).stream()
                 .map(this::toDomainEntity)
                 .collect(Collectors.toList());
     }
@@ -134,6 +155,14 @@ public class JpaComplaintRepositoryImpl implements ComplaintRepository {
         jpa.setLocationAddress(domain.getLocationAddress());
         jpa.setResolutionNotes(domain.getResolutionNotes());
         jpa.setResolutionEvidenceUrl(domain.getResolutionEvidenceUrl());
+        jpa.setReworkReason(domain.getReworkReason());
+        jpa.setReworkCount(domain.getReworkCount());
+        jpa.setCitizenRating(domain.getCitizenRating());
+        jpa.setCitizenFeedback(domain.getCitizenFeedback());
+        jpa.setResolutionLatitude(domain.getResolutionLatitude());
+        jpa.setResolutionLongitude(domain.getResolutionLongitude());
+        jpa.setDistanceDeviationMeters(domain.getDistanceDeviationMeters());
+        jpa.setAutoCloseAt(domain.getAutoCloseAt());
         jpa.setWorkStartedAt(domain.getWorkStartedAt());
         jpa.setWorkCompletedAt(domain.getWorkCompletedAt());
         jpa.setResolvedAt(domain.getResolvedAt());
@@ -141,6 +170,13 @@ public class JpaComplaintRepositoryImpl implements ComplaintRepository {
         jpa.setSlaBreached(domain.isSlaBreached());
         jpa.setSlaWarningSent(domain.isSlaWarningSent());
         jpa.setEscalationLevel(domain.getEscalationLevel());
+        jpa.setExternalSystem(domain.getExternalSystem());
+        jpa.setExternalTicketId(domain.getExternalTicketId());
+        jpa.setIntegrationStatus(domain.getIntegrationStatus());
+        jpa.setExternalSyncedAt(domain.getExternalSyncedAt());
+        jpa.setLastExternalStatus(domain.getLastExternalStatus());
+        jpa.setAssetId(domain.getAssetId());
+        jpa.setProjectId(domain.getProjectId());
         jpa.setCreatedAt(domain.getCreatedAt());
         jpa.setUpdatedAt(domain.getUpdatedAt());
         jpa.setDeleted(domain.isDeleted());
@@ -171,6 +207,14 @@ public class JpaComplaintRepositoryImpl implements ComplaintRepository {
         domain.setLocationAddress(jpa.getLocationAddress());
         domain.setResolutionNotes(jpa.getResolutionNotes());
         domain.setResolutionEvidenceUrl(jpa.getResolutionEvidenceUrl());
+        domain.setReworkReason(jpa.getReworkReason());
+        domain.setReworkCount(jpa.getReworkCount());
+        domain.setCitizenRating(jpa.getCitizenRating());
+        domain.setCitizenFeedback(jpa.getCitizenFeedback());
+        domain.setResolutionLatitude(jpa.getResolutionLatitude());
+        domain.setResolutionLongitude(jpa.getResolutionLongitude());
+        domain.setDistanceDeviationMeters(jpa.getDistanceDeviationMeters());
+        domain.setAutoCloseAt(jpa.getAutoCloseAt());
         domain.setWorkStartedAt(jpa.getWorkStartedAt());
         domain.setWorkCompletedAt(jpa.getWorkCompletedAt());
         domain.setResolvedAt(jpa.getResolvedAt());
@@ -178,6 +222,13 @@ public class JpaComplaintRepositoryImpl implements ComplaintRepository {
         domain.setSlaBreached(jpa.isSlaBreached());
         domain.setSlaWarningSent(jpa.isSlaWarningSent());
         domain.setEscalationLevel(jpa.getEscalationLevel());
+        domain.setExternalSystem(jpa.getExternalSystem());
+        domain.setExternalTicketId(jpa.getExternalTicketId());
+        domain.setIntegrationStatus(jpa.getIntegrationStatus());
+        domain.setExternalSyncedAt(jpa.getExternalSyncedAt());
+        domain.setLastExternalStatus(jpa.getLastExternalStatus());
+        domain.setAssetId(jpa.getAssetId());
+        domain.setProjectId(jpa.getProjectId());
         domain.setCreatedAt(jpa.getCreatedAt());
         domain.setUpdatedAt(jpa.getUpdatedAt());
         domain.setDeleted(jpa.isDeleted());

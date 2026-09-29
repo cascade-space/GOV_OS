@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import SuperAdminLayout from "@/components/superadmin/SuperAdminLayout";
 import { RefreshCw } from "lucide-react";
@@ -7,49 +7,57 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
 import toast from "react-hot-toast";
+import { superAdminService } from "@/lib/services/superadmin.service";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 const COLORS = ["#1e3a5f","#16a34a","#f97316","#ef4444","#8b5cf6","#06b6d4","#84cc16"];
 
 export default function SuperAdminAnalytics() {
     const [trend, setTrend] = useState<any[]>([]);
     const [overview, setOverview] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [range, setRange] = useState("7d");
-    const [userEmail, setUserEmail] = useState("");
 
     useEffect(() => {
-        const stored = localStorage.getItem("civicpath_superadmin");
-        if (stored) { const u = JSON.parse(stored); setUserEmail(u.email); fetchData(u.email); }
+        fetchData();
     }, []);
 
-    useEffect(() => { if (userEmail) fetchData(userEmail); }, [range]);
-
-    const fetchData = async (email: string) => {
+    const fetchData = async () => {
         setLoading(true);
         try {
-            const headers = { "x-user-email": email };
-            const [tr, ov] = await Promise.all([
-                fetch(`${API}/api/v1/superadmin/trend`, { headers }).then(r => r.json()),
-                fetch(`${API}/api/v1/superadmin/overview`, { headers }).then(r => r.json()),
+            const [tr, ov]: any = await Promise.all([
+                superAdminService.getTrend().catch(() => null),
+                superAdminService.getOverview().catch(() => null),
             ]);
-            if (tr.success) setTrend(tr.data);
-            if (ov.success) setOverview(ov.data);
-        } catch { toast.error("Failed to load analytics"); }
-        finally { setLoading(false); }
+            if (tr?.success && Array.isArray(tr.data)) {
+                const normalizedTrend = tr.data.map((pt: any) => ({
+                    day: pt.day || pt.date || "Today",
+                    submitted: pt.submitted ?? pt.complaints ?? 0,
+                    resolved: pt.resolved ?? 0,
+                }));
+                setTrend(normalizedTrend);
+            }
+            if (ov?.success && ov.data) {
+                setOverview(ov.data);
+            }
+        } catch (err) {
+            console.error("Failed to load analytics:", err);
+            toast.error("Failed to load analytics");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const c = overview?.complaints;
 
     const statusData = c ? [
-        { name: "Submitted", value: parseInt(c.pending) || 0 },
+        { name: "Pending", value: parseInt(c.pending) || 0 },
+        { name: "In Progress", value: parseInt(c.in_progress) || 0 },
         { name: "Resolved", value: parseInt(c.resolved) || 0 },
-        { name: "Closed", value: parseInt(c.closed) || 0 },
+        { name: "Escalated", value: parseInt(c.escalated) || 0 },
     ].filter(d => d.value > 0) : [];
 
-    const resolutionRate = c && parseInt(c.total) > 0
-        ? Math.round((parseInt(c.resolved) / parseInt(c.total)) * 100)
-        : 0;
+    const resolutionRate = c?.resolution_rate != null
+        ? Math.round(Number(c.resolution_rate))
+        : (c && parseInt(c.total) > 0 ? Math.round((parseInt(c.resolved) / parseInt(c.total)) * 100) : 0);
 
     return (
         <SuperAdminLayout>
@@ -59,7 +67,7 @@ export default function SuperAdminAnalytics() {
                         <h1 className="text-xl font-black text-gray-900">Analytics</h1>
                         <p className="text-gray-500 text-sm mt-0.5">Platform-wide performance metrics</p>
                     </div>
-                    <button onClick={() => fetchData(userEmail)} className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-700">
+                    <button onClick={fetchData} className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-700 transition-colors">
                         <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
                         Refresh
                     </button>
@@ -72,10 +80,10 @@ export default function SuperAdminAnalytics() {
                         {/* Summary cards */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                             {[
-                                { label: "Total Complaints", value: c?.total || 0, color: "text-blue-600" },
+                                { label: "Total Complaints", value: c?.total ?? 0, color: "text-blue-600" },
                                 { label: "Resolution Rate", value: `${resolutionRate}%`, color: "text-green-600" },
-                                { label: "Pending", value: c?.pending || 0, color: "text-orange-600" },
-                                { label: "This Week", value: c?.this_week || 0, color: "text-purple-600" },
+                                { label: "Pending", value: c?.pending ?? 0, color: "text-amber-600" },
+                                { label: "In Progress", value: c?.in_progress ?? 0, color: "text-purple-600" },
                             ].map(({ label, value, color }) => (
                                 <div key={label} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 text-center">
                                     <p className={`text-3xl font-black ${color}`}>{value}</p>
@@ -86,9 +94,9 @@ export default function SuperAdminAnalytics() {
 
                         {/* Trend chart */}
                         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-                            <h3 className="text-sm font-bold text-gray-700 mb-4">7-Day Complaint Trend</h3>
+                            <h3 className="text-sm font-bold text-gray-700 mb-4">Complaint & Resolution Trend</h3>
                             {trend.length === 0 ? (
-                                <div className="flex items-center justify-center h-48 text-gray-400 text-sm">No data for this period</div>
+                                <div className="flex items-center justify-center h-48 text-gray-400 text-sm">No trend data available</div>
                             ) : (
                                 <ResponsiveContainer width="100%" height={250}>
                                     <LineChart data={trend} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
@@ -109,11 +117,11 @@ export default function SuperAdminAnalytics() {
                             <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                                 <h3 className="text-sm font-bold text-gray-700 mb-4">Status Distribution</h3>
                                 {statusData.length === 0 ? (
-                                    <div className="flex items-center justify-center h-48 text-gray-400 text-sm">No data</div>
+                                    <div className="flex items-center justify-center h-48 text-gray-400 text-sm">No complaints distributed</div>
                                 ) : (
                                     <ResponsiveContainer width="100%" height={220}>
                                         <PieChart>
-                                            <Pie data={statusData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }) => `${name} ${(percent*100).toFixed(0)}%`} labelLine={false}>
+                                            <Pie data={statusData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }: any) => `${name} ${((percent || 0)*100).toFixed(0)}%`} labelLine={false}>
                                                 {statusData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                                             </Pie>
                                             <Tooltip />
@@ -126,10 +134,10 @@ export default function SuperAdminAnalytics() {
                                 <h3 className="text-sm font-bold text-gray-700 mb-4">Platform Summary</h3>
                                 <div className="space-y-3">
                                     {[
-                                        { label: "Total Users", value: overview?.users?.total || 0, sub: `${overview?.users?.admins || 0} admins, ${overview?.users?.mlas || 0} MLAs` },
-                                        { label: "Active Officers", value: overview?.officers?.active || 0, sub: `${overview?.officers?.total || 0} total` },
-                                        { label: "Complaints Today", value: c?.today || 0, sub: "New submissions" },
-                                        { label: "This Week", value: c?.this_week || 0, sub: "Last 7 days" },
+                                        { label: "Total Platform Users", value: overview?.total_users || overview?.users?.total || 0, sub: "Registered across municipalities" },
+                                        { label: "Active Field Officers", value: overview?.total_officers || overview?.officers?.total || 0, sub: "Field execution workforce" },
+                                        { label: "Active Municipal Tenants", value: overview?.total_tenants || 1, sub: "Onboarded local bodies" },
+                                        { label: "Escalated Grievances", value: c?.escalated ?? 0, sub: "Exceeded SLA thresholds" },
                                     ].map(({ label, value, sub }) => (
                                         <div key={label} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                                             <div>

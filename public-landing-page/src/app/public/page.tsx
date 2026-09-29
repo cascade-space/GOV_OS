@@ -15,8 +15,8 @@ export default function PublicDashboardPage() {
     useEffect(() => {
         if (user) {
             setLoading(true);
-            api.get("/complaints/public/my")
-                .then(res => setMyComplaints(res))
+            api.get("/citizen/me/complaints")
+                .then((res: any) => setMyComplaints(Array.isArray(res) ? res : (res?.data || [])))
                 .catch(err => console.error("Failed to fetch my complaints", err))
                 .finally(() => setLoading(false));
         }

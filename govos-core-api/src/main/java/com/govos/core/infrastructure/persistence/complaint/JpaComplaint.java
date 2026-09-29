@@ -85,6 +85,31 @@ public class JpaComplaint extends BaseEntity {
     @Column(name = "resolved_at")
     private Instant resolvedAt;
 
+    // Milestone M5 Verification, Rework & Citizen Confirmation fields
+    @Column(name = "rework_reason", columnDefinition = "TEXT")
+    private String reworkReason;
+
+    @Column(name = "rework_count", nullable = false)
+    private int reworkCount = 0;
+
+    @Column(name = "citizen_rating")
+    private Integer citizenRating;
+
+    @Column(name = "citizen_feedback", columnDefinition = "TEXT")
+    private String citizenFeedback;
+
+    @Column(name = "resolution_latitude")
+    private Double resolutionLatitude;
+
+    @Column(name = "resolution_longitude")
+    private Double resolutionLongitude;
+
+    @Column(name = "distance_deviation_meters")
+    private Double distanceDeviationMeters;
+
+    @Column(name = "auto_close_at")
+    private Instant autoCloseAt;
+
     // SLA & Escalation fields
     @Column(name = "sla_deadline")
     private Instant slaDeadline;
@@ -97,4 +122,27 @@ public class JpaComplaint extends BaseEntity {
 
     @Column(name = "escalation_level", nullable = false)
     private int escalationLevel = 0;
+
+    // External Integration Hub fields (Milestone M8)
+    @Column(name = "external_system", length = 50)
+    private String externalSystem;
+
+    @Column(name = "external_ticket_id", length = 100)
+    private String externalTicketId;
+
+    @Column(name = "integration_status", length = 30)
+    private String integrationStatus = "NONE";
+
+    @Column(name = "external_synced_at")
+    private Instant externalSyncedAt;
+
+    @Column(name = "last_external_status", length = 50)
+    private String lastExternalStatus;
+
+    // Milestone M9 Civic Assets & Projects
+    @Column(name = "asset_id")
+    private UUID assetId;
+
+    @Column(name = "project_id")
+    private UUID projectId;
 }

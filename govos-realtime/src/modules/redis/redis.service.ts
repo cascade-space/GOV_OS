@@ -58,21 +58,51 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
       const roomName = `${target.roomType}:${target.roomId}`;
       
-      // Broadcast to the specific room
+      // Broadcast to the tenant-level room
       this.gateway.server.to(roomName).emit(type, data);
       this.logger.debug(`Broadcasted event ${type} to room ${roomName}`);
 
+      // Fan out to specific complaint room if complaintNumber exists
+      const complaintNumber = data?.complaintNumber;
+      if (complaintNumber) {
+        this.gateway.server.to(`complaint:${complaintNumber}`).emit(type, data);
+        this.logger.debug(`Broadcasted event ${type} to complaint:${complaintNumber}`);
+      }
+
+      // If it's an SLA event, also broadcast directly to assigned officer room
+      if (type.startsWith('sla:')) {
+        const assignedToId = data?.assignedToId;
+        if (assignedToId) {
+          this.gateway.server.to(`user:${assignedToId}`).emit(type, data);
+          this.logger.debug(`Broadcasted SLA event ${type} to user:${assignedToId}`);
+        }
+      }
+
       // If it's a complaint event, sanitize and broadcast to public:dashboard as well
-      if (type === 'complaint:created' || type === 'complaint:status_changed') {
+      if (type.startsWith('complaint:')) {
+        let actionDescription = 'Civic issue updated';
+        if (type === 'complaint:created') {
+          actionDescription = data?.title ? `New issue reported: "${data.title}"` : 'New civic grievance submitted';
+        } else if (type === 'complaint:rework_requested' || data?.status === 'REWORK_REQUIRED') {
+          actionDescription = 'Quality check failed — rectification underway';
+        } else if (data?.status === 'RESOLVED') {
+          actionDescription = 'Field work verified and resolution approved';
+        } else if (data?.status === 'CLOSED') {
+          actionDescription = 'Resolution confirmed by citizen';
+        } else {
+          actionDescription = `Issue status changed to ${data?.status || 'Active'}`;
+        }
+
         const publicActivity = {
-          id: data?.complaintNumber || data?.id || ('CP-' + Date.now()),
+          id: complaintNumber || data?.id || ('CP-' + Date.now()),
           category: data?.category || 'Civic Issue',
-          action: type === 'complaint:created' 
-            ? (data?.title ? `New issue reported: "${data.title}"` : 'New civic grievance submitted')
-            : `Issue status changed to ${data?.status || 'Active'}`,
+          action: actionDescription,
           ward: data?.locationAddress || 'Ward Area',
           time: 'Just now',
-          status: data?.status === 'RESOLVED' ? 'Verified Completed' : (data?.status === 'IN_PROGRESS' ? 'In Progress' : 'Under Review'),
+          status: data?.status === 'RESOLVED' ? 'Verified Completed' : 
+                  (data?.status === 'CLOSED' ? 'Closed & Confirmed' : 
+                  (data?.status === 'REWORK_REQUIRED' ? 'Rectification Underway' : 
+                  (data?.status === 'IN_PROGRESS' ? 'In Progress' : 'Under Review'))),
         };
         this.gateway.server.to('public:dashboard').emit('public:activity', publicActivity);
         this.logger.debug(`Broadcasted public activity for ${publicActivity.id} to public:dashboard`);

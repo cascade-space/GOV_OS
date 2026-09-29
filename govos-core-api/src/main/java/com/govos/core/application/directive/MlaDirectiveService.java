@@ -29,30 +29,34 @@ public class MlaDirectiveService {
     public MlaDirective issueDirective(UUID tenantId, UUID complaintId, String mlaName,
                                        String constituency, String directiveType,
                                        String instructionNotes, UUID issuedByUserId) {
-        Complaint complaint = complaintRepository.findById(complaintId)
-                .orElseThrow(() -> new IllegalArgumentException("Complaint not found with id: " + complaintId));
+        Complaint complaint = null;
+        if (complaintId != null) {
+            complaint = complaintRepository.findById(complaintId).orElse(null);
+        }
 
         // Create Directive
-        MlaDirective directive = new MlaDirective(tenantId, complaintId, mlaName, constituency, directiveType, instructionNotes);
+        MlaDirective directive = new MlaDirective(tenantId, complaint != null ? complaint.getId() : null, mlaName, constituency, directiveType, instructionNotes);
         MlaDirective saved = directiveRepository.save(directive);
 
-        // Escalation on complaint: Upgrade to CRITICAL and set legislative escalation tier (Level 3)
-        complaint.setPriority(Priority.CRITICAL);
-        complaint.setEscalationLevel(3);
-        Complaint savedComplaint = complaintRepository.save(complaint);
+        if (complaint != null) {
+            // Escalation on complaint: Upgrade to CRITICAL and set legislative escalation tier (Level 3)
+            complaint.setPriority(Priority.CRITICAL);
+            complaint.setEscalationLevel(3);
+            Complaint savedComplaint = complaintRepository.save(complaint);
 
-        // Broadcast status changed
-        eventPublisher.publishComplaintStatusChanged(savedComplaint);
+            // Broadcast status changed
+            eventPublisher.publishComplaintStatusChanged(savedComplaint);
+        }
 
         // Audit Trail
         auditService.record(tenantId, issuedByUserId, "MLA",
-                "MLA_DIRECTIVE_ISSUED", "COMPLAINT", complaint.getId().toString(),
-                complaint.getComplaintNumber(),
+                "MLA_DIRECTIVE_ISSUED", "COMPLAINT", complaint != null ? complaint.getId().toString() : saved.getId().toString(),
+                complaint != null ? complaint.getComplaintNumber() : "CONSTITUENCY_POLICY",
                 String.format("{\"mla\":\"%s\",\"constituency\":\"%s\",\"type\":\"%s\"}",
                         mlaName, constituency, directiveType));
 
         log.info("MLA Directive issued by {} for complaint {} in {}",
-                mlaName, complaint.getComplaintNumber(), constituency);
+                mlaName, complaint != null ? complaint.getComplaintNumber() : "GENERAL", constituency);
 
         return saved;
     }

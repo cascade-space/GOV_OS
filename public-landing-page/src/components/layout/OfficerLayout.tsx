@@ -1,9 +1,11 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { OFFICER_NAV } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { CheckSquare, Clock, MapPin, LogOut, User } from "lucide-react";
+import { authService } from "@/lib/services/auth.service";
+import { useAppStore } from "@/lib/store";
 
 const ICONS: Record<string, React.ReactNode> = {
     CheckSquare: <CheckSquare className="w-4 h-4" />,
@@ -13,6 +15,14 @@ const ICONS: Record<string, React.ReactNode> = {
 
 export function OfficerLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const router = useRouter();
+    const { clearAuth } = useAppStore();
+
+    const handleLogout = () => {
+        authService.logout();
+        clearAuth();
+        router.replace('/login');
+    };
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -50,8 +60,8 @@ export function OfficerLayout({ children }: { children: React.ReactNode }) {
                             href={item.href}
                             className={cn(
                                 "flex-1 flex flex-col items-center justify-center gap-1 py-3 text-xs font-medium transition-colors",
-                                pathname === item.href || pathname.startsWith(item.href + "/")
-                                    ? "text-civic-blue"
+                                pathname === item.href || (item.href !== "/officer/dashboard" && pathname.startsWith(item.href + "/"))
+                                    ? "text-civic-blue font-bold"
                                     : "text-gray-400 hover:text-gray-600"
                             )}
                         >
@@ -59,13 +69,13 @@ export function OfficerLayout({ children }: { children: React.ReactNode }) {
                             <span>{item.label}</span>
                         </Link>
                     ))}
-                    <Link
-                        href="/admin/login"
-                        className="flex-1 flex flex-col items-center justify-center gap-1 py-3 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors"
+                    <button
+                        onClick={handleLogout}
+                        className="flex-1 flex flex-col items-center justify-center gap-1 py-3 text-xs font-medium text-gray-400 hover:text-rose-600 transition-colors"
                     >
                         <LogOut className="w-4 h-4" />
                         <span>Logout</span>
-                    </Link>
+                    </button>
                 </div>
             </nav>
         </div>

@@ -17,7 +17,7 @@ import java.util.UUID;
 @Setter
 public class JpaMlaDirective extends BaseEntity {
 
-    @Column(name = "complaint_id", nullable = false)
+    @Column(name = "complaint_id")
     private UUID complaintId;
 
     @Column(name = "mla_name", nullable = false)

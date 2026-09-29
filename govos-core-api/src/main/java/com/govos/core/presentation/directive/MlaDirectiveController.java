@@ -21,7 +21,7 @@ public class MlaDirectiveController {
     private final MlaDirectiveService directiveService;
 
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN', 'ROLE_REP')")
     public ResponseEntity<MlaDirective> issueDirective(
             @Valid @RequestBody MlaDirectiveDtos.IssueDirectiveRequest request,
             Authentication auth
@@ -44,7 +44,7 @@ public class MlaDirectiveController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN', 'ROLE_OFFICER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN', 'ROLE_OFFICER', 'ROLE_REP')")
     public ResponseEntity<List<MlaDirective>> listDirectives(Authentication auth) {
         var details = (JwtAuthFilter.GovOsUserDetails) auth.getDetails();
         UUID tenantId = details.tenantId();
@@ -54,13 +54,14 @@ public class MlaDirectiveController {
     }
 
     @GetMapping("/complaint/{complaintId}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN', 'ROLE_OFFICER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN', 'ROLE_OFFICER', 'ROLE_REP')")
     public ResponseEntity<List<MlaDirective>> listByComplaint(@PathVariable UUID complaintId) {
         List<MlaDirective> list = directiveService.listByComplaint(complaintId);
         return ResponseEntity.ok(list);
     }
 
     @GetMapping("/constituency/{constituency}")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN', 'ROLE_OFFICER', 'ROLE_REP')")
     public ResponseEntity<List<MlaDirective>> listByConstituency(
             @PathVariable String constituency,
             Authentication auth

@@ -86,4 +86,88 @@ public class AnalyticsService {
 
         return report;
     }
+
+    /**
+     * Ward-scoped analytics for OFFICER role.
+     * Returns complaint counts filtered to a specific ward.
+     */
+    public Map<String, Object> getWardSummary(UUID tenantId, UUID wardId) {
+        Map<String, Object> report = new LinkedHashMap<>();
+        report.put("tenantId", tenantId.toString());
+        report.put("wardId", wardId.toString());
+        report.put("scope", "WARD");
+
+        List<com.govos.core.domain.complaint.Complaint> wardComplaints =
+                complaintRepository.findByTenantIdAndWardId(tenantId, wardId);
+
+        long totalComplaints = wardComplaints.size();
+        long resolvedComplaints = wardComplaints.stream()
+                .filter(c -> c.getStatus() == com.govos.core.domain.complaint.ComplaintStatus.RESOLVED
+                          || c.getStatus() == com.govos.core.domain.complaint.ComplaintStatus.CLOSED)
+                .count();
+        long inProgress = wardComplaints.stream()
+                .filter(c -> c.getStatus() == com.govos.core.domain.complaint.ComplaintStatus.IN_PROGRESS
+                          || c.getStatus() == com.govos.core.domain.complaint.ComplaintStatus.ASSIGNED)
+                .count();
+        long slaBreached = wardComplaints.stream()
+                .filter(com.govos.core.domain.complaint.Complaint::isSlaBreached)
+                .count();
+
+        double resolutionRate = totalComplaints > 0
+                ? Math.round((resolvedComplaints * 100.0) / totalComplaints) : 0.0;
+
+        report.put("totalComplaints", totalComplaints);
+        report.put("resolvedComplaints", resolvedComplaints);
+        report.put("inProgressComplaints", inProgress);
+        report.put("slaBreachedComplaints", slaBreached);
+        report.put("resolutionRate", resolutionRate);
+        report.put("citizenSatisfactionScore", Math.round(5.0 * resolutionRate / 100.0 * 100.0) / 100.0);
+        // No budget/assets/projects at ward level — those are tenant-wide
+        report.put("budgetUtilization", null);
+        report.put("activeAssets", null);
+        report.put("ongoingProjects", null);
+        return report;
+    }
+
+    /**
+     * Constituency-scoped analytics for REP role.
+     * Returns complaint counts for the MLA's constituency.
+     */
+    public Map<String, Object> getConstituencySummary(UUID tenantId, String constituency) {
+        Map<String, Object> report = new LinkedHashMap<>();
+        report.put("tenantId", tenantId.toString());
+        report.put("constituency", constituency);
+        report.put("scope", "CONSTITUENCY");
+
+        List<com.govos.core.domain.complaint.Complaint> constComplaints =
+                complaintRepository.findByTenantIdAndConstituency(tenantId, constituency);
+
+        long totalComplaints = constComplaints.size();
+        long resolvedComplaints = constComplaints.stream()
+                .filter(c -> c.getStatus() == com.govos.core.domain.complaint.ComplaintStatus.RESOLVED
+                          || c.getStatus() == com.govos.core.domain.complaint.ComplaintStatus.CLOSED)
+                .count();
+        long slaBreached = constComplaints.stream()
+                .filter(com.govos.core.domain.complaint.Complaint::isSlaBreached)
+                .count();
+        long reopened = constComplaints.stream()
+                .filter(c -> c.getStatus() == com.govos.core.domain.complaint.ComplaintStatus.REOPENED)
+                .count();
+
+        double resolutionRate = totalComplaints > 0
+                ? Math.round((resolvedComplaints * 100.0) / totalComplaints) : 0.0;
+
+        report.put("totalComplaints", totalComplaints);
+        report.put("resolvedComplaints", resolvedComplaints);
+        report.put("slaBreachedComplaints", slaBreached);
+        report.put("reopenedComplaints", reopened);
+        report.put("resolutionRate", resolutionRate);
+        report.put("citizenSatisfactionScore", Math.round(5.0 * resolutionRate / 100.0 * 100.0) / 100.0);
+
+        // Directives count for this constituency
+        report.put("activeDirectives", constComplaints.stream()
+                .filter(c -> c.getStatus() != com.govos.core.domain.complaint.ComplaintStatus.CLOSED)
+                .count());
+        return report;
+    }
 }

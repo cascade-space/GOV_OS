@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.UUID;
+import jakarta.annotation.PostConstruct;
+import com.govos.core.domain.auth.RoleRepository;
 
 /**
  * AuthService — Application Use Case layer.
@@ -39,6 +41,99 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final GovOsProperties govOsProperties;
+    private final RoleRepository roleRepository;
+
+    @PostConstruct
+    public void bootstrapDatabaseCredentials() {
+        try {
+            String hashedPassword = passwordEncoder.encode("Admin@123");
+            UUID demoTenantId = UUID.fromString("00000000-0000-0000-0000-000000000002");
+            UUID platformTenantId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+            // 1. Super Admin (Platform Operator)
+            userRepository.findByEmail("admin@govos.in").ifPresent(user -> {
+                user.setPasswordHash(hashedPassword);
+                user.setActive(true);
+                roleRepository.findByCode("SUPER_ADMIN").ifPresent(r -> user.getRoles().add(r));
+                userRepository.save(user);
+                log.info("Initialized real password hash for SuperAdmin admin@govos.in");
+            });
+
+            // 2. Tenant Admin (HDMC Municipality)
+            userRepository.findByEmail("admin@demo.govos.in").ifPresent(user -> {
+                user.setPasswordHash(hashedPassword);
+                user.setActive(true);
+                roleRepository.findByCode("TENANT_ADMIN").ifPresent(r -> user.getRoles().add(r));
+                userRepository.save(user);
+                log.info("Initialized real password hash for TenantAdmin admin@demo.govos.in");
+            });
+
+            // 3. Field Officer (Junior Engineer)
+            userRepository.findByEmail("officer@demo.govos.in").ifPresent(user -> {
+                user.setPasswordHash(hashedPassword);
+                user.setActive(true);
+                roleRepository.findByCode("OFFICER").ifPresent(r -> user.getRoles().add(r));
+                userRepository.save(user);
+                log.info("Initialized real password hash for Officer officer@demo.govos.in");
+            });
+
+            // 4. MLA Representative (Dharwad #71)
+            userRepository.findByEmail("mla@dharwad.gov.in").ifPresentOrElse(
+                user -> {
+                    user.setPasswordHash(hashedPassword);
+                    user.setActive(true);
+                    roleRepository.findByCode("REP").ifPresent(r -> user.getRoles().add(r));
+                    userRepository.save(user);
+                },
+                () -> {
+                    User mla = User.builder()
+                        .tenantId(demoTenantId)
+                        .email("mla@dharwad.gov.in")
+                        .phone("+919666666666")
+                        .fullName("Hon. Amrut Desai (MLA Dharwad #71)")
+                        .displayName("Amrut Desai")
+                        .passwordHash(hashedPassword)
+                        .active(true)
+                        .emailVerified(true)
+                        .phoneVerified(true)
+                        .build();
+                    roleRepository.findByCode("REP").ifPresent(r -> mla.getRoles().add(r));
+                    userRepository.save(mla);
+                    log.info("Bootstrapped MLA user mla@dharwad.gov.in with real password hash");
+                }
+            );
+
+            // 5. Citizen Demo User
+            userRepository.findByEmail("citizen@demo.govos.in").ifPresentOrElse(
+                user -> {
+                    user.setPasswordHash(hashedPassword);
+                    user.setActive(true);
+                    roleRepository.findByCode("CITIZEN").ifPresent(r -> user.getRoles().add(r));
+                    userRepository.save(user);
+                },
+                () -> {
+                    User citizen = User.builder()
+                        .tenantId(demoTenantId)
+                        .email("citizen@demo.govos.in")
+                        .phone("+919555555555")
+                        .fullName("Ramesh Kumar (Citizen)")
+                        .displayName("Ramesh Kumar")
+                        .passwordHash(hashedPassword)
+                        .active(true)
+                        .emailVerified(true)
+                        .phoneVerified(true)
+                        .build();
+                    roleRepository.findByCode("CITIZEN").ifPresent(r -> citizen.getRoles().add(r));
+                    userRepository.save(citizen);
+                    log.info("Bootstrapped Citizen user citizen@demo.govos.in with real password hash");
+                }
+            );
+
+            log.info("Database users real authentication credential bootstrap complete (Admin@123)");
+        } catch (Exception e) {
+            log.error("Failed to bootstrap database user credentials: {}", e.getMessage(), e);
+        }
+    }
 
     // =========================================================
     // 1. REQUEST OTP

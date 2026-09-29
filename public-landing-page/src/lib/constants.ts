@@ -1,16 +1,20 @@
 // ── Status Enums ─────────────────────────────────────────────────────────────
 export const COMPLAINT_STATUSES = [
+    "new",
     "submitted",
     "under_review",
     "validated",
     "assigned",
     "in_progress",
     "work_completed",
+    "verification_pending",
     "under_verification",
     "quality_check",
+    "rework_required",
     "resolved",
     "verified_completed",
     "closed",
+    "reopened",
     "rejected",
     "duplicate",
 ] as const;
@@ -18,33 +22,41 @@ export const COMPLAINT_STATUSES = [
 export type ComplaintStatus = (typeof COMPLAINT_STATUSES)[number];
 
 export const STATUS_LABELS: Record<ComplaintStatus, string> = {
+    new: "New / Submitted",
     submitted: "Submitted",
     under_review: "Under Review",
     validated: "Validated",
     assigned: "Assigned",
     in_progress: "Work in Progress",
     work_completed: "Work Completed",
+    verification_pending: "Verification Pending",
     under_verification: "Under Verification",
     quality_check: "Quality Check",
-    resolved: "Verified Completed",
+    rework_required: "Rework Required",
+    resolved: "Resolved",
     verified_completed: "Verified Completed",
     closed: "Closed",
+    reopened: "Reopened",
     rejected: "Rejected",
     duplicate: "Duplicate",
 };
 
 export const STATUS_COLORS: Record<ComplaintStatus, string> = {
+    new: "bg-blue-50 text-blue-700 border border-blue-200",
     submitted: "bg-slate-100 text-slate-700 border border-slate-300",
     under_review: "bg-blue-50 text-blue-700 border border-blue-200",
     validated: "bg-blue-100 text-blue-800 border border-blue-300",
     assigned: "bg-purple-50 text-purple-700 border border-purple-200",
     in_progress: "bg-amber-50 text-amber-700 border border-amber-300",
     work_completed: "bg-teal-50 text-teal-700 border border-teal-200",
+    verification_pending: "bg-indigo-50 text-indigo-700 border border-indigo-200",
     under_verification: "bg-indigo-50 text-indigo-700 border border-indigo-200",
     quality_check: "bg-indigo-100 text-indigo-800 border border-indigo-300",
+    rework_required: "bg-rose-50 text-rose-700 border border-rose-300",
     resolved: "bg-emerald-50 text-emerald-700 border border-emerald-300",
     verified_completed: "bg-emerald-100 text-emerald-800 border border-emerald-300",
     closed: "bg-gray-100 text-gray-700 border border-gray-300",
+    reopened: "bg-purple-100 text-purple-800 border border-purple-300",
     rejected: "bg-rose-50 text-rose-700 border border-rose-200",
     duplicate: "bg-amber-100 text-amber-800 border border-amber-200",
 };
@@ -104,14 +116,14 @@ export const DEPARTMENTS = [
 
 // ── Dharwad Constituency Wards ────────────────────────────────────────────────
 export const DHARWAD_WARDS = [
-    { id: "ward-01", number: 1, name: "Saptapur & University Area", totalIssues: 142, resolved: 135 },
-    { id: "ward-02", number: 2, name: "Kalyan Nagar & Malmaddi", totalIssues: 98, resolved: 94 },
-    { id: "ward-03", number: 3, name: "Line Bazaar & Old Hubli-Dharwad Road", totalIssues: 210, resolved: 198 },
-    { id: "ward-04", number: 4, name: "Gandhinagar & Toll Naka", totalIssues: 165, resolved: 158 },
-    { id: "ward-05", number: 5, name: "Kelgeri & Lake Precinct", totalIssues: 87, resolved: 83 },
-    { id: "ward-06", number: 6, name: "Hosayellapur & Market Yard", totalIssues: 184, resolved: 172 },
-    { id: "ward-07", number: 7, name: "Navalur & Industrial Corridor", totalIssues: 112, resolved: 104 },
-    { id: "ward-08", number: 8, name: "Sadhankeri & Cultural Zone", totalIssues: 76, resolved: 73 },
+    { id: "ward-01", number: 1, name: "Saptapur & University Area", totalIssues: 0, resolved: 0 },
+    { id: "ward-02", number: 2, name: "Kalyan Nagar & Malmaddi", totalIssues: 0, resolved: 0 },
+    { id: "ward-03", number: 3, name: "Line Bazaar & Old Hubli-Dharwad Road", totalIssues: 0, resolved: 0 },
+    { id: "ward-04", number: 4, name: "Gandhinagar & Toll Naka", totalIssues: 0, resolved: 0 },
+    { id: "ward-05", number: 5, name: "Kelgeri & Lake Precinct", totalIssues: 0, resolved: 0 },
+    { id: "ward-06", number: 6, name: "Hosayellapur & Market Yard", totalIssues: 0, resolved: 0 },
+    { id: "ward-07", number: 7, name: "Navalur & Industrial Corridor", totalIssues: 0, resolved: 0 },
+    { id: "ward-08", number: 8, name: "Sadhankeri & Cultural Zone", totalIssues: 0, resolved: 0 },
 ];
 
 // ── Roles ─────────────────────────────────────────────────────────────────────
@@ -155,15 +167,15 @@ export const MLA_NAV = [
 ];
 
 
-// ── Stepper Steps (8-Stage Complete Governance Journey) ────────────────────────
-export const COMPLAINT_LIFECYCLE_STEPS = [
+// ── Stepper Steps (6-Stage Citizen Journey per Blueprint) ──────────────────────
+export const CITIZEN_LIFECYCLE_STEPS = [
     { key: "submitted", label: "Submitted", description: "Issue received with photo & GPS location" },
-    { key: "under_review", label: "Under Review", description: "Automated triage & department validation" },
-    { key: "assigned", label: "Assigned", description: "Designated to field response officer" },
-    { key: "in_progress", label: "Work in Progress", description: "On-ground execution & materials dispatched" },
-    { key: "work_completed", label: "Work Completed", description: "Officer uploaded completion proof & evidence" },
-    { key: "under_verification", label: "Under Verification", description: "Supervisor & citizen verification check" },
-    { key: "verified_completed", label: "Verified Completed", description: "Quality verified and marked in community progress" },
-    { key: "closed", label: "Closed", description: "Resolution certified & archived" },
+    { key: "assigned", label: "Assigned to Field Team", description: "Designated to field response officer" },
+    { key: "in_progress", label: "Work in Progress", description: "On-ground execution underway" },
+    { key: "quality_verification", label: "Quality Verification", description: "Independent inspection of resolution photo & work" },
+    { key: "resolved", label: "Resolved", description: "Resolution certified; 72-hour citizen confirmation active" },
+    { key: "closed", label: "Closed", description: "Archived & verified in civic records" },
 ];
+
+export const COMPLAINT_LIFECYCLE_STEPS = CITIZEN_LIFECYCLE_STEPS;
 

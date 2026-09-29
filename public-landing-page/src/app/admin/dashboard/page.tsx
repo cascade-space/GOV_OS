@@ -7,16 +7,11 @@ import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
 import { formatDateTime, getSLAStatus, cn } from "@/lib/utils";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { MOCK_COMPLAINTS, MOCK_STATS, MOCK_TREND_DATA, MOCK_CATEGORY_DATA } from "@/lib/mockData";
 
 import {
     FileText, Clock, AlertTriangle, CheckCircle2, TrendingUp,
     Users, ArrowRight, Bell, Zap, Plus, Loader2
 } from "lucide-react";
-import {
-    LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
-} from "recharts";
 import api from "@/lib/api-client";
 import toast from "react-hot-toast";
 
@@ -33,38 +28,43 @@ function AdminDashboardContent() {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
-            const [statsData, complaintsData] = await Promise.all([
-                api.get('/admin/stats'),
-                api.get('/complaints?limit=5')
-            ]);
+            const res: any = await api.get('/complaints');
+            const complaintsArray = Array.isArray(res) ? res : (res?.data || []);
 
-            if (statsData?.success && statsData.data) {
-                setStats(statsData.data);
-            } else if (statsData?.total_complaints !== undefined) {
-                setStats(statsData);
-            } else {
-                setStats({
-                    total_complaints: 3380,
-                    pending: 132,
-                    resolved: 3248,
-                    sla_breached: 4
-                });
-            }
+            const total = complaintsArray.length;
+            const pending = complaintsArray.filter((c: any) =>
+                ['NEW', 'SUBMITTED', 'ASSIGNED', 'IN_PROGRESS'].includes(c.status?.toUpperCase())
+            ).length;
+            const resolved = complaintsArray.filter((c: any) =>
+                ['RESOLVED', 'CLOSED', 'WORK_COMPLETED'].includes(c.status?.toUpperCase())
+            ).length;
+            const breached = complaintsArray.filter((c: any) =>
+                (c.slaDeadline || c.sla_deadline) &&
+                new Date(c.slaDeadline || c.sla_deadline).getTime() < Date.now() &&
+                !['RESOLVED', 'CLOSED'].includes(c.status?.toUpperCase())
+            ).length;
 
-            const rawComplaints = complaintsData?.data || complaintsData?.complaints || complaintsData;
-            const complaintsArray = Array.isArray(rawComplaints) && rawComplaints.length > 0
-                ? rawComplaints
-                : MOCK_COMPLAINTS;
-            setComplaints(complaintsArray.slice(0, 4));
-        } catch (error: any) {
-            console.warn('Backend offline, using demo admin data:', error);
             setStats({
-                total_complaints: 3380,
-                pending: 132,
-                resolved: 3248,
-                sla_breached: 4
+                total_complaints: total,
+                pending,
+                resolved,
+                sla_breached: breached
             });
-            setComplaints(MOCK_COMPLAINTS.slice(0, 4));
+            const sortedComplaints = [...complaintsArray].sort((a: any, b: any) => {
+                const timeA = new Date(a.createdAt || a.created_at || 0).getTime();
+                const timeB = new Date(b.createdAt || b.created_at || 0).getTime();
+                return timeB - timeA;
+            });
+            setComplaints(sortedComplaints.slice(0, 5));
+        } catch (error: any) {
+            console.error('Failed to fetch admin dashboard complaints:', error);
+            setStats({
+                total_complaints: 0,
+                pending: 0,
+                resolved: 0,
+                sla_breached: 0
+            });
+            setComplaints([]);
         } finally {
             setLoading(false);
         }

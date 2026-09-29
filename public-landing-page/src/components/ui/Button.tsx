@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import React from "react";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: "primary" | "secondary" | "orange" | "green" | "danger" | "ghost";
+    variant?: "primary" | "secondary" | "orange" | "green" | "danger" | "ghost" | "outline";
     size?: "sm" | "md" | "lg";
     loading?: boolean;
     leftIcon?: React.ReactNode;
@@ -28,6 +28,7 @@ export function Button({
         green: "btn-green",
         danger: "btn-danger",
         ghost: "btn-ghost",
+        outline: "border border-gray-300 text-gray-700 hover:bg-gray-50 bg-white shadow-sm",
     };
     const sizes = {
         sm: "px-3 py-1.5 text-xs",

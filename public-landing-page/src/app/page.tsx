@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -33,8 +33,31 @@ import { useLanguage } from "@/contexts/LanguageContext";
 ───────────────────────────────────────────── */
 function HeroSection() {
     const [trackId, setTrackId] = useState("");
+    const [stats, setStats] = useState({
+        totalRequests: 0,
+        issuesResolved: 0,
+        workInProgress: 0,
+        resolutionRate: 0,
+        averageResolutionHours: 0,
+    });
     const router = useRouter();
     const { t } = useLanguage();
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8080';
+                const res = await fetch(`${baseURL}/api/v1/public/dashboard/stats`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setStats(data);
+                }
+            } catch (err) {
+                console.warn("Could not fetch real public stats:", err);
+            }
+        };
+        fetchStats();
+    }, []);
 
     const handleTrack = () => {
         if (trackId.trim()) {
@@ -70,14 +93,16 @@ function HeroSection() {
                             </p>
                         </div>
 
-                        {/* 4 Stat chips in ONE single row - fully visible with no cropping */}
+                        {/* 4 Stat chips in ONE single row - dynamic from database */}
                         <div className="flex items-center gap-2 sm:gap-2.5 xl:gap-3.5 flex-wrap sm:flex-nowrap pt-1">
                             <div className="flex items-center gap-2.5 bg-white/95 backdrop-blur-md rounded-2xl px-3 py-2 sm:px-3.5 sm:py-2.5 xl:px-4 xl:py-3 shadow-md border border-gray-100/90 shrink-0 hover:shadow-lg transition">
                                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                                     <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
                                 <div className="pr-0.5">
-                                    <div className="text-xs sm:text-sm xl:text-base font-black text-gray-900 leading-tight">12,400+</div>
+                                    <div className="text-xs sm:text-sm xl:text-base font-black text-gray-900 leading-tight">
+                                        {stats.totalRequests > 0 ? stats.totalRequests.toLocaleString() : "0"}
+                                    </div>
                                     <div className="text-[9px] sm:text-[11px] text-gray-500 font-medium leading-none mt-0.5 whitespace-nowrap">{t('home.hero.citizensConnected')}</div>
                                 </div>
                             </div>
@@ -87,7 +112,9 @@ function HeroSection() {
                                     <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
                                 <div className="pr-0.5">
-                                    <div className="text-xs sm:text-sm xl:text-base font-black text-gray-900 leading-tight">2,450+</div>
+                                    <div className="text-xs sm:text-sm xl:text-base font-black text-gray-900 leading-tight">
+                                        {stats.issuesResolved > 0 ? stats.issuesResolved.toLocaleString() : "0"}
+                                    </div>
                                     <div className="text-[9px] sm:text-[11px] text-gray-500 font-medium leading-none mt-0.5 whitespace-nowrap">{t('home.hero.issuesResolved')}</div>
                                 </div>
                             </div>
@@ -97,7 +124,9 @@ function HeroSection() {
                                     <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
                                 <div className="pr-0.5">
-                                    <div className="text-xs sm:text-sm xl:text-base font-black text-gray-900 leading-tight">94%</div>
+                                    <div className="text-xs sm:text-sm xl:text-base font-black text-gray-900 leading-tight">
+                                        {stats.resolutionRate > 0 ? `${stats.resolutionRate}%` : "0%"}
+                                    </div>
                                     <div className="text-[9px] sm:text-[11px] text-gray-500 font-medium leading-none mt-0.5 whitespace-nowrap">{t('home.hero.satisfactionRate')}</div>
                                 </div>
                             </div>
@@ -114,7 +143,7 @@ function HeroSection() {
                         </div>
                     </div>
 
-                    {/* ── RIGHT: Track Your Complaint floating card (Enlarged & Prominent) ── */}
+                    {/* ── RIGHT: Track Your Complaint floating card ── */}
                     <div className="w-full lg:w-[420px] xl:w-[460px] 2xl:w-[490px] shrink-0">
                         <div className="bg-white/98 rounded-3xl shadow-2xl border border-gray-100 p-6 sm:p-7 xl:p-8 space-y-4 sm:space-y-5">
                             <div className="text-center space-y-1">
@@ -129,7 +158,7 @@ function HeroSection() {
                                         value={trackId}
                                         onChange={(e) => setTrackId(e.target.value)}
                                         onKeyDown={(e) => e.key === "Enter" && handleTrack()}
-                                        placeholder="CMP-2024-00341 or 9876543210"
+                                        placeholder="CMP-GV-202609-0001 or 9876543210"
                                         className="flex-1 text-xs sm:text-sm bg-transparent outline-none text-gray-700 placeholder-gray-400 font-medium"
                                     />
                                 </div>
@@ -142,24 +171,23 @@ function HeroSection() {
                                 </button>
                             </div>
                             <p className="text-xs sm:text-sm text-gray-500 text-center pt-0.5">
-                                {t('home.hero.trackHint')}{" "}
-                                <button onClick={() => setTrackId("CMP-2024-00341")} className="text-emerald-600 font-bold hover:underline">CMP-2024-00341</button>
-                                {" "}{t('common.or')}{" "}
-                                <button onClick={() => setTrackId("CMP-2024-00342")} className="text-emerald-600 font-bold hover:underline">CMP-2024-00342</button>
+                                Enter your reference ID or phone number to see live status
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* ── Bottom Floating Stats Bar (Inside hero section on grass with safe bottom margin) ── */}
+            {/* ── Bottom Floating Stats Bar ── */}
             <div className="relative z-10 w-full max-w-[1380px] mx-auto px-4 sm:px-8 pt-10 pb-5 sm:pb-7 xl:pb-8">
                 <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-100 py-4 px-5 sm:px-8">
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 sm:gap-6 items-center divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
                         <div className="flex items-center gap-3 px-2">
                             <TrendingUp className="w-6 h-6 text-emerald-600 shrink-0" />
                             <div>
-                                <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">3.2 {t('dashboard.hours') === 'hrs' ? 'days' : t('dashboard.hours')}</div>
+                                <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">
+                                    {stats.averageResolutionHours > 0 ? `${stats.averageResolutionHours} hrs` : "0 hrs"}
+                                </div>
                                 <div className="text-xs sm:text-sm text-gray-500 font-medium">{t('home.hero.avgResolutionTime')}</div>
                             </div>
                         </div>
@@ -167,7 +195,9 @@ function HeroSection() {
                         <div className="flex items-center gap-3 px-2 pt-2 sm:pt-0">
                             <Users className="w-6 h-6 text-emerald-600 shrink-0" />
                             <div>
-                                <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">12,400+</div>
+                                <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">
+                                    {stats.totalRequests.toLocaleString()}
+                                </div>
                                 <div className="text-xs sm:text-sm text-gray-500 font-medium">{t('home.hero.citizensServed')}</div>
                             </div>
                         </div>
@@ -175,7 +205,9 @@ function HeroSection() {
                         <div className="flex items-center gap-3 px-2 pt-2 sm:pt-0">
                             <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
                             <div>
-                                <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">1,832</div>
+                                <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">
+                                    {stats.issuesResolved.toLocaleString()}
+                                </div>
                                 <div className="text-xs sm:text-sm text-gray-500 font-medium">{t('home.hero.issuesResolved')}</div>
                             </div>
                         </div>
@@ -183,7 +215,9 @@ function HeroSection() {
                         <div className="flex items-center gap-3 px-2 pt-2 sm:pt-0">
                             <Clock className="w-6 h-6 text-amber-500 shrink-0" />
                             <div>
-                                <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">315</div>
+                                <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">
+                                    {stats.workInProgress.toLocaleString()}
+                                </div>
                                 <div className="text-xs sm:text-sm text-gray-500 font-medium">{t('home.hero.activeIssues')}</div>
                             </div>
                         </div>
@@ -191,7 +225,9 @@ function HeroSection() {
                         <div className="flex items-center gap-3 px-2 pt-2 sm:pt-0 col-span-2 sm:col-span-1">
                             <Star className="w-6 h-6 text-amber-400 fill-amber-400 shrink-0" />
                             <div>
-                                <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">94%</div>
+                                <div className="text-base sm:text-lg xl:text-xl font-black text-gray-900 leading-tight">
+                                    {stats.resolutionRate > 0 ? `${stats.resolutionRate}%` : "0%"}
+                                </div>
                                 <div className="text-xs sm:text-sm text-gray-500 font-medium">{t('home.hero.satisfactionRate')}</div>
                             </div>
                         </div>
@@ -338,40 +374,28 @@ function CTABanner() {
 ───────────────────────────────────────────── */
 function RecentlyResolved() {
     const { t } = useLanguage();
-    const items = [
-        {
-            title: t('home.recentResolutions.issue1'),
-            category: t('home.recentResolutions.cat1'),
-            ward: "Ward 12",
-            time: "2h ago",
-            color: "text-green-600",
-            bg: "bg-green-50",
-        },
-        {
-            title: t('home.recentResolutions.issue2'),
-            category: t('home.recentResolutions.cat2'),
-            ward: "Ward 7",
-            time: "1d ago",
-            color: "text-blue-600",
-            bg: "bg-blue-50",
-        },
-        {
-            title: t('home.recentResolutions.issue3'),
-            category: t('home.recentResolutions.cat3'),
-            ward: "Ward 5",
-            time: "2d ago",
-            color: "text-amber-600",
-            bg: "bg-amber-50",
-        },
-        {
-            title: t('home.recentResolutions.issue4'),
-            category: t('home.recentResolutions.cat4'),
-            ward: "Ward 3",
-            time: "3d ago",
-            color: "text-teal-600",
-            bg: "bg-teal-50",
-        },
-    ];
+    const [items, setItems] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchRecent = async () => {
+            try {
+                const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8080';
+                const res = await fetch(`${baseURL}/api/v1/public/dashboard/stats`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data.recentActivity)) {
+                        setItems(data.recentActivity);
+                    }
+                }
+            } catch (err) {
+                console.warn("Could not fetch recent resolutions:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchRecent();
+    }, []);
 
     return (
         <section className="py-10 bg-white">
@@ -386,24 +410,41 @@ function RecentlyResolved() {
                     </Link>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {items.map((item, i) => (
-                        <div key={i} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition space-y-3">
-                            <div className="flex items-start gap-3">
-                                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
-                                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                {items.length === 0 ? (
+                    <div className="text-center py-12 px-4 bg-gray-50/80 rounded-2xl border border-gray-200/80">
+                        <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto mb-3 opacity-60" />
+                        <h3 className="text-base font-bold text-gray-900">No Resolved Complaints in Database Yet</h3>
+                        <p className="text-xs text-gray-500 max-w-sm mx-auto mt-1">
+                            Live resolutions will appear here in real-time as citizens submit grievances and officers complete field repairs.
+                        </p>
+                        <Link
+                            href="/citizen/report"
+                            className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Report a Civic Issue</span>
+                        </Link>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {items.map((item, i) => (
+                            <div key={i} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition space-y-3">
+                                <div className="flex items-start gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
+                                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                    </div>
+                                    <p className="text-sm font-semibold text-gray-900 leading-snug">{item.action || item.title}</p>
                                 </div>
-                                <p className="text-sm font-semibold text-gray-900 leading-snug">{item.title}</p>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-xs font-semibold text-emerald-600">{item.category}</span>
+                                    <span className="text-gray-300">•</span>
+                                    <span className="text-xs text-gray-500">{item.ward}</span>
+                                    <span className="ml-auto text-xs text-gray-400">{item.time}</span>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <span className={`text-xs font-semibold ${item.color}`}>{item.category}</span>
-                                <span className="text-gray-300">•</span>
-                                <span className="text-xs text-gray-500">{item.ward}</span>
-                                <span className="ml-auto text-xs text-gray-400">{item.time}</span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </section>
     );

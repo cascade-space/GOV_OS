@@ -35,35 +35,80 @@ export function timeAgo(date: string | Date): string {
 }
 
 // ── SLA Calculations ──────────────────────────────────────────────────────────
-export function getSLAStatus(deadline: string | Date | null): {
+export function getSLAStatus(
+    deadline: string | Date | null,
+    options?: { isBreached?: boolean; escalationLevel?: number; isWarning?: boolean }
+): {
     label: string;
     color: string;
+    bg: string;
     isBreached: boolean;
+    isWarning: boolean;
     hoursLeft: number;
 } {
-    if (!deadline) return { label: "No SLA", color: "text-gray-400", isBreached: false, hoursLeft: 0 };
+    if (!deadline) return { label: "No SLA", color: "text-gray-400", bg: "bg-gray-50", isBreached: false, isWarning: false, hoursLeft: 0 };
 
     const now = new Date();
     const sla = new Date(deadline);
     const diffMs = sla.getTime() - now.getTime();
     const hoursLeft = Math.floor(diffMs / 3600000);
 
-    if (hoursLeft < 0) {
+    const isBreached = options?.isBreached || hoursLeft < 0;
+    const escalationLevel = options?.escalationLevel || 0;
+
+    if (escalationLevel >= 2) {
         return {
-            label: `Breached ${Math.abs(hoursLeft)}h ago`,
-            color: "text-red-600",
+            label: "🔥 Level 2 Escalated (Commissioner)",
+            color: "text-purple-700",
+            bg: "bg-purple-100 border border-purple-300",
             isBreached: true,
+            isWarning: false,
             hoursLeft,
         };
     }
-    if (hoursLeft < 4) {
-        return { label: `${hoursLeft}h left`, color: "text-red-500", isBreached: false, hoursLeft };
+
+    if (isBreached) {
+        return {
+            label: `🚨 Breached (L1 Dept Head)`,
+            color: "text-red-700",
+            bg: "bg-red-100 border border-red-300",
+            isBreached: true,
+            isWarning: false,
+            hoursLeft,
+        };
     }
+
+    if (options?.isWarning || hoursLeft <= 4) {
+        return {
+            label: `⚠️ SLA At Risk (${hoursLeft}h left)`,
+            color: "text-amber-800",
+            bg: "bg-amber-100 border border-amber-300",
+            isBreached: false,
+            isWarning: true,
+            hoursLeft,
+        };
+    }
+
     if (hoursLeft < 24) {
-        return { label: `${hoursLeft}h left`, color: "text-orange-500", isBreached: false, hoursLeft };
+        return {
+            label: `${hoursLeft}h left`,
+            color: "text-orange-700",
+            bg: "bg-orange-50 border border-orange-200",
+            isBreached: false,
+            isWarning: false,
+            hoursLeft,
+        };
     }
+
     const daysLeft = Math.floor(hoursLeft / 24);
-    return { label: `${daysLeft}d left`, color: "text-green-600", isBreached: false, hoursLeft };
+    return {
+        label: `${daysLeft}d left`,
+        color: "text-emerald-700",
+        bg: "bg-emerald-50 border border-emerald-200",
+        isBreached: false,
+        isWarning: false,
+        hoursLeft,
+    };
 }
 
 // ── Complaint Number Generator (client-side preview) ─────────────────────────

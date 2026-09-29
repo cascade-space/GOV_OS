@@ -24,9 +24,10 @@ export function Badge({ children, variant = "gray", className }: BadgeProps) {
     );
 }
 
-export function StatusBadge({ status }: { status: ComplaintStatus }) {
-    const colorClass = STATUS_COLORS[status] || "bg-gray-100 text-gray-600";
-    return <span className={cn("badge", colorClass)}>{STATUS_LABELS[status] || status}</span>;
+export function StatusBadge({ status }: { status: string }) {
+    const normalizedKey = (status || '').toLowerCase() as ComplaintStatus;
+    const colorClass = STATUS_COLORS[normalizedKey] || "bg-gray-100 text-gray-600";
+    return <span className={cn("badge", colorClass)}>{STATUS_LABELS[normalizedKey] || status}</span>;
 }
 
 export function PriorityBadge({ priority }: { priority: Priority }) {

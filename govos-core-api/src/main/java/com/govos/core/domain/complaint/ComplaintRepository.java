@@ -8,6 +8,9 @@ public interface ComplaintRepository {
     Complaint save(Complaint complaint);
     Optional<Complaint> findById(UUID id);
     List<Complaint> findByTenantId(UUID tenantId);
+    List<Complaint> findByTenantIdAndWardId(UUID tenantId, UUID wardId);
+    List<Complaint> findByTenantIdAndConstituency(UUID tenantId, String constituency);
+    List<Complaint> findByReporterId(UUID reporterId);
     long countByTenantId(UUID tenantId);
     long countResolvedByTenantId(UUID tenantId);
     long countByTenantIdAndStatus(UUID tenantId, ComplaintStatus status);

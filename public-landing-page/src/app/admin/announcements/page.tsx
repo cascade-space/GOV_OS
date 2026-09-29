@@ -5,10 +5,29 @@ import { Megaphone, Plus, Trash2, Edit3, Calendar, Eye, EyeOff } from "lucide-re
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
-import { MOCK_ANNOUNCEMENTS } from "@/lib/mockData";
+const INITIAL_ANNOUNCEMENTS = [
+    {
+        id: "ann-1",
+        title: "Monsoon Preparedness & Stormwater Drain Desilting Drive",
+        category: "Alert",
+        date: "2026-09-08",
+        views: 2840,
+        status: "active",
+        content: "HDMC Engineering Division has deployed high-capacity dewatering pumps across Wards 1 to 14. Citizens are advised to report water-logging via GovOS."
+    },
+    {
+        id: "ann-2",
+        title: "Dharwad Smart Bus Shelter Upgrades — Public Works Update",
+        category: "Work",
+        date: "2026-09-05",
+        views: 1950,
+        status: "active",
+        content: "Civil construction of 12 solar-powered smart transit shelters initiated on Belgaum Road corridor. Completion slated for October 2026."
+    }
+];
 
 export default function AdminAnnouncementsPage() {
-    const [items, setItems] = useState(MOCK_ANNOUNCEMENTS);
+    const [items, setItems] = useState(INITIAL_ANNOUNCEMENTS);
     const [showAdd, setShowAdd] = useState(false);
 
     const toggleStatus = (id: string) => {

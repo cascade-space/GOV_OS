@@ -40,6 +40,16 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 // Public citizen portal endpoints (no JWT required)
                 .requestMatchers("/api/v1/public/**").permitAll()
+                // Storage endpoints (pre-signed upload URLs)
+                .requestMatchers("/api/v1/storage/**").permitAll()
+                // Constituency & Wards public endpoints
+                .requestMatchers("/api/v1/constituencies/**").permitAll()
+                // Public Projects & Assets for constituency transparency
+                .requestMatchers("/api/v1/projects/public/**").permitAll()
+                .requestMatchers("/api/v1/assets/public/**").permitAll()
+                // Webhook ingress & Mock external endpoints (secured via HMAC, not JWT)
+                .requestMatchers("/api/v1/integrations/webhook/**").permitAll()
+                .requestMatchers("/api/v1/mock/iccc/**").permitAll()
                 // Internal inter-service endpoints (protected by custom header, not JWT)
                 .requestMatchers("/api/v1/internal/**").permitAll()
                 // Actuator & Swagger

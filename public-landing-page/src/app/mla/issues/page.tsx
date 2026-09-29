@@ -1,44 +1,70 @@
 "use client";
+import { useEffect, useState } from "react";
 import { MLALayout } from "@/components/layout/MLALayout";
-import { MOCK_COMPLAINTS } from "@/lib/mockData";
 import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
 import { getSLAStatus, formatDateTime, cn } from "@/lib/utils";
-import { Search, MapPin, Filter, Download, ArrowRight, Clock, AlertTriangle } from "lucide-react";
-import { useState } from "react";
+import { Search, MapPin, Filter, Download, ArrowRight, Clock, AlertTriangle, User } from "lucide-react";
 import Link from "next/link";
+import api from "@/lib/api-client";
 
 export default function MLAIssuesPage() {
+    const [complaints, setComplaints] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [activeTab, setActiveTab] = useState("all");
 
-    const filtered = MOCK_COMPLAINTS.filter(c => {
-        const matchesSearch = c.title.toLowerCase().includes(search.toLowerCase()) ||
-            c.complaintNumber.toLowerCase().includes(search.toLowerCase()) ||
-            c.ward.toLowerCase().includes(search.toLowerCase());
+    useEffect(() => {
+        const fetchIssues = async () => {
+            try {
+                const res: any = await api.get('/complaints');
+                const list = Array.isArray(res) ? res : (res?.data || []);
+                setComplaints(list);
+            } catch (err) {
+                console.error("Failed to load MLA issues:", err);
+                setComplaints([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchIssues();
+    }, []);
+
+    const filtered = complaints.filter(c => {
+        const title = (c.title || "").toLowerCase();
+        const num = (c.complaintNumber || c.complaint_number || "").toLowerCase();
+        const loc = (c.locationAddress || c.location || "").toLowerCase();
+        const s = search.toLowerCase();
+        const matchesSearch = s === "" || title.includes(s) || num.includes(s) || loc.includes(s);
+
+        const priority = (c.priority || "").toUpperCase();
+        const status = (c.status || "").toUpperCase();
+        const isBreached = (c.slaDeadline || c.sla_deadline) &&
+            new Date(c.slaDeadline || c.sla_deadline).getTime() < Date.now() &&
+            !['RESOLVED', 'CLOSED'].includes(status);
 
         if (activeTab === "all") return matchesSearch;
-        if (activeTab === "critical") return matchesSearch && (c.priority === "critical" || c.priority === "high");
-
-        if (activeTab === "breached") return matchesSearch && getSLAStatus(c.slaDeadline).isBreached;
-        if (activeTab === "resolved") return matchesSearch && c.status === "resolved";
+        if (activeTab === "critical") return matchesSearch && (priority === "CRITICAL" || priority === "HIGH");
+        if (activeTab === "breached") return matchesSearch && isBreached;
+        if (activeTab === "resolved") return matchesSearch && (status === "RESOLVED" || status === "CLOSED");
         return matchesSearch;
     });
 
+    const criticalCount = complaints.filter(c => ['CRITICAL', 'HIGH'].includes((c.priority || '').toUpperCase())).length;
+    const breachedCount = complaints.filter(c => (c.slaDeadline || c.sla_deadline) && new Date(c.slaDeadline || c.sla_deadline).getTime() < Date.now() && !['RESOLVED', 'CLOSED'].includes((c.status || '').toUpperCase())).length;
+    const resolvedCount = complaints.filter(c => ['RESOLVED', 'CLOSED'].includes((c.status || '').toUpperCase())).length;
+
     return (
         <MLALayout>
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6 animate-fade-in pb-8">
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-black text-gray-900">Constituency Issues</h1>
-                        <p className="text-gray-500 text-sm">Real-time overview of all reported civic concerns in your ward.</p>
+                        <p className="text-gray-500 text-sm">Real-time legislative overview of all reported civic concerns in Dharwad.</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <button className="btn-ghost bg-white border border-gray-200">
                             <Download className="w-4 h-4" /> Export Report
-                        </button>
-                        <button className="btn-primary">
-                            <Filter className="w-4 h-4" /> Filter Views
                         </button>
                     </div>
                 </div>
@@ -58,10 +84,10 @@ export default function MLAIssuesPage() {
 
                     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
                         {[
-                            { id: "all", label: "All Issues", count: MOCK_COMPLAINTS.length },
-                            { id: "critical", label: "Critical / High", count: MOCK_COMPLAINTS.filter(c => c.priority === "critical" || c.priority === "high").length },
-                            { id: "breached", label: "SLA Breached", count: MOCK_COMPLAINTS.filter(c => getSLAStatus(c.slaDeadline).isBreached).length },
-                            { id: "resolved", label: "Resolved", count: MOCK_COMPLAINTS.filter(c => c.status === "resolved").length },
+                            { id: "all", label: "All Issues", count: complaints.length },
+                            { id: "critical", label: "Critical / High", count: criticalCount },
+                            { id: "breached", label: "SLA Breached", count: breachedCount },
+                            { id: "resolved", label: "Resolved", count: resolvedCount },
                         ].map(tab => (
                             <button
                                 key={tab.id}
@@ -87,7 +113,12 @@ export default function MLAIssuesPage() {
 
                 {/* Issues Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {filtered.length === 0 ? (
+                    {loading ? (
+                        <div className="col-span-full py-20 text-center">
+                            <div className="w-8 h-8 border-4 border-civic-blue border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                            <p className="text-gray-400 text-sm">Loading constituency issues...</p>
+                        </div>
+                    ) : filtered.length === 0 ? (
                         <div className="col-span-full py-20 text-center civic-card">
                             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Search className="w-8 h-8 text-gray-300" />
@@ -96,13 +127,13 @@ export default function MLAIssuesPage() {
                         </div>
                     ) : (
                         filtered.map(issue => {
-                            const sla = getSLAStatus(issue.slaDeadline);
+                            const sla = getSLAStatus(issue.slaDeadline || issue.sla_deadline);
                             return (
                                 <Link href={`/mla/issues/${issue.id}`} key={issue.id} className="block group">
-                                    <div className="civic-card-elevated p-5 flex flex-col h-full cursor-pointer">
+                                    <div className="civic-card-elevated p-5 flex flex-col h-full cursor-pointer hover:border-civic-blue/30 transition-all">
                                         <div className="flex items-start justify-between mb-3">
                                             <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase font-mono">
-                                                {issue.complaintNumber}
+                                                {issue.complaintNumber || issue.complaint_number}
                                             </span>
                                             <StatusBadge status={issue.status} />
                                         </div>
@@ -118,30 +149,22 @@ export default function MLAIssuesPage() {
                                         <div className="bg-gray-50 rounded-lg p-2.5 mb-3">
                                             <div className="flex items-center justify-between mb-1">
                                                 <span className="text-xs text-gray-500">Citizen:</span>
-                                                <span className="text-xs font-bold text-gray-800">{issue.citizenName}</span>
+                                                <span className="text-xs font-semibold text-gray-900">{issue.reporterName || issue.citizenName || 'Citizen'}</span>
                                             </div>
                                             <div className="flex items-center justify-between">
-                                                <span className="text-xs text-gray-500">Mobile:</span>
-                                                <span className="text-xs font-mono text-gray-700">{issue.citizenMobile}</span>
+                                                <span className="text-xs text-gray-500">Category:</span>
+                                                <span className="text-xs font-semibold text-gray-900">{issue.category || 'General'}</span>
                                             </div>
                                         </div>
 
-                                        <div className="mt-auto space-y-3">
-                                            <div className="flex items-center justify-between">
-                                                <PriorityBadge priority={issue.priority} />
-                                                <div className={cn("flex items-center gap-1.5 text-[11px] font-bold", sla.color)}>
-                                                    {sla.isBreached ? <AlertTriangle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-                                                    {sla.label}
-                                                </div>
+                                        <div className="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
+                                            <div className="flex items-center gap-1 text-gray-500 truncate max-w-[180px]">
+                                                <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-civic-blue" />
+                                                <span className="truncate">{issue.locationAddress || 'Dharwad'}</span>
                                             </div>
-
-                                            <div className="pt-3 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-400">
-                                                <MapPin className="w-3.5 h-3.5" />
-                                                <span className="truncate">{issue.ward}</span>
-                                                <span className="ml-auto flex items-center gap-1 text-civic-blue font-bold group-hover:gap-2 transition-all">
-                                                    Details <ArrowRight className="w-3.5 h-3.5" />
-                                                </span>
-                                            </div>
+                                            <span className="font-bold text-civic-blue group-hover:translate-x-1 transition-transform inline-flex items-center gap-0.5">
+                                                View &rarr;
+                                            </span>
                                         </div>
                                     </div>
                                 </Link>

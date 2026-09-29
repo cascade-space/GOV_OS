@@ -33,7 +33,7 @@ export default function OfficersList({ officers, onStatusChange, onDelete }: Off
         try {
             const storedUser = localStorage.getItem('civicpath_user');
             const userData = storedUser ? JSON.parse(storedUser) : null;
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
             const res = await fetch(`${apiUrl}/api/v1/officers/${officer.id}/regenerate-password`, {
                 method: 'POST',
@@ -62,7 +62,7 @@ export default function OfficersList({ officers, onStatusChange, onDelete }: Off
         try {
             const storedUser = localStorage.getItem('civicpath_user');
             const userData = storedUser ? JSON.parse(storedUser) : null;
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
             const res = await fetch(`${apiUrl}/api/v1/officers/${officer.id}`, {
                 method: 'DELETE',
@@ -86,7 +86,7 @@ export default function OfficersList({ officers, onStatusChange, onDelete }: Off
         try {
             const storedUser = localStorage.getItem('civicpath_user');
             const userData = storedUser ? JSON.parse(storedUser) : null;
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
             const res = await fetch(`${apiUrl}/api/v1/officers/${officer.id}/resend-credentials`, {
                 method: 'POST',
@@ -110,7 +110,7 @@ export default function OfficersList({ officers, onStatusChange, onDelete }: Off
         try {
             const storedUser = localStorage.getItem('civicpath_user');
             const userData = storedUser ? JSON.parse(storedUser) : null;
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
             const res = await fetch(`${apiUrl}/api/v1/officers/${officer.id}/status`, {
                 method: 'PATCH',

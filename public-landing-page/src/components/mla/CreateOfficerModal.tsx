@@ -53,7 +53,7 @@ export default function CreateOfficerModal({ onClose, onSuccess }: CreateOfficer
         try {
             const storedUser = localStorage.getItem('civicpath_user');
             const userData = storedUser ? JSON.parse(storedUser) : null;
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
             const res = await fetch(`${apiUrl}/api/v1/officers/create`, {
                 method: 'POST',

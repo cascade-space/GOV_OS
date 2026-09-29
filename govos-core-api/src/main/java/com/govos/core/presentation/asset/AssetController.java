@@ -18,13 +18,28 @@ import java.util.UUID;
 public class AssetController {
 
     private final AssetService assetService;
+    private static final UUID DEFAULT_TENANT_ID = UUID.fromString("00000000-0000-0000-0000-000000000002");
+
+    @GetMapping("/public")
+    public ResponseEntity<List<CivicAsset>> listPublicAssets(@RequestParam(required = false) UUID tenantId) {
+        UUID effectiveTenant = tenantId != null ? tenantId : DEFAULT_TENANT_ID;
+        return ResponseEntity.ok(assetService.listAssets(effectiveTenant));
+    }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN', 'ROLE_DEPT_HEAD')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN', 'ROLE_DEPT_HEAD', 'ROLE_OFFICER', 'ROLE_MLA')")
     public ResponseEntity<List<CivicAsset>> listAssets(Authentication auth) {
         var details = (JwtAuthFilter.GovOsUserDetails) auth.getDetails();
         UUID tenantId = details.tenantId();
         return ResponseEntity.ok(assetService.listAssets(tenantId));
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN', 'ROLE_DEPT_HEAD', 'ROLE_OFFICER', 'ROLE_MLA')")
+    public ResponseEntity<CivicAsset> getAsset(@PathVariable UUID id, Authentication auth) {
+        var details = (JwtAuthFilter.GovOsUserDetails) auth.getDetails();
+        UUID tenantId = details.tenantId();
+        return ResponseEntity.ok(assetService.getAsset(tenantId, id));
     }
 
     @PostMapping
@@ -34,6 +49,7 @@ public class AssetController {
         UUID tenantId = details.tenantId();
         return ResponseEntity.ok(assetService.createAsset(tenantId, dto));
     }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN', 'ROLE_DEPT_HEAD')")
     public ResponseEntity<CivicAsset> updateAsset(@PathVariable UUID id, @RequestBody CivicAsset dto, Authentication auth) {

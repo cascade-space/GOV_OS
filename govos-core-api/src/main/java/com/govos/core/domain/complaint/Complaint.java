@@ -40,11 +40,32 @@ public class Complaint {
     private Instant workCompletedAt;
     private Instant resolvedAt;
 
+    // Milestone M5 Verification, Rework & Citizen Confirmation fields
+    private String reworkReason;
+    private int reworkCount = 0;
+    private Integer citizenRating;
+    private String citizenFeedback;
+    private Double resolutionLatitude;
+    private Double resolutionLongitude;
+    private Double distanceDeviationMeters;
+    private Instant autoCloseAt;
+
     // SLA & Escalation fields
     private Instant slaDeadline;
     private boolean slaBreached;
     private boolean slaWarningSent;
     private int escalationLevel;
+
+    // Milestone M8 External Integration Hub fields
+    private String externalSystem;
+    private String externalTicketId;
+    private String integrationStatus = "NONE";
+    private Instant externalSyncedAt;
+    private String lastExternalStatus;
+
+    // Milestone M9 Civic Assets & Projects
+    private UUID assetId;
+    private UUID projectId;
     
     private Instant createdAt;
     private Instant updatedAt;
@@ -110,15 +131,19 @@ public class Complaint {
 
     public void markSlaBreached() {
         this.slaBreached = true;
-        this.escalationLevel = Math.max(this.escalationLevel + 1, 1);
-        // Upgrade priority if breached
-        if (this.priority == Priority.LOW) {
-            this.priority = Priority.MEDIUM;
-        } else if (this.priority == Priority.MEDIUM) {
-            this.priority = Priority.HIGH;
-        } else if (this.priority == Priority.HIGH) {
-            this.priority = Priority.CRITICAL;
-        }
+        this.escalationLevel = 1;
+        this.updatedAt = Instant.now();
+    }
+
+    public void escalateToLevel2() {
+        this.escalationLevel = 2;
+        this.priority = Priority.CRITICAL;
+        this.updatedAt = Instant.now();
+    }
+
+    public void autoClose() {
+        this.status = ComplaintStatus.CLOSED;
+        this.citizenFeedback = "Automatically closed following 72h resolution window expiration without citizen contest.";
         this.updatedAt = Instant.now();
     }
     
@@ -137,10 +162,25 @@ public class Complaint {
     }
 
     public void completeWork(String notes, String evidenceUrl) {
-        this.status = ComplaintStatus.WORK_COMPLETED;
+        completeWork(notes, evidenceUrl, null, null);
+    }
+
+    public void completeWork(String notes, String evidenceUrl, Double resLat, Double resLng) {
+        this.status = ComplaintStatus.VERIFICATION_PENDING;
         this.resolutionNotes = notes;
         this.resolutionEvidenceUrl = evidenceUrl;
+        this.resolutionLatitude = resLat;
+        this.resolutionLongitude = resLng;
+        this.distanceDeviationMeters = calculateDistanceMeters(this.latitude, this.longitude, resLat, resLng);
         this.workCompletedAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+
+    public void requestRework(String reason, Instant newSlaDeadline) {
+        this.status = ComplaintStatus.REWORK_REQUIRED;
+        this.reworkReason = reason;
+        this.reworkCount++;
+        this.slaDeadline = newSlaDeadline;
         this.updatedAt = Instant.now();
     }
 
@@ -150,6 +190,27 @@ public class Complaint {
             this.resolutionNotes = (this.resolutionNotes != null ? this.resolutionNotes + " | Verification: " : "") + notes;
         }
         this.resolvedAt = Instant.now();
+        this.autoCloseAt = Instant.now().plus(java.time.Duration.ofHours(72));
+        this.updatedAt = Instant.now();
+    }
+
+    public void confirmResolution(int rating, String feedback) {
+        this.status = ComplaintStatus.CLOSED;
+        this.citizenRating = rating;
+        this.citizenFeedback = feedback;
+        this.updatedAt = Instant.now();
+    }
+
+    public void reopenByCitizen(String reason, String reopenEvidenceUrl) {
+        this.status = ComplaintStatus.REOPENED;
+        this.citizenFeedback = reason;
+        if (reopenEvidenceUrl != null && !reopenEvidenceUrl.isBlank()) {
+            this.resolutionEvidenceUrl = reopenEvidenceUrl;
+        }
+        this.reworkReason = "Citizen contested: " + reason;
+        this.reworkCount++;
+        this.priority = Priority.HIGH;
+        this.slaDeadline = Instant.now().plus(java.time.Duration.ofHours(24));
         this.updatedAt = Instant.now();
     }
     
@@ -157,12 +218,27 @@ public class Complaint {
         this.status = newStatus;
         if (newStatus == ComplaintStatus.IN_PROGRESS && this.workStartedAt == null) {
             this.workStartedAt = Instant.now();
-        } else if (newStatus == ComplaintStatus.WORK_COMPLETED && this.workCompletedAt == null) {
+        } else if ((newStatus == ComplaintStatus.WORK_COMPLETED || newStatus == ComplaintStatus.VERIFICATION_PENDING) && this.workCompletedAt == null) {
             this.workCompletedAt = Instant.now();
-        } else if ((newStatus == ComplaintStatus.RESOLVED || newStatus == ComplaintStatus.CLOSED) && this.resolvedAt == null) {
+        } else if (newStatus == ComplaintStatus.RESOLVED) {
+            if (this.resolvedAt == null) this.resolvedAt = Instant.now();
+            if (this.autoCloseAt == null) this.autoCloseAt = Instant.now().plus(java.time.Duration.ofHours(72));
+        } else if (newStatus == ComplaintStatus.CLOSED && this.resolvedAt == null) {
             this.resolvedAt = Instant.now();
         }
         this.updatedAt = Instant.now();
+    }
+
+    private Double calculateDistanceMeters(Double lat1, Double lon1, Double lat2, Double lon2) {
+        if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return null;
+        final int R = 6371000;
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return Math.round(R * c * 10.0) / 10.0;
     }
 
     public void setComplaintNumber(String complaintNumber) {
@@ -202,6 +278,14 @@ public class Complaint {
     public boolean isSlaBreached() { return slaBreached; }
     public boolean isSlaWarningSent() { return slaWarningSent; }
     public int getEscalationLevel() { return escalationLevel; }
+    public String getReworkReason() { return reworkReason; }
+    public int getReworkCount() { return reworkCount; }
+    public Integer getCitizenRating() { return citizenRating; }
+    public String getCitizenFeedback() { return citizenFeedback; }
+    public Double getResolutionLatitude() { return resolutionLatitude; }
+    public Double getResolutionLongitude() { return resolutionLongitude; }
+    public Double getDistanceDeviationMeters() { return distanceDeviationMeters; }
+    public Instant getAutoCloseAt() { return autoCloseAt; }
 
     // Setters for mappers
     public void setId(UUID id) { this.id = id; }
@@ -224,6 +308,14 @@ public class Complaint {
     public void setLocationAddress(String locationAddress) { this.locationAddress = locationAddress; }
     public void setResolutionNotes(String resolutionNotes) { this.resolutionNotes = resolutionNotes; }
     public void setResolutionEvidenceUrl(String resolutionEvidenceUrl) { this.resolutionEvidenceUrl = resolutionEvidenceUrl; }
+    public void setReworkReason(String reworkReason) { this.reworkReason = reworkReason; }
+    public void setReworkCount(int reworkCount) { this.reworkCount = reworkCount; }
+    public void setCitizenRating(Integer citizenRating) { this.citizenRating = citizenRating; }
+    public void setCitizenFeedback(String citizenFeedback) { this.citizenFeedback = citizenFeedback; }
+    public void setResolutionLatitude(Double resolutionLatitude) { this.resolutionLatitude = resolutionLatitude; }
+    public void setResolutionLongitude(Double resolutionLongitude) { this.resolutionLongitude = resolutionLongitude; }
+    public void setDistanceDeviationMeters(Double distanceDeviationMeters) { this.distanceDeviationMeters = distanceDeviationMeters; }
+    public void setAutoCloseAt(Instant autoCloseAt) { this.autoCloseAt = autoCloseAt; }
     public void setWorkStartedAt(Instant workStartedAt) { this.workStartedAt = workStartedAt; }
     public void setWorkCompletedAt(Instant workCompletedAt) { this.workCompletedAt = workCompletedAt; }
     public void setResolvedAt(Instant resolvedAt) { this.resolvedAt = resolvedAt; }
@@ -234,4 +326,41 @@ public class Complaint {
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     public void setDeleted(boolean deleted) { isDeleted = deleted; }
+
+    public String getExternalSystem() { return externalSystem; }
+    public void setExternalSystem(String externalSystem) { this.externalSystem = externalSystem; }
+
+    public String getExternalTicketId() { return externalTicketId; }
+    public void setExternalTicketId(String externalTicketId) { this.externalTicketId = externalTicketId; }
+
+    public String getIntegrationStatus() { return integrationStatus; }
+    public void setIntegrationStatus(String integrationStatus) { this.integrationStatus = integrationStatus; }
+
+    public Instant getExternalSyncedAt() { return externalSyncedAt; }
+    public void setExternalSyncedAt(Instant externalSyncedAt) { this.externalSyncedAt = externalSyncedAt; }
+
+    public String getLastExternalStatus() { return lastExternalStatus; }
+    public void setLastExternalStatus(String lastExternalStatus) { this.lastExternalStatus = lastExternalStatus; }
+
+    public void markExternalSyncSuccess(String externalSystem, String externalTicketId, String externalStatus) {
+        this.externalSystem = externalSystem;
+        this.externalTicketId = externalTicketId;
+        this.integrationStatus = "SYNCED";
+        this.externalSyncedAt = Instant.now();
+        this.lastExternalStatus = externalStatus;
+        this.updatedAt = Instant.now();
+    }
+
+    public void markExternalSyncFailed(String externalSystem, String error) {
+        this.externalSystem = externalSystem;
+        this.integrationStatus = "FAILED";
+        this.lastExternalStatus = "ERROR: " + error;
+        this.updatedAt = Instant.now();
+    }
+
+    public UUID getAssetId() { return assetId; }
+    public void setAssetId(UUID assetId) { this.assetId = assetId; }
+
+    public UUID getProjectId() { return projectId; }
+    public void setProjectId(UUID projectId) { this.projectId = projectId; }
 }

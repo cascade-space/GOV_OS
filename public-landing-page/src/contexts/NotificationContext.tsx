@@ -34,26 +34,21 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const fetchNotificationCounts = async () => {
         try {
             // Use API client with proper authentication headers
-            const data = await api.get('/admin/notifications');
+            const data: any = await api.get('/admin/notifications').catch(() => null);
             
-            if (data.success) {
+            if (data?.success && data?.data) {
                 setCounts(data.data);
-            } else {
-                // Fallback: fetch stats and calculate counts
-                const statsData = await api.get('/admin/stats');
-                if (statsData.success) {
-                    const stats = statsData.data;
-                    setCounts({
-                        newComplaints: stats.pending || 0,
-                        pendingComplaints: stats.pending || 0,
-                        slaBreached: stats.sla_breached || 0,
-                        highPriorityPending: 0,
-                        escalatedComplaints: stats.escalated || 0
-                    });
-                }
+            } else if (Array.isArray(data)) {
+                setCounts({
+                    newComplaints: data.filter((c: any) => c.status === 'NEW').length,
+                    pendingComplaints: data.filter((c: any) => ['NEW', 'ASSIGNED', 'IN_PROGRESS'].includes(c.status)).length,
+                    slaBreached: data.filter((c: any) => c.sla_breached || c.slaBreached).length,
+                    highPriorityPending: data.filter((c: any) => (c.priority === 'HIGH' || c.priority === 'CRITICAL') && c.status !== 'RESOLVED').length,
+                    escalatedComplaints: data.filter((c: any) => (c.escalation_level || 0) > 0).length,
+                });
             }
-        } catch (error) {
-            console.error('Error fetching notification counts:', error);
+        } catch {
+            // Non-critical background metric
         } finally {
             setLoading(false);
         }

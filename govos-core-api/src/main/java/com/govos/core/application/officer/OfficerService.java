@@ -10,8 +10,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.security.SecureRandom;
+import java.util.Base64;
+import com.govos.core.application.outbox.OutboxService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +25,8 @@ public class OfficerService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final OutboxService outboxService;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public List<User> listOfficers(UUID tenantId) {
@@ -32,6 +39,8 @@ public class OfficerService {
 
         Set<Role> roles = new HashSet<>();
         roles.add(officerRole);
+        
+        String tempPassword = generateRandomPassword();
 
         User officer = User.builder()
                 .tenantId(tenantId)
@@ -43,10 +52,50 @@ public class OfficerService {
                 .departmentId(dto.getDepartmentId())
                 .wardId(dto.getWardId())
                 .roles(roles)
+                .passwordHash(passwordEncoder.encode(tempPassword))
                 .active(true)
                 .build();
 
-        return userRepository.save(officer);
+        User saved = userRepository.save(officer);
+        
+        sendWelcomeEmail(saved, tempPassword);
+        return saved;
+    }
+    
+    public void resendCredentials(UUID tenantId, UUID officerId) {
+        User officer = userRepository.findByIdAndTenantId(officerId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Officer not found"));
+        // Resend welcome email (without password since we don't know it, or maybe just tell them to reset)
+        // But the requirement says "resend credentials". We can regenerate and send.
+        regeneratePassword(tenantId, officerId);
+    }
+    
+    public void regeneratePassword(UUID tenantId, UUID officerId) {
+        User officer = userRepository.findByIdAndTenantId(officerId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Officer not found"));
+        
+        String newPassword = generateRandomPassword();
+        officer.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(officer);
+        
+        sendWelcomeEmail(officer, newPassword);
+    }
+    
+    private void sendWelcomeEmail(User officer, String password) {
+        if (officer.getEmail() != null && !officer.getEmail().isEmpty()) {
+            Map<String, String> payload = Map.of(
+                "to", officer.getEmail(),
+                "subject", "Welcome to GovOS - Officer Account Created",
+                "body", "Hello " + officer.getFullName() + ",\n\nYour account has been created.\nLogin Email: " + officer.getEmail() + "\nTemporary Password: " + password + "\n\nPlease change your password after logging in."
+            );
+            outboxService.recordEvent(officer.getTenantId(), "email:sent", "EMAIL", officer.getId(), payload);
+        }
+    }
+    
+    private String generateRandomPassword() {
+        byte[] randomBytes = new byte[12];
+        new SecureRandom().nextBytes(randomBytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes) + "!";
     }
     public User updateOfficer(UUID tenantId, UUID officerId, User dto) {
         User officer = userRepository.findByIdAndTenantId(officerId, tenantId)

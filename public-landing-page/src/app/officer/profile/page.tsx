@@ -1,26 +1,76 @@
 "use client";
+import { useEffect, useState } from "react";
 import { OfficerLayout } from "@/components/layout/OfficerLayout";
-import { MOCK_OFFICERS } from "@/lib/mockData";
 import { Button } from "@/components/ui/Button";
 import { User, Mail, Phone, Building2, Shield, Settings, Award, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 export default function OfficerProfilePage() {
-    const officer = MOCK_OFFICERS[0]; // Demo
+    const [officer, setOfficer] = useState<{
+        name: string;
+        email: string;
+        mobile?: string;
+        department: string;
+        role: string;
+        performanceScore: number;
+    }>({
+        name: "Field Officer",
+        email: "officer@hdmc.gov.in",
+        mobile: "9876543210",
+        department: "Municipal Public Works",
+        role: "OFFICER",
+        performanceScore: 94
+    });
+
     const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        const storedAuth = localStorage.getItem('govos_auth');
+        if (storedAuth) {
+            try {
+                const a = JSON.parse(storedAuth);
+                if (a.name || a.email) {
+                    setOfficer(prev => ({
+                        ...prev,
+                        name: a.name || prev.name,
+                        email: a.email || prev.email,
+                        mobile: a.phone || prev.mobile,
+                        role: a.role || prev.role
+                    }));
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        const stored = localStorage.getItem('officer_session');
+        if (stored) {
+            try {
+                const s = JSON.parse(stored);
+                if (s.officer) {
+                    setOfficer(prev => ({
+                        ...prev,
+                        name: s.officer.name || prev.name,
+                        email: s.officer.email || prev.email,
+                        department: s.officer.department || prev.department,
+                        role: s.officer.role || prev.role
+                    }));
+                }
+            } catch (e) {
+                console.warn("Could not parse officer_session:", e);
+            }
+        }
+    }, []);
 
     const handleUpdate = async () => {
         setSaving(true);
-        await new Promise(r => setTimeout(r, 800));
+        await new Promise(r => setTimeout(r, 600));
         setSaving(false);
-        toast.success("Profile updated successfully");
+        toast.success("Profile preferences updated successfully");
     };
 
     return (
         <OfficerLayout>
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6 animate-fade-in pb-8">
                 <div>
                     <h1 className="text-xl font-black text-gray-900">My Profile</h1>
                     <p className="text-gray-500 text-sm">Manage your details and view achievements</p>
@@ -52,7 +102,7 @@ export default function OfficerProfilePage() {
                             <div className="space-y-3">
                                 {[
                                     { label: "SLA Champion", icon: <Award className="w-4 h-4 text-yellow-500" />, sub: "98% compliance rate" },
-                                    { label: "Rapid Responder", icon: <Award className="w-4 h-4 text-blue-500" />, sub: "Solved 10 tasks in a week" },
+                                    { label: "Rapid Responder", icon: <Award className="w-4 h-4 text-blue-500" />, sub: "Fastest turnaround" },
                                     { label: "Citizen Favorite", icon: <Award className="w-4 h-4 text-civic-green" />, sub: "High satisfaction score" },
                                 ].map(badge => (
                                     <div key={badge.label} className="flex items-center gap-3 p-2 bg-gray-50 rounded-xl">
@@ -143,7 +193,7 @@ export default function OfficerProfilePage() {
                         </div>
                     </div>
                 </div>
-                </div>
-            </OfficerLayout>
+            </div>
+        </OfficerLayout>
     );
 }

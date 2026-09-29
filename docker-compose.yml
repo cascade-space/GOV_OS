@@ -74,6 +74,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      - ./govos-core-api/src:/app/src
 
   realtime:
     build:

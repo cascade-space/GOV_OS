@@ -50,4 +50,22 @@ public class OfficerController {
         officerService.deleteOfficer(tenantId, id);
         return ResponseEntity.noContent().build();
     }
+    
+    @PostMapping("/{id}/resend-credentials")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN')")
+    public ResponseEntity<Void> resendCredentials(@PathVariable UUID id, Authentication auth) {
+        var details = (JwtAuthFilter.GovOsUserDetails) auth.getDetails();
+        UUID tenantId = details.tenantId();
+        officerService.resendCredentials(tenantId, id);
+        return ResponseEntity.ok().build();
+    }
+    
+    @PostMapping("/{id}/regenerate-password")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN')")
+    public ResponseEntity<Void> regeneratePassword(@PathVariable UUID id, Authentication auth) {
+        var details = (JwtAuthFilter.GovOsUserDetails) auth.getDetails();
+        UUID tenantId = details.tenantId();
+        officerService.regeneratePassword(tenantId, id);
+        return ResponseEntity.ok().build();
+    }
 }

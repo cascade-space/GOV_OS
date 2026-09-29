@@ -1,13 +1,12 @@
 // Dynamic route page for MLA issue details
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, use } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { MLALayout } from "@/components/layout/MLALayout";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
 import { ComplaintStepper } from "@/components/ui/Stepper";
-import { MOCK_COMPLAINTS } from "@/lib/mockData";
 import { complaintService } from "@/lib/services/complaint.service";
 import { formatDateTime, getSLAStatus, cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
@@ -19,34 +18,69 @@ import {
 
 const CivicMapbox = dynamic(() => import("@/components/ui/CivicMapbox"), { ssr: false });
 
-export default function MLAIssueDetailPage({ params }: { params: { id: string } }) {
+export default function MLAIssueDetailPage({ params }: { params?: Promise<{ id: string }> | { id: string } }) {
     const router = useRouter();
-    const [issue, setIssue] = useState(MOCK_COMPLAINTS.find(c => c.id === params.id));
-    const [loading, setLoading] = useState(false);
+    const routeParams = useParams();
+    const resolvedParams = params ? (typeof (params as any).then === "function" ? use(params as Promise<{ id: string }>) : params) : null;
+    const rawId = (routeParams?.id as string) || (resolvedParams && typeof resolvedParams.id === 'string' ? resolvedParams.id : '');
+    const issueId = typeof rawId === 'string' ? rawId.trim() : '';
+
+    const [issue, setIssue] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
     const [showDirectiveModal, setShowDirectiveModal] = useState(false);
     const [directiveContent, setDirectiveContent] = useState("");
 
     useEffect(() => {
-        complaintService.getComplaintById(params.id)
-            .then((data: any) => setIssue(data))
-            .catch(() => {
-                const mock = MOCK_COMPLAINTS.find(c => c.id === params.id);
-                if (mock) setIssue(mock);
-            });
-    }, [params.id]);
+        if (!issueId) {
+            setLoading(false);
+            return;
+        }
+
+        let isCancelled = false;
+        const fetchIssue = async () => {
+            try {
+                setLoading(true);
+                let data: any;
+                if (issueId.toUpperCase().startsWith("CMP-")) {
+                    data = await complaintService.getComplaintByNumber(issueId);
+                } else {
+                    data = await complaintService.getComplaintById(issueId);
+                }
+                if (!isCancelled) setIssue(data);
+            } catch (err) {
+                console.error("Failed to load MLA issue:", err);
+                if (!isCancelled) setIssue(null);
+            } finally {
+                if (!isCancelled) setLoading(false);
+            }
+        };
+
+        fetchIssue();
+        return () => { isCancelled = true; };
+    }, [issueId]);
+
+    if (loading) {
+        return (
+            <MLALayout>
+                <div className="flex items-center justify-center py-32">
+                    <div className="w-8 h-8 border-4 border-civic-blue border-t-transparent rounded-full animate-spin" />
+                </div>
+            </MLALayout>
+        );
+    }
 
     if (!issue) {
         return (
             <MLALayout>
                 <div className="text-center py-20">
-                    <p className="text-gray-500">Issue not found</p>
+                    <p className="text-gray-500 font-medium">Issue not found in database</p>
                     <Button onClick={() => router.back()} className="mt-4">Go Back</Button>
                 </div>
             </MLALayout>
         );
     }
 
-    const sla = getSLAStatus(issue.slaDeadline);
+    const sla = getSLAStatus(issue.slaDeadline || issue.sla_deadline);
 
     const handleSendDirective = async () => {
         if (!directiveContent.trim()) {
@@ -56,13 +90,13 @@ export default function MLAIssueDetailPage({ params }: { params: { id: string } 
 
         setLoading(true);
         try {
-            // In real app, would call API to send directive
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            toast.success("Directive sent to department");
+            await complaintService.escalateComplaint(issue.id, `MLA Directive: ${directiveContent.trim()}`);
+            setIssue({ ...issue, isEscalated: true });
+            toast.success("Directive registered and dispatched to HDMC department!");
             setShowDirectiveModal(false);
             setDirectiveContent("");
-        } catch (error) {
-            toast.error("Failed to send directive");
+        } catch (error: any) {
+            toast.error("Failed to send directive: " + (error?.message || "Server error"));
         } finally {
             setLoading(false);
         }
@@ -71,12 +105,11 @@ export default function MLAIssueDetailPage({ params }: { params: { id: string } 
     const handleEscalate = async () => {
         setLoading(true);
         try {
-            await complaintService.escalateComplaint(issue.id, "Escalated by MLA for priority attention");
+            await complaintService.escalateComplaint(issue.id, "Escalated by MLA for immediate executive attention");
             setIssue({ ...issue, isEscalated: true });
-            toast.success("Issue escalated successfully");
-        } catch (error) {
-            setIssue({ ...issue, isEscalated: true });
-            toast.success("Issue escalated successfully");
+            toast.success("Issue escalated successfully to Municipal Commissioner!");
+        } catch (error: any) {
+            toast.error("Failed to escalate issue: " + (error?.message || "Server error"));
         } finally {
             setLoading(false);
         }

@@ -1,135 +1,126 @@
-"use client";
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+﻿"use client";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { useAppStore, AuthUser, UserRole } from '@/lib/store';
 
-type AdminRole = 'admin' | 'mla' | null;
+/**
+ * Auth Context -- uses JWT 'rid' claim as single source of truth for role.
+ * Replaces the old 'admin'/'mla' string system. Role values now match backend
+ * Spring Security authority codes: SUPER_ADMIN, TENANT_ADMIN, OFFICER, REP, CITIZEN.
+ *
+ * localStorage key: 'govos_auth' (unified -- eliminates the old civicpath_user / civic_user split)
+ */
 
-interface User {
-    email: string;
-    role: AdminRole;
-    loginTime: string;
-}
-
-interface AdminRoleContextType {
-    user: User | null;
-    role: AdminRole;
-    isAdmin: boolean;
-    isMLA: boolean;
-    canAccessAdmin: boolean;
-    canAccessMLA: boolean;
-    hasAdminAccess: boolean;
-    checkRole: () => Promise<void>;
-    login: (email: string, role: AdminRole) => void;
+interface AuthContextType {
+    user: AuthUser | null;
+    role: UserRole | null;
+    // Role predicates
+    isSuperAdmin: boolean;
+    isTenantAdmin: boolean;
+    isOfficer: boolean;
+    isRep: boolean;
+    isCitizen: boolean;
+    // Legacy aliases for existing components (will be cleaned up gradually)
+    isAdmin: boolean;    // = isTenantAdmin || isSuperAdmin
+    isMLA: boolean;      // = isRep
+    canAccessAdmin: boolean;   // SUPER_ADMIN or TENANT_ADMIN
+    canAccessMLA: boolean;     // SUPER_ADMIN, TENANT_ADMIN, or REP
+    canAccessOfficer: boolean; // SUPER_ADMIN, TENANT_ADMIN, or OFFICER
+    hasAdminAccess: boolean;   // any authenticated user
+    // Actions
+    login: (authUser: AuthUser) => void;
     logout: () => void;
+    checkRole: () => void;
     loading: boolean;
     error: string | null;
 }
 
-const AdminRoleContext = createContext<AdminRoleContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AdminRoleProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
-    const [role, setRole] = useState<AdminRole>(null);
+    const { user, setUser, clearAuth } = useAppStore();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const login = (email: string, userRole: AdminRole) => {
-        const userData: User = {
-            email,
-            role: userRole,
-            loginTime: new Date().toISOString()
-        };
-        
-        setUser(userData);
-        setRole(userRole);
-        setLoading(false); // Ensure loading is false after login
-        localStorage.setItem('civicpath_user', JSON.stringify(userData));
-        console.log('✅ User logged in:', userData);
-    };
+    const login = useCallback((authUser: AuthUser) => {
+        setUser(authUser);
+        setLoading(false);
+    }, [setUser]);
 
-    const logout = () => {
-        setUser(null);
-        setRole(null);
-        localStorage.removeItem('civicpath_user');
-        console.log('✅ User logged out');
-    };
+    const logout = useCallback(() => {
+        clearAuth();
+    }, [clearAuth]);
 
-    const checkRole = async () => {
+    const checkRole = useCallback(() => {
+        setLoading(true);
+        setError(null);
         try {
-            setLoading(true);
-            setError(null);
-            
-            // First check localStorage for existing session
-            const storedUser = localStorage.getItem('civicpath_user');
-            if (storedUser) {
-                try {
-                    const userData: User = JSON.parse(storedUser);
-                    // Check if session is still valid (less than 24 hours old)
-                    const loginTime = new Date(userData.loginTime);
-                    const now = new Date();
-                    const hoursDiff = (now.getTime() - loginTime.getTime()) / (1000 * 60 * 60);
-                    
-                    if (hoursDiff < 24) {
-                        setUser(userData);
-                        setRole(userData.role);
-                        console.log('✅ Session restored from localStorage:', userData);
-                        return;
-                    } else {
-                        // Session expired
-                        localStorage.removeItem('civicpath_user');
-                        console.log('⚠️ Session expired, cleared localStorage');
-                    }
-                } catch (parseError) {
-                    console.error('Error parsing stored user data:', parseError);
-                    localStorage.removeItem('civicpath_user');
+            const stored = typeof window !== 'undefined' ? localStorage.getItem('govos_auth') : null;
+            if (stored) {
+                const parsed: AuthUser = JSON.parse(stored);
+                // Validate token expiry
+                if (Date.now() < parsed.expiresAt) {
+                    setUser(parsed);
+                } else {
+                    clearAuth();
+                }
+            } else {
+                // Check legacy key and migrate if present
+                const legacy = localStorage.getItem('civicpath_user');
+                if (legacy) {
+                    console.warn('[GovOS] Legacy civicpath_user session found -- clearing. Please log in again.');
+                    clearAuth();
                 }
             }
-
-            // If no valid session in localStorage, user is not authenticated
-            // Don't make API calls with test emails - this was causing the auto-login issue
-            setUser(null);
-            setRole(null);
-            console.log('ℹ️ No valid session found, user not authenticated');
-            
-        } catch (error) {
-            console.error('Role check failed:', error);
-            setUser(null);
-            setRole(null);
-            setError(error instanceof Error ? error.message : 'Network error');
+        } catch {
+            setError('Failed to restore session');
+            clearAuth();
         } finally {
             setLoading(false);
         }
-    };
+    }, [setUser, clearAuth]);
 
     useEffect(() => {
         checkRole();
-    }, []);
+    }, [checkRole]);
 
-    const value: AdminRoleContextType = {
+    const role = user?.role ?? null;
+
+    const value: AuthContextType = {
         user,
         role,
-        isAdmin: role === 'admin',
-        isMLA: role === 'mla',
-        canAccessAdmin: role === 'admin',
-        canAccessMLA: role === 'admin' || role === 'mla',
+        isSuperAdmin: role === 'SUPER_ADMIN',
+        isTenantAdmin: role === 'TENANT_ADMIN',
+        isOfficer: role === 'OFFICER',
+        isRep: role === 'REP',
+        isCitizen: role === 'CITIZEN',
+        // Legacy aliases
+        isAdmin: role === 'TENANT_ADMIN' || role === 'SUPER_ADMIN',
+        isMLA: role === 'REP',
+        canAccessAdmin: role === 'SUPER_ADMIN' || role === 'TENANT_ADMIN',
+        canAccessMLA: role === 'SUPER_ADMIN' || role === 'TENANT_ADMIN' || role === 'REP',
+        canAccessOfficer: role === 'SUPER_ADMIN' || role === 'TENANT_ADMIN' || role === 'OFFICER',
         hasAdminAccess: role !== null,
-        checkRole,
         login,
         logout,
+        checkRole,
         loading,
-        error
+        error,
     };
 
     return (
-        <AdminRoleContext.Provider value={value}>
+        <AuthContext.Provider value={value}>
             {children}
-        </AdminRoleContext.Provider>
+        </AuthContext.Provider>
     );
 }
 
 export function useAdminRole() {
-    const context = useContext(AdminRoleContext);
+    const context = useContext(AuthContext);
     if (context === undefined) {
         throw new Error('useAdminRole must be used within AdminRoleProvider');
     }
     return context;
 }
+
+// Named export for new code to use
+export { useAdminRole as useAuth };

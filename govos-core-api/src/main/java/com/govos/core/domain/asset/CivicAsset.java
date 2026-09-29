@@ -40,4 +40,22 @@ public class CivicAsset extends BaseEntity {
 
     @Column(name = "next_maintenance_date")
     private LocalDate nextMaintenanceDate;
+
+    @Column(name = "ward_id")
+    private java.util.UUID wardId;
+
+    @Column(name = "department_id")
+    private java.util.UUID departmentId;
+
+    @Column(name = "installation_date")
+    private LocalDate installationDate;
+
+    @Column(name = "manufacturer", length = 100)
+    private String manufacturer;
+
+    @Column(name = "cost")
+    private Double cost;
+
+    @jakarta.persistence.Transient
+    private Long activeComplaintsCount;
 }

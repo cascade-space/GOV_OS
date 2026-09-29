@@ -1,5 +1,6 @@
 package com.govos.core.presentation.complaint;
 
+import com.govos.core.application.admin.AuditService;
 import com.govos.core.application.complaint.ComplaintService;
 import com.govos.core.domain.complaint.Complaint;
 import com.govos.core.domain.complaint.ComplaintStatus;
@@ -20,6 +21,7 @@ import java.util.UUID;
 public class ComplaintController {
 
     private final ComplaintService complaintService;
+    private final AuditService auditService;
 
     @PostMapping
     public ResponseEntity<Complaint> createComplaint(
@@ -46,12 +48,45 @@ public class ComplaintController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Complaint>> listComplaints(Authentication auth) {
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN', 'ROLE_OFFICER', 'ROLE_REP')")
+    public ResponseEntity<List<Complaint>> listComplaints(
+            @RequestParam(required = false) UUID wardId,
+            Authentication auth
+    ) {
         var details = (JwtAuthFilter.GovOsUserDetails) auth.getDetails();
         UUID tenantId = details.tenantId();
-        
-        List<Complaint> complaints = complaintService.listByTenant(tenantId);
+
+        List<Complaint> complaints;
+        if (wardId != null) {
+            complaints = complaintService.listByWard(tenantId, wardId);
+        } else {
+            complaints = complaintService.listByTenant(tenantId);
+        }
         return ResponseEntity.ok(complaints);
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN', 'ROLE_OFFICER', 'ROLE_REP', 'ROLE_CITIZEN')")
+    public ResponseEntity<Complaint> getComplaintById(
+            @PathVariable String id,
+            Authentication auth
+    ) {
+        Complaint complaint = null;
+        if (id.toUpperCase().startsWith("CMP-")) {
+            complaint = complaintService.findByComplaintNumber(id).orElse(null);
+        } else {
+            try {
+                UUID uuid = UUID.fromString(id);
+                complaint = complaintService.findById(uuid).orElse(null);
+            } catch (IllegalArgumentException ignored) {
+                complaint = complaintService.findByComplaintNumber(id).orElse(null);
+            }
+        }
+
+        if (complaint == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(complaint);
     }
 
     @PutMapping("/{id}/status")
@@ -96,7 +131,26 @@ public class ComplaintController {
             Authentication auth
     ) {
         UUID officerId = UUID.fromString(auth.getPrincipal().toString());
-        Complaint updated = complaintService.completeWork(id, officerId, request.resolutionNotes(), request.resolutionEvidenceUrl());
+        Complaint updated = complaintService.completeWork(
+                id,
+                officerId,
+                request.resolutionNotes(),
+                request.resolutionEvidenceUrl(),
+                request.resolutionLatitude(),
+                request.resolutionLongitude()
+        );
+        return ResponseEntity.ok(updated);
+    }
+
+    @PatchMapping("/{id}/request-rework")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN')")
+    public ResponseEntity<Complaint> requestRework(
+            @PathVariable UUID id,
+            @Valid @RequestBody ComplaintDtos.RequestReworkRequest request,
+            Authentication auth
+    ) {
+        UUID verifierId = UUID.fromString(auth.getPrincipal().toString());
+        Complaint updated = complaintService.requestRework(id, verifierId, request.reworkReason());
         return ResponseEntity.ok(updated);
     }
 
@@ -121,6 +175,45 @@ public class ComplaintController {
         UUID officerId = UUID.fromString(auth.getPrincipal().toString());
 
         List<Complaint> complaints = complaintService.listAssignedToOfficer(tenantId, officerId);
+        return ResponseEntity.ok(complaints);
+    }
+    
+    @GetMapping("/my")
+    @PreAuthorize("hasAnyAuthority('ROLE_CITIZEN', 'ROLE_TENANT_ADMIN', 'ROLE_SUPER_ADMIN')")
+    public ResponseEntity<List<Complaint>> listMyComplaints(Authentication auth) {
+        var details = (JwtAuthFilter.GovOsUserDetails) auth.getDetails();
+        UUID citizenId = UUID.fromString(auth.getPrincipal().toString());
+
+        List<Complaint> complaints = complaintService.listByReporterId(citizenId);
+        return ResponseEntity.ok(complaints);
+    }
+
+    /**
+     * Returns the full audit timeline for a complaint by its UUID or complaint number.
+     * Used by officers and admins to view the complete history, including pre-rework events.
+     */
+    @GetMapping("/{id}/timeline")
+    @PreAuthorize("hasAnyAuthority('ROLE_OFFICER', 'ROLE_TENANT_ADMIN', 'ROLE_SUPER_ADMIN', 'ROLE_REP')")
+    public ResponseEntity<List<AuditService.TimelineEventDto>> getComplaintTimeline(
+            @PathVariable String id
+    ) {
+        List<AuditService.TimelineEventDto> timeline = auditService.getTimelineForResource(id);
+        return ResponseEntity.ok(timeline);
+    }
+
+    /**
+     * REP-only: list complaints for a specific constituency (read-only).
+     * MLA staff can use this to drive their constituency dashboard.
+     */
+    @GetMapping("/constituency/{constituency}")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN', 'ROLE_REP')")
+    public ResponseEntity<List<Complaint>> listByConstituency(
+            @PathVariable String constituency,
+            Authentication auth
+    ) {
+        var details = (JwtAuthFilter.GovOsUserDetails) auth.getDetails();
+        UUID tenantId = details.tenantId();
+        List<Complaint> complaints = complaintService.listByConstituency(tenantId, constituency);
         return ResponseEntity.ok(complaints);
     }
 }

@@ -23,10 +23,28 @@ public class ComplaintDtos {
 
     public record CompleteWorkRequest(
             @NotBlank String resolutionNotes,
-            String resolutionEvidenceUrl
+            String resolutionEvidenceUrl,
+            Double resolutionLatitude,
+            Double resolutionLongitude
     ) {}
 
     public record VerifyCloseRequest(
             String notes
+    ) {}
+
+    public record RequestReworkRequest(
+            @NotBlank String reworkReason
+    ) {}
+
+    public record ConfirmResolutionRequest(
+            String mobileNumber,
+            @NotNull Integer rating,
+            String feedback
+    ) {}
+
+    public record ReopenComplaintRequest(
+            String mobileNumber,
+            @NotBlank String reason,
+            @NotBlank String evidenceUrl
     ) {}
 }

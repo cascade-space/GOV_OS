@@ -41,23 +41,35 @@ public class CitizenController {
         return ResponseEntity.ok(citizens);
     }
 
+    /**
+     * Create a citizen account. OFFICER is intentionally excluded — only admins
+     * can create accounts for citizens to prevent unauthorized account provisioning.
+     */
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN', 'ROLE_OFFICER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN')")
     public ResponseEntity<User> createCitizen(@RequestBody User dto, Authentication auth) {
         var details = (JwtAuthFilter.GovOsUserDetails) auth.getDetails();
         UUID tenantId = details.tenantId();
         return ResponseEntity.ok(citizenService.createCitizen(tenantId, dto));
     }
+    /**
+     * Update a citizen profile. OFFICER excluded — only admins can modify citizen records.
+     */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN', 'ROLE_OFFICER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN')")
     public ResponseEntity<User> updateCitizen(@PathVariable UUID id, @RequestBody User dto, Authentication auth) {
         var details = (JwtAuthFilter.GovOsUserDetails) auth.getDetails();
         UUID tenantId = details.tenantId();
         return ResponseEntity.ok(citizenService.updateCitizen(tenantId, id, dto));
     }
 
+    /**
+     * SECURITY FIX: ROLE_OFFICER removed from DELETE.
+     * Previously any field officer could delete citizen accounts — this was a critical bug.
+     * Only TENANT_ADMIN and SUPER_ADMIN can deactivate (soft-delete) citizens.
+     */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN', 'ROLE_OFFICER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_TENANT_ADMIN')")
     public ResponseEntity<Void> deleteCitizen(@PathVariable UUID id, Authentication auth) {
         var details = (JwtAuthFilter.GovOsUserDetails) auth.getDetails();
         UUID tenantId = details.tenantId();

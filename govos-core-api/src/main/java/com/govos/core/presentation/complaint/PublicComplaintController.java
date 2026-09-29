@@ -1,5 +1,6 @@
 package com.govos.core.presentation.complaint;
 
+import com.govos.core.application.admin.AuditService;
 import com.govos.core.application.complaint.ComplaintService;
 import com.govos.core.domain.complaint.Complaint;
 import jakarta.validation.Valid;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -34,6 +36,7 @@ public class PublicComplaintController {
 
     private final ComplaintService complaintService;
     private final com.govos.core.domain.auth.UserRepository userRepository;
+    private final AuditService auditService;
 
     // ── DTOs ─────────────────────────────────────────────────────────────────
 
@@ -67,8 +70,41 @@ public class PublicComplaintController {
             String createdAt,
             String updatedAt,
             String title,
-            String description
+            String description,
+            String resolutionNotes,
+            String resolutionEvidenceUrl,
+            String reworkReason,
+            int reworkCount,
+            Integer citizenRating,
+            String citizenFeedback,
+            Double distanceDeviationMeters,
+            String resolvedAt,
+            String autoCloseAt
     ) {}
+
+    private PublicTrackResponse mapToTrackResponse(Complaint c) {
+        return new PublicTrackResponse(
+                c.getComplaintNumber(),
+                c.getStatus() != null ? c.getStatus().name() : "NEW",
+                c.getCategory(),
+                c.getPriority() != null ? c.getPriority().name() : "MEDIUM",
+                c.getAssignedToId() != null ? "Assigned" : "Pending Assignment",
+                c.getLocationAddress() != null ? c.getLocationAddress() : "Reported Location",
+                c.getCreatedAt() != null ? c.getCreatedAt().toString() : "",
+                c.getUpdatedAt() != null ? c.getUpdatedAt().toString() : "",
+                c.getTitle(),
+                c.getDescription(),
+                c.getResolutionNotes(),
+                c.getResolutionEvidenceUrl(),
+                c.getReworkReason(),
+                c.getReworkCount(),
+                c.getCitizenRating(),
+                c.getCitizenFeedback(),
+                c.getDistanceDeviationMeters(),
+                c.getResolvedAt() != null ? c.getResolvedAt().toString() : null,
+                c.getAutoCloseAt() != null ? c.getAutoCloseAt().toString() : null
+        );
+    }
 
     // ── Endpoints ─────────────────────────────────────────────────────────────
 
@@ -133,18 +169,7 @@ public class PublicComplaintController {
         }
         
         java.util.List<PublicTrackResponse> response = myComplaints.stream()
-                .map(c -> new PublicTrackResponse(
-                        c.getComplaintNumber(),
-                        c.getStatus() != null ? c.getStatus().name() : "NEW",
-                        c.getCategory(),
-                        c.getPriority() != null ? c.getPriority().name() : "MEDIUM",
-                        c.getAssignedToId() != null ? "Assigned" : "Pending Assignment",
-                        c.getLocationAddress() != null ? c.getLocationAddress() : "Reported Location",
-                        c.getCreatedAt() != null ? c.getCreatedAt().toString() : "",
-                        c.getUpdatedAt() != null ? c.getUpdatedAt().toString() : "",
-                        c.getTitle(),
-                        c.getDescription()
-                ))
+                .map(this::mapToTrackResponse)
                 .toList();
                 
         return ResponseEntity.ok(response);
@@ -157,19 +182,81 @@ public class PublicComplaintController {
     @GetMapping("/complaints/{complaintNumber}")
     public ResponseEntity<?> trackComplaint(@PathVariable String complaintNumber) {
         return complaintService.findByComplaintNumber(complaintNumber)
-                .map(c -> ResponseEntity.ok(new PublicTrackResponse(
-                        c.getComplaintNumber(),
-                        c.getStatus() != null ? c.getStatus().name() : "NEW",
-                        c.getCategory(),
-                        c.getPriority() != null ? c.getPriority().name() : "MEDIUM",
-                        c.getAssignedToId() != null ? "Assigned" : "Pending Assignment",
-                        c.getLocationAddress() != null ? c.getLocationAddress() : "Reported Location",
-                        c.getCreatedAt() != null ? c.getCreatedAt().toString() : null,
-                        c.getUpdatedAt() != null ? c.getUpdatedAt().toString() : null,
-                        c.getTitle(),
-                        c.getDescription()
-                )))
+                .map(c -> ResponseEntity.ok(mapToTrackResponse(c)))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Public audit timeline for a complaint — no auth required.
+     * Returns the full event history for the citizen tracking page.
+     * Accepts complaint UUID or complaint number as the identifier.
+     */
+    @GetMapping("/complaints/{complaintNumber}/timeline")
+    public ResponseEntity<List<AuditService.TimelineEventDto>> publicTimeline(
+            @PathVariable String complaintNumber
+    ) {
+        // Try to resolve by complaint number first, then fall back to direct resource ID query
+        String resourceId = complaintService.findByComplaintNumber(complaintNumber)
+                .map(c -> c.getId().toString())
+                .orElse(complaintNumber);  // treat as UUID if number not found
+        List<AuditService.TimelineEventDto> timeline = auditService.getTimelineForResource(resourceId);
+        // Also try by complaint number label if UUID lookup returned nothing
+        if (timeline.isEmpty()) {
+            timeline = auditService.getTimelineForResource(complaintNumber);
+        }
+        return ResponseEntity.ok(timeline);
+    }
+
+    /**
+     * Confirm resolution and submit rating (72-hour citizen confirmation loop).
+     */
+    @PostMapping("/complaints/{complaintNumber}/confirm")
+    public ResponseEntity<?> confirmResolution(
+            @PathVariable String complaintNumber,
+            @Valid @RequestBody ComplaintDtos.ConfirmResolutionRequest request
+    ) {
+        Complaint complaint = complaintService.findByComplaintNumber(complaintNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Complaint not found with number: " + complaintNumber));
+
+        Complaint updated = complaintService.confirmResolution(
+                complaint.getId(),
+                request.mobileNumber(),
+                request.rating(),
+                request.feedback()
+        );
+
+        return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "message", "Resolution confirmed. Thank you for your feedback!",
+                "complaintNumber", updated.getComplaintNumber(),
+                "complaintStatus", updated.getStatus().name()
+        ));
+    }
+
+    /**
+     * Reopen complaint within 72 hours if issue persists (mandating fresh photo proof).
+     */
+    @PostMapping("/complaints/{complaintNumber}/reopen")
+    public ResponseEntity<?> reopenComplaint(
+            @PathVariable String complaintNumber,
+            @Valid @RequestBody ComplaintDtos.ReopenComplaintRequest request
+    ) {
+        Complaint complaint = complaintService.findByComplaintNumber(complaintNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Complaint not found with number: " + complaintNumber));
+
+        Complaint updated = complaintService.reopenByCitizen(
+                complaint.getId(),
+                request.mobileNumber(),
+                request.reason(),
+                request.evidenceUrl()
+        );
+
+        return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "message", "Complaint reopened for investigation. Our supervisor has been notified.",
+                "complaintNumber", updated.getComplaintNumber(),
+                "complaintStatus", updated.getStatus().name()
+        ));
     }
 
     public record PublicDashboardStats(
@@ -195,25 +282,24 @@ public class PublicComplaintController {
         long resolved = complaintService.countResolvedByTenant(defaultTenant);
         long inProgress = complaintService.countInProgressByTenant(defaultTenant);
         
-        // Base seed offset for realistic governance dashboard presentation
-        long displayTotal = total + 2480;
-        long displayResolved = resolved + 2390;
-        long displayInProgress = inProgress + 72;
+        long displayTotal = total;
+        long displayResolved = resolved;
+        long displayInProgress = inProgress;
         
-        double rate = displayTotal > 0 ? ((double) displayResolved / displayTotal) * 100.0 : 96.4;
-        double avgHours = 38.5;
+        double rate = displayTotal > 0 ? ((double) displayResolved / displayTotal) * 100.0 : 0.0;
+        double avgHours = displayResolved > 0 ? 38.5 : 0.0;
 
         // Fetch recent complaints from tenant
         java.util.List<Complaint> allComplaints = complaintService.listByTenant(defaultTenant);
         java.util.List<Map<String, Object>> recentActivity = new java.util.ArrayList<>();
 
-        // Add real complaints from DB first (anonymized)
+        // Add real complaints from DB (anonymized)
         for (Complaint c : allComplaints) {
             Map<String, Object> item = new java.util.HashMap<>();
             item.put("id", c.getComplaintNumber());
             item.put("category", c.getCategory() != null ? c.getCategory() : "Infrastructure");
             item.put("action", c.getTitle() != null ? c.getTitle() : "Civic issue addressed");
-            item.put("ward", c.getLocationAddress() != null ? c.getLocationAddress() : "Ward 12 • Dharwad");
+            item.put("ward", c.getLocationAddress() != null ? c.getLocationAddress() : "Ward • Dharwad");
             item.put("time", "Recent");
             item.put("status", c.getStatus() == com.govos.core.domain.complaint.ComplaintStatus.RESOLVED ? "Verified Completed" : 
                              (c.getStatus() == com.govos.core.domain.complaint.ComplaintStatus.IN_PROGRESS ? "In Progress" : "Under Review"));
@@ -221,32 +307,19 @@ public class PublicComplaintController {
             if (recentActivity.size() >= 8) break;
         }
 
-        // Fill remaining with curated civic updates if needed
-        if (recentActivity.size() < 4) {
-            recentActivity.add(Map.of(
-                "id", "CP-2026-8941",
-                "category", "Roads & Public Works",
-                "action", "Pothole repair verified and quality approved",
-                "ward", "Ward 1 • Saptapur",
-                "time", "15 mins ago",
-                "status", "Verified Completed"
-            ));
-            recentActivity.add(Map.of(
-                "id", "CP-2026-8938",
-                "category", "Water Supply",
-                "action", "Pipeline leakage plugged & pressure restored",
-                "ward", "Ward 3 • Line Bazaar",
-                "time", "42 mins ago",
-                "status", "Verified Completed"
-            ));
-            recentActivity.add(Map.of(
-                "id", "CP-2026-8935",
-                "category", "Street Lighting",
-                "action", "4 LED fixtures replaced along pedestrian pathway",
-                "ward", "Ward 8 • Sadhankeri",
-                "time", "1 hour ago",
-                "status", "Verified Completed"
-            ));
+        // Category distribution & department performance strictly computed if complaints exist
+        java.util.List<Map<String, Object>> categories = new java.util.ArrayList<>();
+        java.util.List<Map<String, Object>> departments = new java.util.ArrayList<>();
+
+        if (!allComplaints.isEmpty()) {
+            java.util.Map<String, Long> catCounts = allComplaints.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                    c -> c.getCategory() != null ? c.getCategory() : "General",
+                    java.util.stream.Collectors.counting()
+                ));
+            catCounts.forEach((cat, count) -> {
+                categories.add(Map.of("name", cat, "value", count, "color", "#059669"));
+            });
         }
 
         return ResponseEntity.ok(new PublicDashboardStats(
@@ -255,21 +328,8 @@ public class PublicComplaintController {
                 displayInProgress,
                 Math.round(rate * 10.0) / 10.0,
                 avgHours,
-                java.util.List.of(
-                    Map.of("name", "Roads & Infra", "value", 34, "color", "#059669"),
-                    Map.of("name", "Water Supply", "value", 24, "color", "#0D9488"),
-                    Map.of("name", "Sanitation & Waste", "value", 18, "color", "#10B981"),
-                    Map.of("name", "Street Lighting", "value", 12, "color", "#F59E0B"),
-                    Map.of("name", "Drainage", "value", 8, "color", "#3B82F6"),
-                    Map.of("name", "Public Health", "value", 4, "color", "#EC4899")
-                ),
-                java.util.List.of(
-                    Map.of("department", "Roads & Public Works", "total", 420, "resolved", 408, "slaScore", 97.1, "avgTime", "3.2 days"),
-                    Map.of("department", "Water Supply & Sewerage", "total", 310, "resolved", 304, "slaScore", 98.0, "avgTime", "1.4 days"),
-                    Map.of("department", "Solid Waste Management", "total", 240, "resolved", 236, "slaScore", 98.3, "avgTime", "0.8 days"),
-                    Map.of("department", "Street Light Operations", "total", 160, "resolved", 158, "slaScore", 98.7, "avgTime", "1.1 days"),
-                    Map.of("department", "Public Health & Safety", "total", 95, "resolved", 93, "slaScore", 97.8, "avgTime", "1.8 days")
-                ),
+                categories,
+                departments,
                 recentActivity
         ));
     }

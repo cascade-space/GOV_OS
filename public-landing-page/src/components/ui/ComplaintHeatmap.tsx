@@ -1,12 +1,11 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
 import Map, { Source, Layer } from 'react-map-gl/mapbox';
-import type { HeatmapLayer } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
-const heatmapLayer: HeatmapLayer = {
+const heatmapLayer: any = {
     id: 'complaints-heat',
     type: 'heatmap',
     paint: {
@@ -79,7 +78,8 @@ export default function ComplaintHeatmap({ height = '400px' }: ComplaintHeatmapP
 
     const fetchComplaintLocations = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/v1/mla/complaint-locations');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+            const response = await fetch(`${apiUrl}/api/v1/mla/complaint-locations`);
             const data = await response.json();
             if (data.success && data.data.features.length > 0) {
                 setGeojsonData(data.data);

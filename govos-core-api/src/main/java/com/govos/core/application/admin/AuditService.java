@@ -61,6 +61,37 @@ public class AuditService {
                 .collect(Collectors.toList());
     }
 
+    public record TimelineEventDto(
+            UUID id,
+            String action,
+            String actorName,
+            String resourceType,
+            String resourceId,
+            String resourceLabel,
+            String payload,
+            String createdAt
+    ) {}
+
+    /**
+     * Returns all chronological audit entries for a given resource (e.g. complaint).
+     */
+    @Transactional(readOnly = true)
+    public List<TimelineEventDto> getTimelineForResource(String resourceIdOrLabel) {
+        return repository.findTimelineByResourceIdOrLabel(resourceIdOrLabel)
+                .stream()
+                .map(l -> new TimelineEventDto(
+                        l.getId(),
+                        l.getAction(),
+                        l.getActorName(),
+                        l.getResourceType(),
+                        l.getResourceId(),
+                        l.getResourceLabel(),
+                        l.getPayload(),
+                        l.getCreatedAt() != null ? l.getCreatedAt().toString() : null
+                ))
+                .collect(Collectors.toList());
+    }
+
     private AuditLog toDomain(JpaAuditLog jpa) {
         AuditLog a = new AuditLog();
         a.setId(jpa.getId());

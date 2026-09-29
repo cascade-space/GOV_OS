@@ -16,7 +16,7 @@ export function useNotifications() {
 
     const fetchNotificationCounts = async () => {
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
             
             // Fetch notification counts from the API
             const response = await fetch(`${apiUrl}/api/v1/admin/notifications`);

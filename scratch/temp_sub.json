@@ -1,0 +1,10 @@
+﻿{
+    "subCategory":  "Waste Collection",
+    "latitude":  15.3647,
+    "title":  "SLA Auto-Close Test",
+    "name":  "SLA Test Citizen",
+    "description":  "Testing 72h auto close on resolved tickets",
+    "mobile":  "9876543210",
+    "locationAddress":  "Sirur Park Market, Ward 42",
+    "longitude":  75.124
+}

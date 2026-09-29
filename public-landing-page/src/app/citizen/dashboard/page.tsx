@@ -27,7 +27,10 @@ import { PublicNavbar } from "@/components/layout/PublicNavbar";
 import { PublicFooter } from "@/components/layout/PublicFooter";
 import { CitizenLoginModal } from "@/components/layout/CitizenLoginModal";
 
+import { complaintService } from "@/lib/services/complaint.service";
+
 interface PublicComplaint {
+    id?: string;
     complaintNumber: string;
     status: string;
     category?: string;
@@ -54,19 +57,16 @@ export default function CitizenDashboardPage() {
         if (!user) return;
         setLoading(true);
         try {
-            const token = localStorage.getItem("civicpath_token");
-            const res = await api.get("/public/complaints/my", {
-                headers: token ? { Authorization: `Bearer ${token}` } : undefined
-            }) as PublicComplaint[];
-
+            const res: any = await complaintService.getMyCitizenComplaints();
             if (Array.isArray(res)) {
                 setComplaints(res);
+            } else if (res?.data && Array.isArray(res.data)) {
+                setComplaints(res.data);
             } else {
                 setComplaints([]);
             }
         } catch (err) {
             console.warn("Could not fetch citizen complaints from backend, checking fallback:", err);
-            // Fallback for demonstration if offline
             setComplaints([]);
         } finally {
             setLoading(false);

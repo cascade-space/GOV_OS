@@ -51,14 +51,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 
                 String role = claims.get("rid", String.class);
                 String tenantIdStr = claims.get("tid", String.class);
+                String wardIdStr = claims.get("wid", String.class);
                 UUID tenantId = (tenantIdStr != null && !tenantIdStr.isEmpty()) ? UUID.fromString(tenantIdStr) : null;
+                UUID wardId = (wardIdStr != null && !wardIdStr.isEmpty()) ? UUID.fromString(wardIdStr) : null;
 
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userId,
                         null,
                         Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
                 );
-                authToken.setDetails(new GovOsUserDetails(tenantId, UUID.fromString(userId), role));
+                authToken.setDetails(new GovOsUserDetails(tenantId, UUID.fromString(userId), role, wardId));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         } catch (Exception e) {
@@ -69,5 +71,5 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    public record GovOsUserDetails(UUID tenantId, UUID userId, String role) {}
+    public record GovOsUserDetails(UUID tenantId, UUID userId, String role, UUID wardId) {}
 }

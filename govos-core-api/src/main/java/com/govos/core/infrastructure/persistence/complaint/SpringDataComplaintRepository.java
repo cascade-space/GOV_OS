@@ -8,12 +8,30 @@ import java.util.List;
 import java.util.UUID;
 
 public interface SpringDataComplaintRepository extends JpaRepository<JpaComplaint, UUID> {
+    List<JpaComplaint> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
     List<JpaComplaint> findByTenantId(UUID tenantId);
+    List<JpaComplaint> findByTenantIdAndWardId(UUID tenantId, UUID wardId);
     java.util.Optional<JpaComplaint> findByComplaintNumber(String complaintNumber);
     List<JpaComplaint> findByReporterMobileOrderByCreatedAtDesc(String reporterMobile);
     List<JpaComplaint> findByAssignedToIdOrderByCreatedAtDesc(UUID assignedToId);
     List<JpaComplaint> findByTenantIdAndAssignedToIdOrderByCreatedAtDesc(UUID tenantId, UUID assignedToId);
     List<JpaComplaint> findByStatusIn(List<com.govos.core.domain.complaint.ComplaintStatus> statuses);
+    List<JpaComplaint> findByReporterIdOrderByCreatedAtDesc(UUID reporterId);
+
+    /**
+     * Constituency-scoped complaint list: joins complaints → wards → constituencies by name.
+     * Used by the REP (MLA) role to see only their constituency's complaints.
+     */
+    @Query(value = """
+        SELECT c.* FROM complaints c
+        LEFT JOIN wards w ON c.ward_id = w.id
+        LEFT JOIN constituencies con ON w.constituency_id = con.id
+        WHERE c.tenant_id = :tenantId
+          AND (c.ward_id IS NULL OR con.name ILIKE :constituency OR con.code ILIKE :constituency)
+          AND c.is_deleted = false
+        ORDER BY c.created_at DESC
+        """, nativeQuery = true)
+    List<JpaComplaint> findByTenantIdAndConstituency(@Param("tenantId") UUID tenantId, @Param("constituency") String constituency);
 
     long countByTenantId(UUID tenantId);
 
@@ -47,4 +65,10 @@ public interface SpringDataComplaintRepository extends JpaRepository<JpaComplain
 
     @Query(value = "SELECT COUNT(id) + 1 FROM complaints WHERE tenant_id = :tenantId", nativeQuery = true)
     long getNextSequenceForTenant(@Param("tenantId") UUID tenantId);
+
+    @Query(value = "SELECT COUNT(*) FROM complaints WHERE asset_id = :assetId AND status NOT IN ('RESOLVED','CLOSED') AND is_deleted = false", nativeQuery = true)
+    long countActiveByAssetId(@Param("assetId") UUID assetId);
+
+    @Query(value = "SELECT COUNT(*) FROM complaints WHERE project_id = :projectId AND is_deleted = false", nativeQuery = true)
+    long countByProjectId(@Param("projectId") UUID projectId);
 }
