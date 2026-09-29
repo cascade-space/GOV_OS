@@ -24,6 +24,7 @@ import {
 import toast from "react-hot-toast";
 import { persistSession } from "@/lib/services/auth.service";
 import { useAppStore, AuthUser, UserRole } from "@/lib/store";
+import { getBaseUrl } from "@/lib/api-client";
 
 interface RoleOption {
     id: "admin" | "mla" | "officer" | "superadmin" | "citizen";
@@ -118,7 +119,12 @@ export default function UnifiedLoginPage() {
 
     // Real DB Login Authenticator
     const authenticateWithDb = async (loginEmail: string, loginPass: string, defaultTargetRoute?: string) => {
-        const baseURL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8080";
+        const baseURL = getBaseUrl();
+        if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+            if (baseURL.includes("127.0.0.1") || baseURL.includes("localhost")) {
+                throw new Error("NEXT_PUBLIC_API_URL is missing in your Vercel settings! Set NEXT_PUBLIC_API_URL to your deployed backend URL (e.g. https://your-backend.onrender.com) in Vercel.");
+            }
+        }
         const res = await fetch(`${baseURL}/api/v1/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

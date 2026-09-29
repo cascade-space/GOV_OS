@@ -68,7 +68,7 @@ spring:
 # SERVER
 # ============================================================
 server:
-  port: 8080
+  port: ${PORT:8080}
   compression:
     enabled: true
     mime-types: application/json,text/html,text/plain
@@ -167,6 +167,8 @@ govos:
       - http://localhost:3003
       - http://127.0.0.1:3000
       - https://civicpath-gov.vercel.app
+      - https://*.vercel.app
+      - https://*.onrender.com
       - ${FRONTEND_URL:https://civicpath-gov.vercel.app}
     allowed-headers: "*"
     allow-credentials: true

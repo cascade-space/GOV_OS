@@ -72,9 +72,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(govOsProperties.cors().allowedOrigins());
+        configuration.setAllowedOriginPatterns(govOsProperties.cors().allowedOrigins());
         configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(java.util.List.of(govOsProperties.cors().allowedHeaders()));
+        configuration.setExposedHeaders(java.util.Arrays.asList("Authorization", "Content-Disposition", "x-tenant-id"));
         configuration.setAllowCredentials(govOsProperties.cors().allowCredentials());
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
