@@ -23,24 +23,30 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install root dependencies
         run: npm ci
 
+      - name: Install public-landing-page dependencies
+        run: npm ci
+        working-directory: public-landing-page
+
       - name: Clear Next.js cache
-        run: rm -rf .next
+        run: rm -rf public-landing-page/.next
 
       - name: Build
         run: npm run build
+        working-directory: public-landing-page
         env:
           NODE_ENV: production
+          NEXT_PUBLIC_API_URL: http://localhost:8080
 
       - name: Add .nojekyll file
-        run: touch ./out/.nojekyll
+        run: touch ./public-landing-page/out/.nojekyll
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out
+          path: ./public-landing-page/out
 
   deploy:
     environment:
