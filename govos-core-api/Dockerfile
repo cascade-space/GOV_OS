@@ -24,6 +24,8 @@ USER govos
 
 # Copy jar from builder
 COPY --from=builder --chown=govos:govos /app/target/govos-core-api-*.jar app.jar
+COPY --chown=govos:govos entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Configure port and JVM options optimized for 512MB RAM (Render Free Tier)
 # - SerialGC eliminates G1GC memory overhead (~50-100MB saved)
@@ -33,4 +35,4 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:+UseSerialGC -Xms128m -Xmx320m -XX:+
 
 EXPOSE 8080
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dserver.port=${PORT} -jar app.jar"]
+ENTRYPOINT ["/app/entrypoint.sh"]
