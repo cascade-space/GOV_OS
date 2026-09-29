@@ -1,4 +1,9 @@
 // Dynamic route page for MLA issue details
+// generateStaticParams required for output: 'export' — returns empty array since data is fetched client-side
+export async function generateStaticParams() {
+    return [];
+}
+
 "use client";
 
 import { useEffect, useState, use } from "react";

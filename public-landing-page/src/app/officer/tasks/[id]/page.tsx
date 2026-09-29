@@ -1,4 +1,9 @@
 // Dynamic route page for officer task details
+// generateStaticParams required for output: 'export' — returns empty array since data is fetched client-side
+export async function generateStaticParams() {
+    return [];
+}
+
 "use client";
 
 import { useEffect, useState, useCallback, useRef, use } from "react";
