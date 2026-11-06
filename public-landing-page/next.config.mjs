@@ -6,6 +6,9 @@ const nextConfig = {
     output: isGhPages ? 'export' : undefined,
     basePath: basePath,
     assetPrefix: basePath,
+    env: {
+        NEXT_PUBLIC_BASE_PATH: basePath,
+    },
     images: {
         remotePatterns: [
             {

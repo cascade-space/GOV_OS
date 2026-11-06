@@ -71,7 +71,7 @@ function HeroSection() {
         <section className="relative w-full overflow-hidden flex flex-col justify-between min-h-[660px] lg:min-h-0 lg:aspect-[1600/686] xl:min-h-[720px]">
             {/* Background: herosection.jpg (1600x686) fills whole section without cropping */}
             <img
-                src="/herosection.jpg"
+                src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/herosection.jpg`}
                 alt="CivicPath community park hero"
                 className="absolute inset-0 w-full h-full object-cover object-bottom sm:object-center pointer-events-none select-none"
             />
@@ -335,7 +335,7 @@ function CTABanner() {
             {/* Background Panorama Illustration */}
             <div
                 className="absolute inset-0 bg-no-repeat bg-cover md:bg-[length:100%_100%] bg-bottom pointer-events-none"
-                style={{ backgroundImage: `url('/cta-banner-bg.png')` }}
+                style={{ backgroundImage: `url('${process.env.NEXT_PUBLIC_BASE_PATH || ''}/cta-banner-bg.png')` }}
             />
 
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between pl-6 sm:pl-32 md:pl-44 lg:pl-52 pr-6 sm:pr-16 md:pr-24 lg:pr-32 py-7 md:py-9 gap-6">

@@ -85,7 +85,7 @@ export function MLALayout({ children }: { children: React.ReactNode }) {
                             </div>
                             <div className="w-10 h-10 rounded-full border-2 border-civic-orange shadow-lg overflow-hidden bg-white shrink-0 transition-transform hover:scale-110">
                                 <img
-                                    src="/static/mla.jpg"
+                                    src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/static/mla.jpg`}
                                     alt="MLA Portrait"
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
