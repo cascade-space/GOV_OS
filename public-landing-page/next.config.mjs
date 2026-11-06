@@ -1,5 +1,11 @@
+const isGhPages = process.env.DEPLOY_TARGET === 'gh-pages';
+const basePath = isGhPages ? '/GOV_OS' : '';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    output: isGhPages ? 'export' : undefined,
+    basePath: basePath,
+    assetPrefix: basePath,
     images: {
         remotePatterns: [
             {

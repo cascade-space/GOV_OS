@@ -4,7 +4,7 @@ import ComplaintDetailPage from './ComplaintDetailClient';
 
 export async function generateStaticParams() {
     // Data is fetched client-side from Spring Boot; no static IDs to pre-render.
-    return [];
+    return [{ id: 'demo' }];
 }
 
 export default function Page({ params }: { params?: Promise<{ id: string }> | { id: string } }) {

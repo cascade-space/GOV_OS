@@ -1,3 +1,3 @@
 export async function generateStaticParams() {
-    return [];
+    return [{ id: 'demo' }];
 }
