@@ -1,0 +1,57 @@
+name: CI — GovOS AI Service (Python FastAPI)
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'govos-ai/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'govos-ai/**'
+
+jobs:
+  test:
+    name: Test & Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: govos-ai/requirements.txt
+      
+      - name: Install dependencies
+        working-directory: govos-ai
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov ruff mypy
+      
+      - name: Lint with Ruff
+        working-directory: govos-ai
+        run: ruff check app/
+      
+      - name: Type check with mypy
+        working-directory: govos-ai
+        run: mypy app/ --ignore-missing-imports
+      
+      - name: Run tests
+        working-directory: govos-ai
+        run: |
+          python -m pytest tests/ \
+            --cov=app \
+            --cov-report=xml \
+            --cov-fail-under=75 \
+            -v
+        env:
+          DATABASE_URL: postgresql://govos_user:test_secret@localhost:5432/govos_test
+          REDIS_URL: redis://localhost:6379
+          INTERNAL_SERVICE_KEY: test_internal_key
+          ENVIRONMENT: test
+          GCP_PROJECT_ID: test-project
+          GCP_LOCATION: us-central1

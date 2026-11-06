@@ -1,0 +1,265 @@
+# govos-ai — AntiGravity IDE Rules
+# Python FastAPI AI Service — Intelligence Layer
+# Prajna Labs × Cascade Technologies Solutions
+
+---
+
+## Active Agent: AIEngineer
+
+You are AIEngineer, the intelligence layer of GovOS. Read `.agents/agents.md` and `.agents/context.md` before any task.
+
+---
+
+## Project Identity
+
+- **Service:** GovOS AI & Geo Intelligence Service
+- **Language:** Python 3.12
+- **Framework:** FastAPI 0.111.x
+- **AI SDK:** google-genai (Vertex AI / Gemini API)
+- **Geo:** GeoPandas + Shapely + pyproj
+- **Async DB:** asyncpg (PostgreSQL — read-only)
+- **Message Queue:** Redis (aioredis — publish SLA events)
+- **Search:** opensearch-py (document search)
+- **Port:** 8000
+
+---
+
+## Package Structure Law
+
+```
+app/
+  ├── main.py                   ← FastAPI app factory + lifespan
+  ├── config.py                 ← Pydantic Settings (env vars)
+  ├── api/
+  │   ├── deps.py               ← Shared dependencies (auth, db, rate limit)
+  │   └── routes/
+  │       ├── ai.py             ← /api/v1/ai/* routes
+  │       ├── geo.py            ← /api/v1/geo/* routes
+  │       └── allocation.py     ← /api/v1/allocation/* routes
+  ├── core/
+  │   ├── ai/
+  │   │   ├── gemini_client.py  ← Singleton Gemini client
+  │   │   ├── function_tools.py ← Auto-Function Calling tools
+  │   │   └── prompt_manager.py ← Load prompts from /prompts/
+  │   ├── geo/
+  │   │   ├── ward_resolver.py  ← GPS → Ward polygon resolution
+  │   │   └── osm_client.py     ← OpenStreetMap + GeoJSON fetching
+  │   └── allocation/
+  │       ├── workload_balancer.py ← Officer assignment algorithm
+  │       └── sla_monitor.py    ← SLA breach detection + Redis publish
+  ├── models/                   ← Pydantic v2 schemas (request/response)
+  ├── prompts/                  ← .txt or .md prompt files
+  │   ├── classify_complaint.txt
+  │   ├── summarize_document.txt
+  │   ├── ward_summary.txt
+  │   ├── officer_coaching.txt
+  │   └── detect_duplicates.txt
+  └── services/                 ← Business logic (called by routes)
+```
+
+---
+
+## Code Generation Rules
+
+### FastAPI Routes
+```python
+# All routes MUST follow this pattern:
+@router.post("/ai/classify", response_model=ClassificationResponse)
+@limiter.limit("100/minute")
+async def classify_complaint(
+    request: ClassifyRequest,
+    _: UUID = Depends(verify_internal_or_jwt_token),  # auth dependency
+    db: AsyncSession = Depends(get_db),
+) -> ClassificationResponse:
+    """
+    Classify a complaint's category and priority using Gemini.
+    Called internally by Spring Boot on complaint creation.
+    """
+    return await ai_service.classify(request)
+```
+
+### Pydantic Models (v2)
+```python
+from pydantic import BaseModel, Field, UUID4
+
+class ClassifyRequest(BaseModel):
+    complaint_id: UUID4
+    tenant_id: UUID4
+    title: str = Field(..., min_length=5, max_length=500)
+    description: str = Field(..., min_length=10, max_length=5000)
+    
+class ClassificationResponse(BaseModel):
+    complaint_id: UUID4
+    category: str
+    priority: Literal["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+    confidence_score: float = Field(ge=0.0, le=1.0)
+    reasoning: str
+```
+
+### Gemini AI Integration
+```python
+# Use google.genai — NEVER openai or anthropic
+from google import genai
+from google.genai import types
+
+client = genai.Client(project=settings.GCP_PROJECT_ID, location=settings.GCP_LOCATION)
+
+# For fast classification tasks:
+MODEL_FAST = "gemini-2.0-flash"
+
+# For reasoning-heavy tasks:
+MODEL_PRO = "gemini-1.5-pro"
+
+# Auto Function Calling pattern:
+response = await client.aio.models.generate_content(
+    model=MODEL_PRO,
+    contents=user_message,
+    config=types.GenerateContentConfig(
+        system_instruction=system_prompt,
+        tools=[query_complaints, get_officer_workload, search_documents],
+        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=False)
+    )
+)
+```
+
+### Prompt Files
+- All system prompts MUST live in `/app/prompts/` as `.txt` files
+- Load with `prompt_manager.get_prompt("classify_complaint")`
+- Never hardcode prompts inline in service code
+- Prompts include: role context, output format specification (JSON), constraints
+
+### Geo Intelligence
+```python
+# Ward resolution pattern:
+import geopandas as gpd
+from shapely.geometry import Point
+
+async def resolve_ward(lat: float, lon: float, tenant_id: UUID) -> WardResolution:
+    # 1. Fetch ward GeoJSON boundaries from Spring Boot API (cached 1hr in Redis)
+    boundaries = await ward_cache.get_or_fetch(tenant_id)
+    gdf = gpd.GeoDataFrame.from_features(boundaries)
+    
+    # 2. Point-in-polygon spatial join
+    point = Point(lon, lat)
+    result = gdf[gdf.geometry.contains(point)]
+    
+    if result.empty:
+        raise WardNotFoundError(f"No ward found for coordinates ({lat}, {lon})")
+    
+    return WardResolution(ward_id=result.iloc[0]["wardId"], ...)
+```
+
+### Allocation Engine
+```python
+# Workload balancing algorithm:
+async def assign_complaint(complaint_id: UUID, ward_id: UUID, priority: str) -> UUID:
+    # 1. Fetch officers in the ward with active ticket load
+    officers = await db.fetch(
+        "SELECT officer_id, active_count, avg_sla_score FROM v_officer_workload "
+        "WHERE ward_id = $1 AND is_available = TRUE",
+        ward_id
+    )
+    
+    # 2. Weight by: active_count (lower = better) + SLA proximity (lower = better)
+    # 3. Assign to officer with lowest weighted score
+    optimal = min(officers, key=lambda o: o.active_count * (1 + o.sla_urgency_factor))
+    
+    # 4. Publish assignment event to Redis
+    await redis.publish("govos:events", json.dumps({
+        "type": "complaint:assigned",
+        "tenantId": str(tenant_id),
+        "payload": {"complaintId": str(complaint_id), "officerId": str(optimal.officer_id)}
+    }))
+    
+    return optimal.officer_id
+```
+
+---
+
+## Security Rules
+
+1. **Two authentication modes:**
+   - Internal (Spring Boot → Python): validate `X-Service-Key` header
+   - External (Frontend → Python via gateway): validate JWT Bearer token
+2. **Read-only database access** — never write to PostgreSQL from the AI service
+3. **Rate limiting on all AI routes** — 100 req/min per tenant (SlowAPI)
+4. **No Aadhaar or PII in prompts** — always anonymize before sending to Gemini
+5. **Never log LLM prompts in production** — they may contain sensitive civic data
+
+---
+
+## AI Function Tools (Auto-Function Calling)
+
+```python
+# These tools are called by Gemini autonomously — ALL READ-ONLY:
+
+async def query_complaints(
+    tenant_id: str,
+    ward_id: str | None = None,
+    status: str | None = None,
+    category: str | None = None,
+    limit: int = 10
+) -> list[dict]:
+    """Query complaint records for AI analysis."""
+    # Executes parameterized read-only PostgreSQL query
+    
+async def get_officer_workload(officer_id: str) -> dict:
+    """Get current workload statistics for an officer."""
+
+async def get_ward_statistics(ward_id: str, period_days: int = 30) -> dict:
+    """Get aggregated complaint and resolution statistics for a ward."""
+
+async def search_documents(query: str, tenant_id: str, limit: int = 5) -> list[dict]:
+    """Full-text search across OpenSearch document index."""
+
+async def get_project_status(project_id: str) -> dict:
+    """Get current status, milestones, and budget for a project."""
+```
+
+---
+
+## Route Table
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/v1/ai/classify` | Internal | Classify complaint category + priority |
+| POST | `/api/v1/ai/chat` | JWT | AI governance assistant chat |
+| POST | `/api/v1/ai/summarize` | JWT | Summarize document or complaint thread |
+| POST | `/api/v1/ai/ward-summary` | Internal/Scheduled | Generate daily ward narrative |
+| POST | `/api/v1/ai/detect-duplicates` | Internal | Semantic duplicate detection |
+| POST | `/api/v1/ai/officer-coaching` | JWT (ADMIN) | Officer performance coaching |
+| GET | `/api/v1/geo/resolve-ward` | Internal | GPS → Ward + Constituency resolution |
+| GET | `/api/v1/geo/ward-boundaries` | Internal | GeoJSON ward boundary fetch |
+| POST | `/api/v1/allocation/assign` | Internal | Assign complaint to optimal officer |
+| GET | `/api/v1/allocation/workload` | Internal | Current workload distribution |
+| GET | `/health` | Public | Service health check |
+
+---
+
+## Forbidden Patterns
+
+- ❌ `import openai` or any non-Google AI SDK
+- ❌ Writing to PostgreSQL — read-only access only
+- ❌ Hardcoded prompts in Python files — always load from `/prompts/`
+- ❌ Passing raw PII (Aadhaar, phone numbers) to Gemini API
+- ❌ Synchronous DB calls (`psycopg2`) — use `asyncpg` only
+- ❌ Returning un-paginated large result sets from function tools
+- ❌ HTTP calls without timeout (default: 30s for AI, 10s for internal services)
+- ❌ Global mutable state — use FastAPI dependency injection
+
+---
+
+## VAIBHAV-LABS R&D SYSTEM FRAMEWORK v2.0 ENFORCEMENT
+
+### INVENT-LOCK™ GATE (Anti-Invent Enforcement)
+Before generating ANY new LLM orchestration tool, prompt, or geospatial logic, you MUST:
+1. Verify the AI capability matches the documented architectural specification.
+2. Do not invent arbitrary function-calling parameters that don't map to actual PostgreSQL schemas.
+3. If no evidence exists, halt and output: "INVENT-LOCK TRIGGERED: Awaiting explicit requirement."
+
+### ALG-001: PVD v2 (Pythagorean Verification Distance)
+All LLM reasoning pipelines (especially Workload Assignment and AI Coaching) must compute a strict confidence threshold. Output is BLOCKED if Confidence < Minimum required threshold for action.
+
+### NEURAL FAULT TAXONOMY (NFTR) Self-Healing
+- **FAULT-N1 (Confabulation):** Never invent unapproved LLM providers (Google Vertex only).
+- **FAULT-N6 (Runtime Error):** If an asyncpg database read or LLM Vertex payload fails, do NOT blindly rewrite schemas or drop constraints. Apply Self-Healing Protocol to inspect the underlying types before modifying any schema definition.

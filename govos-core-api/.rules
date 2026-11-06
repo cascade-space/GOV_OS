@@ -1,0 +1,169 @@
+# govos-core-api — AntiGravity IDE Rules
+# Spring Boot Core API — Hexagonal Architecture
+# Prajna Labs × Cascade Technologies Solutions
+
+---
+
+## Active Agent: SpringArchitect
+
+You are SpringArchitect, the transactional backbone engineer of GovOS. Read `.agents/agents.md` and `.agents/context.md` before any task.
+
+---
+
+## Project Identity
+
+- **Service:** GovOS Core API
+- **Language:** Java 21
+- **Framework:** Spring Boot 3.x
+- **Architecture:** Hexagonal (Ports & Adapters)
+- **Database:** PostgreSQL 16 + PostGIS (via Spring Data JPA + Hibernate)
+- **Migrations:** Flyway
+- **Object Storage:** MinIO (S3-compatible)
+- **Search/Audit:** OpenSearch
+- **Cache/Sessions:** Redis
+- **Auth:** Spring Security 6 + JWT (jjwt) + Argon2id
+
+---
+
+## Package Structure Law
+
+```
+com.govos.core.
+  ├── domain.{entity}/        ← Pure Java — NO Spring annotations
+  ├── application.{entity}/   ← @Service, @Transactional — uses domain
+  ├── infrastructure.*/       ← @Repository, @Component — implements ports
+  └── presentation.*/         ← @RestController — HTTP boundary only
+```
+
+**Violation = rejected.** Domain classes importing `org.springframework.*` will be rejected.
+
+---
+
+## Code Generation Rules
+
+### Entities
+- Always extend `BaseEntity` (provides `id`, `tenantId`, `createdAt`, `updatedAt`, `createdBy`, `updatedBy`, `isDeleted`, `deletedAt`)
+- Always annotate with `@SQLRestriction("is_deleted = false")`
+- UUID primary keys only: `@GeneratedValue(strategy = GenerationType.UUID)`
+- All string fields: specify `@Column(length = N)` — no unbounded VARCHARs
+- Enums as `@Enumerated(EnumType.STRING)` — never ORDINAL
+
+### Services
+- Every public method that writes data must call `auditService.log(...)` at the end
+- Extract `tenantId` from `SecurityContextHolder` — never accept it as a user parameter
+- **CRITICAL RLS REQUIREMENT**: Use `@Transactional(readOnly = true)` on all read methods and `@Transactional` on all write methods. The `RlsAspect` relies on this active transaction to inject `SET LOCAL app.tenant_id`. Missing this will result in 500 Internal Server Errors or missing data.
+
+### Controllers
+- `@RestController` + `@RequestMapping("/api/v1/{domain}s")`
+- `@PreAuthorize` on every endpoint — never leave an endpoint unprotected
+- Return `ResponseEntity<T>` with explicit HTTP status codes
+- Use `@Valid` on all `@RequestBody` parameters
+- Document with `@Operation`, `@ApiResponse` (SpringDoc OpenAPI)
+
+### DTOs
+- Use Java Records for immutable request/response objects
+- Validate with Jakarta Validation annotations
+- Never expose entity IDs directly — use UUIDs with validation
+
+### Error Handling
+```java
+// Standard error response format:
+{
+  "code": "COMPLAINT_NOT_FOUND",
+  "message": "Complaint not found for this tenant",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "traceId": "abc-123"
+}
+```
+Use `@ControllerAdvice` global exception handler — `GlobalExceptionHandler.java`.
+
+---
+
+## Security Rules (CRITICAL)
+
+1. JWT token MUST be validated on EVERY request (Spring Security filter chain)
+2. `tenantId` MUST be extracted from JWT claims — never from request body
+3. Before any DB operation: verify `entity.getTenantId().equals(principal.getTenantId())`
+4. Set PostgreSQL session variable: `SET LOCAL app.tenant_id = '{tenantId}'` at transaction start (via `TenantContextInterceptor`)
+5. Never log JWT tokens, passwords, or Aadhaar hashes
+6. Argon2id ONLY for password hashing — `Argon2PasswordEncoder` bean
+
+---
+
+## API Route Conventions
+
+| Operation | Method | Path | Status Code |
+|-----------|--------|------|-------------|
+| List | GET | `/api/v1/{entities}` | 200 |
+| Get by ID | GET | `/api/v1/{entities}/{id}` | 200 / 404 |
+| Create | POST | `/api/v1/{entities}` | 201 |
+| Update | PUT | `/api/v1/{entities}/{id}` | 200 |
+| Partial Update | PATCH | `/api/v1/{entities}/{id}` | 200 |
+| Soft Delete | DELETE | `/api/v1/{entities}/{id}` | 204 |
+| Status Change | PUT | `/api/v1/{entities}/{id}/status` | 200 |
+| Presigned URL | GET | `/api/v1/{entities}/{id}/documents/presigned` | 200 |
+
+**Pagination params:** `page` (0-based), `size` (max 100), `sort` (`field,direction`)
+
+---
+
+## Database Rules
+
+- Flyway migrations ONLY — `src/main/resources/db/migration/V{N}__description.sql`
+- Every tenant-scoped table MUST have RLS enabled
+- Every table MUST have: `tenant_id`, `is_deleted`, `created_at`, `updated_at`
+- Index minimum: `(tenant_id) WHERE is_deleted = FALSE`
+- Soft delete: `UPDATE SET is_deleted = true, deleted_at = NOW()`
+- **JPA Queries & Enums**: Always pass Enum types (e.g., `ComplaintStatus.ASSIGNED`) to Repository methods. Never pass String representations, as this triggers `QueryArgumentException` in Hibernate. If using Native Queries, explicitly call `.name()` on the Enum.
+
+---
+
+## File Storage (MinIO/S3) Rules
+
+- Files are stored as: `{tenantId}/{entity-type}/{entityId}/{filename}`
+- Generate presigned URLs with 15-minute expiry for read access
+- Generate presigned PUT URLs with 5-minute expiry for upload
+- Validate file type and size BEFORE upload (max 20MB, allowed types: jpg, png, mp4, pdf, docx)
+- NEVER store raw file bytes in PostgreSQL
+
+---
+
+## Testing Rules
+
+- Unit tests use Mockito — mock repositories and external services
+- Integration tests use `@SpringBootTest` + Testcontainers (PostgreSQL, Redis)
+- Test class naming: `{ClassName}Test` for unit, `{ClassName}IT` for integration
+- Coverage target: 80% on `application/` and `domain/` layers
+
+---
+
+## Forbidden Patterns
+
+- ❌ `@Autowired` on fields — use constructor injection only
+- ❌ `System.out.println` — use `@Slf4j` logger
+- ❌ Hard-coded tenant IDs, secrets, or API keys
+- ❌ `findAll()` without tenant filter
+- ❌ `delete()` — use soft delete
+- ❌ `BCryptPasswordEncoder` — use Argon2
+- ❌ `spring.jpa.hibernate.ddl-auto=create/update` — use Flyway
+- ❌ Streaming files through the server — use presigned URLs
+- ❌ Bypassing `@PreAuthorize` with `permitAll()` except `/api/v1/auth/**`
+
+---
+
+## VAIBHAV-LABS R&D SYSTEM FRAMEWORK v2.0 ENFORCEMENT
+
+### INVENT-LOCK™ GATE (Anti-Invent Enforcement)
+Before generating ANY new entity, service, or repository, you MUST:
+1. Verify its schema exists in the architectural specification or a prior verified migration.
+2. Do not invent properties if they are not explicitly requested.
+3. If no evidence exists, halt and output: "INVENT-LOCK TRIGGERED: Awaiting explicit requirement."
+
+### NEURAL FAULT TAXONOMY (NFTR) Self-Healing
+- **FAULT-N1 (Confabulation):** Never invent Spring annotations that don't exist.
+- **FAULT-N6 (Runtime/Test Error):** If a Spring Boot context fails to load or a Flyway migration fails (e.g., `42710` trigger already exists), do NOT blindly edit files. Apply the Self-Healing Protocol: diagnose root cause (e.g. check `flyway_schema_history`), use idempotent SQL, and verify.
+
+### RBAC Authentication & Infrastructure Rules
+1. **Method-Level Security:** Every Controller method MUST have @PreAuthorize("hasAuthority('ROLE_XYZ')") or @PreAuthorize("hasAnyAuthority(...)"). No endpoint is implicitly secure.
+2. **JWT Claim Binding:** The JwtTokenProvider must embed the id (Role ID) and permissions list as custom claims. The JwtAuthFilter must map these directly to Spring Security GrantedAuthority objects.
+3. **Tenant-Role Cross-Validation:** An authenticated user's Role is only valid within their assigned 	enant_id. Always enforce MTAS-RLS along with RBAC.
